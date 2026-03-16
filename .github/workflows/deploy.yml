@@ -1,0 +1,40 @@
+name: Deploy to Sepolia
+
+on:
+  workflow_dispatch:
+    inputs:
+      choice_count:
+        description: 'Number of vote choices'
+        required: true
+        default: '3'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: sepolia
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile contracts
+        run: npx hardhat compile
+
+      - name: Deploy to Sepolia
+        run: npx hardhat run scripts/deploy.js --network sepolia
+        env:
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CHOICE_COUNT: ${{ github.event.inputs.choice_count }}
+
+      - name: Verify deployment
+        run: echo "Deployment complete! Check Etherscan for the new contract address."

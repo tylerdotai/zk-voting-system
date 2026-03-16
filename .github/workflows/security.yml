@@ -1,0 +1,34 @@
+name: Security Analysis
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Slither analysis
+        uses: crytic/slither-action@v0.3.0
+        id: slither
+        with:
+          node-version: '20'
+
+      - name: Print Slither results
+        if: always()
+        run: |
+          echo "Slither found $($GITHUB_OUTPUT)"
