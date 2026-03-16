@@ -27,6 +27,9 @@ contract ZKVoting is Ownable {
     /// @notice Vote tallies
     mapping(uint256 => uint256) public voteCounts;
     
+    /// @notice Track who has voted (voter address => has voted)
+    mapping(address => bool) public hasVoted;
+    
     /// @notice Event emitted when a vote is cast
     event VoteCast(address voter, uint256 choice, bytes32 nullifierHash);
     
@@ -37,7 +40,8 @@ contract ZKVoting is Ownable {
      * @dev Initialize the voting contract
      * @param _choiceCount Number of voting options
      */
-    constructor(uint256 _choiceCount) Ownable(msg.sender) {
+    constructor(uint256 _choiceCount) {
+        _transferOwnership(msg.sender);
         choiceCount = _choiceCount;
     }
     
