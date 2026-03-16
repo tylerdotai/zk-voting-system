@@ -11,7 +11,7 @@
 <br />
 <div align="center">
   <a href="https://codeberg.org/tylerdotai/zk-voting-system">
-    <img src="https://raw.githubusercontent.com/ethereum/ethereum-org/master/public/images/logos/eth-glyph-black.png" alt="Logo" width="80" height="80">
+    <img src="logo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">ZK DID Voting System</h3>
