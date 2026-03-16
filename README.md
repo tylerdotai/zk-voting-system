@@ -29,6 +29,15 @@ python3 -m http.server 8080
 # Then open http://localhost:8080
 ```
 
+### Option 3: Deploy to Testnet
+```bash
+SEPOLIA_RPC_URL=your_rpc PRIVATE_KEY=your_key npm run deploy
+```
+
+**Live Contract (Sepolia Testnet):**
+- Address: `0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e`
+- Explorer: https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e
+
 ## Architecture
 
 ```
