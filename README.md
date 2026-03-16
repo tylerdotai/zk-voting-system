@@ -1,4 +1,4 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<!-- Improved compatibility of back to top link: See: https://codeberg.org/othneildrew/Best-README-Template/pull/73 -->
 <a id="readme-top"></a>
 
 [![Contributors][contributors-shield]][contributors-url]
@@ -24,9 +24,9 @@
     <br />
     <a href="https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e">View on Etherscan</a>
     ·
-    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Report Bug</a>
+    <a href="https://codeberg.org/tylerdotai/zk-voting-system/issues">Report Bug</a>
     ·
-    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Request Feature</a>
+    <a href="https://codeberg.org/tylerdotai/zk-voting-system/issues">Request Feature</a>
   </p>
 </div>
 
@@ -233,12 +233,12 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [contributors-shield]: https://img.shields.io/badge/contributors-1-blue?style=for-the-badge
-[contributors-url]: https://github.com/tylerdotai/zk-voting-system/graphs/contributors
+[contributors-url]: https://codeberg.org/tylerdotai/zk-voting-system/graphs/contributors
 [forks-shield]: https://img.shields.io/badge/forks-0-blue?style=for-the-badge
-[forks-url]: https://github.com/tylerdotai/zk-voting-system/network/members
+[forks-url]: https://codeberg.org/tylerdotai/zk-voting-system/network/members
 [stars-shield]: https://img.shields.io/badge/stars-0-blue?style=for-the-badge
-[stars-url]: https://github.com/tylerdotai/zk-voting-system/stargazers
+[stars-url]: https://codeberg.org/tylerdotai/zk-voting-system/stargazers
 [issues-shield]: https://img.shields.io/badge/issues-0-blue?style=for-the-badge
-[issues-url]: https://github.com/tylerdotai/zk-voting-system/issues
+[issues-url]: https://codeberg.org/tylerdotai/zk-voting-system/issues
 [license-shield]: https://img.shields.io/badge/license-MIT-blue?style=for-the-badge
-[license-url]: https://github.com/tylerdotai/zk-voting-system/blob/main/LICENSE
+[license-url]: https://codeberg.org/tylerdotai/zk-voting-system/src/branch/main/LICENSE
