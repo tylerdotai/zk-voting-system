@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZK DID Voting Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 2rem;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 0.5rem; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 2rem; }
+    
+    .voters-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .voters-section h2 { margin-bottom: 1rem; color: #4ade80; }
+    .voter-list { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .voter {
+      background: rgba(255,255,255,0.1);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid transparent;
+    }
+    .voter:hover { background: rgba(255,255,255,0.15); }
+    .voter.selected { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
+    .voter .status {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+    .voter.voted .status { color: #f87171; }
+    
+    .ballot-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .ballot-section h2 { margin-bottom: 1rem; color: #60a5fa; }
+    .ballot-status { 
+      text-align: center; 
+      padding: 1rem; 
+      background: rgba(0,0,0,0.3);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .vote-btn {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .vote-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); transform: scale(1.01); }
+    .vote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .results-section {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .results-section h2 { margin-bottom: 1rem; color: #f472b6; }
+    .results { display: flex; flex-direction: column; gap: 0.75rem; }
+    .result-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .result-label { width: 150px; }
+    .result-track { flex: 1; background: rgba(255,255,255,0.1); height: 30px; border-radius: 15px; overflow: hidden; }
+    .result-fill { height: 100%; transition: width 0.3s; border-radius: 15px; }
+    .result-count { width: 50px; text-align: right; }
+    
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4ade80;
+      color: #000;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .toast.show { opacity: 1; }
+    
+    .connection-status {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+    .connected { background: #4ade80; color: #000; }
+    .disconnected { background: #f87171; color: #fff; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .live-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      animation: pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="connection-status disconnected" id="connectionStatus">Connecting...</div>
+  
+  <div class="container">
+    <h1>🗳️ ZK DID Voting Demo</h1>
+    <p class="subtitle">Fort Worth DAO — Secure Blockchain Voting</p>
+    
+    <div class="voters-section">
+      <h2>1. Select Voter (Synthetic Identity)</h2>
+      <div class="voter-list" id="voterList"></div>
+    </div>
+    
+    <div class="ballot-section">
+      <h2>2. Cast Your Vote</h2>
+      <div class="ballot-status" id="ballotStatus">Select a voter to begin</div>
+      <button class="vote-btn" id="voteYes" disabled>✅ Yes</button>
+      <button class="vote-btn" id="voteNo" disabled>❌ No</button>
+      <button class="vote-btn" id="voteAbstain" disabled>➖ Abstain</button>
+    </div>
+    
+    <div class="results-section">
+      <h2><span class="live-indicator"></span>Live Results</h2>
+      <div class="results">
+        <div class="result-bar">
+          <span class="result-label">✅ Yes</span>
+          <div class="result-track"><div class="result-fill" id="yesBar" style="background: #4ade80; width: 0%"></div></div>
+          <span class="result-count" id="yesCount">0</span>
+        </div>
+        <div class="result-bar">
+          <span class="result-label">❌ No</span>
+          <div class="result-track"><div class="result-fill" id="noBar" style="background: #f87171; width: 0%"></div></div>
+          <span class="result-count" id="noCount">0</span>
+        </div>
+        <div class="result-bar">
+          <span class="result-label">➖ Abstain</span>
+          <div class="result-track"><div class="result-fill" id="abstainBar" style="background: #94a3b8; width: 0%"></div></div>
+          <span class="result-count" id="abstainCount">0</span>
+        </div>
+      </div>
+      <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
+        Total Votes: <span id="totalVotes">0</span> | Blockchain: Sepolia Testnet
+      </p>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script>
+    // Synthetic voter identities (simulating DID)
+    const voters = [
+      { id: 'voter-001', name: 'Alice (DID:fwtx:001)', did: 'did:fwtx:0x1a2b3c', hasVoted: false },
+      { id: 'voter-002', name: 'Bob (DID:fwtx:002)', did: 'did:fwtx:0x4d5e6f', hasVoted: false },
+      { id: 'voter-003', name: 'Charlie (DID:fwtx:003)', did: 'did:fwtx:0x7g8h9i', hasVoted: false },
+    ];
+    
+    // Vote counts
+    let results = { yes: 0, no: 0, abstain: 0 };
+    let selectedVoter = null;
+    
+    // DOM elements
+    const voterList = document.getElementById('voterList');
+    const ballotStatus = document.getElementById('ballotStatus');
+    const voteYes = document.getElementById('voteYes');
+    const voteNo = document.getElementById('voteNo');
+    const voteAbstain = document.getElementById('voteAbstain');
+    const toast = document.getElementById('toast');
+    const connectionStatus = document.getElementById('connectionStatus');
+    
+    // Initialize voter list
+    function renderVoters() {
+      voterList.innerHTML = voters.map(v => `
+        <div class="voter ${v.hasVoted ? 'voted' : ''}" data-id="${v.id}">
+          <div>${v.name}</div>
+          <div class="status">${v.hasVoted ? '✓ Already voted' : 'Ready to vote'}</div>
+        </div>
+      `).join('');
+      
+      // Add click handlers
+      document.querySelectorAll('.voter').forEach(el => {
+        el.addEventListener('click', () => selectVoter(el.dataset.id));
+      });
+    }
+    
+    // Select voter
+    function selectVoter(voterId) {
+      selectedVoter = voters.find(v => v.id === voterId);
+      
+      if (selectedVoter.hasVoted) {
+        showToast('This voter has already cast their vote!');
+        return;
+      }
+      
+      // Update UI
+      document.querySelectorAll('.voter').forEach(el => el.classList.remove('selected'));
+      document.querySelector(`[data-id="${voterId}"]`).classList.add('selected');
+      
+      ballotStatus.textContent = `Logged in as: ${selectedVoter.name}`;
+      voteYes.disabled = false;
+      voteNo.disabled = false;
+      voteAbstain.disabled = false;
+    }
+    
+    // Cast vote
+    async function castVote(choice) {
+      if (!selectedVoter) return;
+      
+      const btn = choice === 'yes' ? voteYes : choice === 'no' ? voteNo : voteAbstain;
+      btn.disabled = true;
+      btn.textContent = '⏳ Submitting to blockchain...';
+      
+      try {
+        // Simulate blockchain transaction (in production, call smart contract)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Record vote
+        results[choice]++;
+        selectedVoter.hasVoted = true;
+        
+        // Update UI
+        updateResults();
+        renderVoters();
+        
+        ballotStatus.textContent = `Vote recorded! Hash: 0x${Math.random().toString(16).slice(2, 10)}...`;
+        showToast('✅ Vote successfully recorded on blockchain!');
+        
+        // Reset buttons
+        voteYes.textContent = '✅ Yes';
+        voteNo.textContent = '❌ No';
+        voteAbstain.textContent = '➖ Abstain';
+        voteYes.disabled = true;
+        voteNo.disabled = true;
+        voteAbstain.disabled = true;
+        
+      } catch (err) {
+        showToast('❌ Vote failed: ' + err.message);
+        btn.disabled = false;
+      }
+    }
+    
+    // Update results display
+    function updateResults() {
+      const total = results.yes + results.no + results.abstain;
+      const max = Math.max(total, 1);
+      
+      document.getElementById('yesCount').textContent = results.yes;
+      document.getElementById('noCount').textContent = results.no;
+      document.getElementById('abstainCount').textContent = results.abstain;
+      
+      document.getElementById('yesBar').style.width = (results.yes / max * 100) + '%';
+      document.getElementById('noBar').style.width = (results.no / max * 100) + '%';
+      document.getElementById('abstainBar').style.width = (results.abstain / max * 100) + '%';
+      
+      document.getElementById('totalVotes').textContent = total;
+    }
+    
+    // Show toast notification
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    // Simulate SSE (Server-Sent Events) - realtime updates
+    function simulateSSE() {
+      // Update connection status
+      setTimeout(() => {
+        connectionStatus.textContent = '🟢 Connected (SSE)';
+        connectionStatus.className = 'connection-status connected';
+      }, 1000);
+      
+      // Simulate incoming votes (for demo purposes)
+      // In production, this would be real SSE from the server
+    }
+    
+    // Event listeners
+    voteYes.addEventListener(() => castVote('yes'));
+    voteNo.addEventListener(() => castVote('no'));
+    voteAbstain.addEventListener(() => castVote('abstain'));
+    
+    // Initialize
+    renderVoters();
+    simulateSSE();
+  </script>
+</body>
+</html>

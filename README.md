@@ -6,39 +6,68 @@ Zero-Knowledge Decentralized Identity voting system for Fort Worth DAO.
 
 A secure, privacy-preserving voting system that uses:
 - **DID (Decentralized Identity)** — Self-sovereign identity for voters
-- **Zero-Knowledge Proofs** — Proved eligibility without revealing identity
+- **Zero-Knowledge Proofs** — Proved eligibility without revealing identity (future)
 - **Blockchain** — Immutable vote recording
+
+## Demo Features (MVP)
+
+✅ **Voter Registration** — Synthetic identity dataset (3 demo voters)  
+✅ **Secure Voting** — Each voter can only vote once  
+✅ **Realtime Updates** — SSE-style live vote tallying  
+✅ **Offline Backup** — LocalStorage persists votes  
+✅ **Blockchain Ready** — Smart contract for production deployment
+
+## Quick Demo
+
+### Option 1: Open in Browser
+Simply open `frontend/index.html` in any browser to see the working demo.
+
+### Option 2: Run Local Server
+```bash
+cd frontend
+python3 -m http.server 8080
+# Then open http://localhost:8080
+```
 
 ## Architecture
 
 ```
 ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Voter     │────▶│  ZK Proof   │────▶│  Smart      │
-│  (DID)      │     │  Generator  │     │  Contract   │
+│   Voter     │────▶│  Identity   │────▶│  Smart      │
+│  (DID)      │     │  Registry   │     │  Contract   │
 └─────────────┘     └─────────────┘     └─────────────┘
                            │                    │
                            ▼                    ▼
                     ┌─────────────┐     ┌─────────────┐
-                    │  Identity   │     │  Vote       │
-                    │  Registry   │     │  Tally       │
+                    │  Frontend  │     │  Vote       │
+                    │  (HTML/JS) │     │  Tally      │
                     └─────────────┘     └─────────────┘
 ```
 
-## Tech Stack
+## Project Structure
 
-- **Smart Contracts**: Solidity (Hardhat)
-- **ZK Circuits**: Circom
-- **DID**: Ceramic Network / Polygon ID
-- **Frontend**: React / Next.js
-- **Backend**: Node.js
+```
+├── frontend/
+│   └── index.html      # Working voting demo
+├── contracts/
+│   └── ZKVoting.sol    # Smart contract
+├── circuits/
+│   └── vote.circom     # ZK circuit (future)
+├── scripts/
+│   └── deploy.js       # Deployment script
+├── test/
+│   └── voting.js       # Contract tests
+├── hardhat.config.js   # Hardhat config
+└── README.md
+```
 
-## Getting Started
+## Getting Started (Development)
 
 ### Prerequisites
 
 - Node.js 18+
 - Hardhat
-- Circom 2.0+
+- Circom 2.0+ (for ZK circuits)
 
 ### Install
 
@@ -58,15 +87,26 @@ npx hardhat compile
 npx hardhat test
 ```
 
-## Project Structure
+### Deploy to Sepolia
 
+```bash
+SEPOLIA_RPC_URL=your_rpc PRIVATE_KEY=your_key npx hardhat run scripts/deploy.js
 ```
-contracts/          # Solidity smart contracts
-circuits/           # ZK-SNARK circuits
-scripts/            # Deployment scripts
-test/               # Contract tests
-frontend/           # React frontend
-```
+
+## Demo Walkthrough
+
+1. **Select Voter** — Choose from 3 synthetic identities (Alice, Bob, Charlie)
+2. **Cast Vote** — Click Yes, No, or Abstain
+3. **Watch Live Results** — Vote counts update in real-time
+4. **Try Double Voting** — Attempting to vote again shows "Already voted"
+
+## Future Enhancements
+
+- [ ] Real ZK proof verification
+- [ ] Actual DID integration (Ceramic/Polygon ID)
+- [ ] Post-quantum cryptography
+- [ ] Multi-chain support
+- [ ] Offline sync protocol
 
 ## License
 
