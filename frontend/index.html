@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZK DID Voting Demo</title>
+  <title>ZK DID Voting - Offline Capable</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -16,6 +16,19 @@
     .container { max-width: 800px; margin: 0 auto; }
     h1 { text-align: center; margin-bottom: 0.5rem; }
     .subtitle { text-align: center; color: #888; margin-bottom: 2rem; }
+    
+    .status-banner {
+      background: rgba(74, 222, 128, 0.2);
+      border: 1px solid #4ade80;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .status-banner.offline {
+      background: rgba(248, 113, 113, 0.2);
+      border-color: #f87171;
+    }
     
     .connect-section {
       text-align: center;
@@ -43,30 +56,45 @@
       text-align: center;
     }
     
-    .voters-section {
+    .backup-section {
       background: rgba(255,255,255,0.05);
       border-radius: 12px;
       padding: 1.5rem;
       margin-bottom: 2rem;
     }
-    .voters-section h2 { margin-bottom: 1rem; color: #4ade80; }
-    .voter-list { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .voter {
+    .backup-section h2 { margin-bottom: 1rem; color: #fbbf24; }
+    .backup-actions { display: flex; gap: 1rem; margin-bottom: 1rem; }
+    .backup-btn {
+      flex: 1;
+      padding: 0.75rem;
       background: rgba(255,255,255,0.1);
-      padding: 0.75rem 1rem;
+      border: none;
       border-radius: 8px;
+      color: #fff;
       cursor: pointer;
       transition: all 0.2s;
-      border: 2px solid transparent;
     }
-    .voter:hover { background: rgba(255,255,255,0.15); }
-    .voter.selected { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
-    .voter .status {
-      font-size: 0.75rem;
-      color: #888;
-      margin-top: 0.25rem;
+    .backup-btn:hover { background: rgba(255,255,255,0.2); }
+    .backup-info { font-size: 0.85rem; color: #888; }
+    .backup-info code { background: rgba(0,0,0,0.3); padding: 0.2rem 0.4rem; border-radius: 4px; }
+    
+    .offline-votes {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
     }
-    .voter.voted .status { color: #f87171; }
+    .offline-votes h2 { margin-bottom: 1rem; color: #f472b6; }
+    .offline-vote {
+      background: rgba(0,0,0,0.3);
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .offline-vote .timestamp { color: #666; font-size: 0.75rem; }
+    .offline-vote .status { color: #fbbf24; font-size: 0.75rem; }
+    .offline-vote.synced .status { color: #4ade80; }
     
     .ballot-section {
       background: rgba(255,255,255,0.05);
@@ -127,9 +155,11 @@
       font-weight: 600;
       opacity: 0;
       transition: opacity 0.3s;
+      z-index: 1000;
     }
     .toast.show { opacity: 1; }
     .toast.error { background: #f87171; color: #fff; }
+    .toast.warning { background: #fbbf24; color: #000; }
     
     .connection-status {
       position: fixed;
@@ -174,11 +204,15 @@
   </style>
 </head>
 <body>
-  <div class="connection-status disconnected" id="connectionStatus">Disconnected</div>
+  <div class="connection-status disconnected" id="connectionStatus">Offline Mode</div>
   
   <div class="container">
     <h1>🗳️ ZK DID Voting</h1>
-    <p class="subtitle">Fort Worth DAO — Blockchain Voting on Sepolia</p>
+    <p class="subtitle">Fort Worth DAO — Offline Capable Blockchain Voting</p>
+    
+    <div class="status-banner" id="statusBanner">
+      <span id="statusText">🟢 Online - Connected to blockchain</span>
+    </div>
     
     <div class="connect-section">
       <button class="connect-btn" id="connectBtn">Connect Wallet</button>
@@ -189,9 +223,28 @@
       <div>Network: <span id="networkName">Sepolia Testnet</span></div>
     </div>
     
+    <div class="backup-section">
+      <h2>💾 Offline Backup</h2>
+      <div class="backup-actions">
+        <button class="backup-btn" id="exportBtn">📤 Export Votes</button>
+        <button class="backup-btn" id="importBtn">📥 Import Votes</button>
+        <input type="file" id="importFile" accept=".json" style="display:none">
+      </div>
+      <p class="backup-info">
+        Votes are stored locally in your browser and can be exported as <code>votes-backup.json</code>. 
+        Import to sync offline votes when back online.
+      </p>
+    </div>
+    
+    <div class="offline-votes" id="offlineVotesSection" style="display: none;">
+      <h2>📝 Pending Offline Votes</h2>
+      <div id="offlineVotesList"></div>
+      <button class="backup-btn" id="syncBtn" style="margin-top: 1rem;">🔄 Sync to Blockchain</button>
+    </div>
+    
     <div class="ballot-section">
       <h2>Cast Your Vote</h2>
-      <div class="ballot-status" id="ballotStatus">Connect wallet to vote</div>
+      <div class="ballot-status" id="ballotStatus">Connect wallet to vote (or vote offline)</div>
       <button class="vote-btn" id="voteYes" disabled>✅ Yes</button>
       <button class="vote-btn" id="voteNo" disabled>❌ No</button>
       <button class="vote-btn" id="voteAbstain" disabled>➖ Abstain</button>
@@ -218,7 +271,7 @@
         </div>
       </div>
       <p style="margin-top: 1rem; color: #666; font-size: 0.9rem;">
-        Total Votes: <span id="totalVotes">0</span> | Blockchain: Sepolia
+        Total Votes: <span id="totalVotes">0</span> | Blockchain: Sepolia | Mode: <span id="modeText">Online</span>
       </p>
     </div>
     
@@ -231,7 +284,123 @@
   
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // Contract configuration
+    // ============ OFFLINE STORAGE ============
+    const STORAGE_KEY = 'zk_voting_offline_votes';
+    const VOTES_KEY = 'zk_voting_cached_results';
+    
+    // Load offline votes from localStorage
+    function loadOfflineVotes() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+    
+    // Save offline votes to localStorage
+    function saveOfflineVotes(votes) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
+    }
+    
+    // Add a pending offline vote
+    function addOfflineVote(choice, walletAddr) {
+      const votes = loadOfflineVotes();
+      const vote = {
+        id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+        choice: choice,
+        wallet: walletAddr,
+        timestamp: new Date().toISOString(),
+        synced: false,
+        txHash: null
+      };
+      votes.push(vote);
+      saveOfflineVotes(votes);
+      renderOfflineVotes();
+      return vote;
+    }
+    
+    // Mark vote as synced
+    function markVoteSynced(voteId, txHash) {
+      const votes = loadOfflineVotes();
+      const vote = votes.find(v => v.id === voteId);
+      if (vote) {
+        vote.synced = true;
+        vote.txHash = txHash;
+        saveOfflineVotes(votes);
+        renderOfflineVotes();
+      }
+    }
+    
+    // Get pending (unsynced) votes
+    function getPendingVotes() {
+      return loadOfflineVotes().filter(v => !v.synced);
+    }
+    
+    // Export votes to JSON file
+    function exportVotes() {
+      const data = {
+        exported: new Date().toISOString(),
+        votes: loadOfflineVotes(),
+        cachedResults: localStorage.getItem(VOTES_KEY)
+      };
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `votes-backup-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Votes exported!', false);
+    }
+    
+    // Import votes from JSON file
+    function importVotes(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.votes && Array.isArray(data.votes)) {
+            // Merge with existing votes
+            const existing = loadOfflineVotes();
+            const existingIds = new Set(existing.map(v => v.id));
+            const newVotes = data.votes.filter(v => !existingIds.has(v.id));
+            
+            saveOfflineVotes([...existing, ...newVotes]);
+            renderOfflineVotes();
+            showToast(`Imported ${newVotes.length} votes!`, false);
+          }
+        } catch (err) {
+          showToast('Invalid backup file!', true);
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    // Render pending offline votes
+    function renderOfflineVotes() {
+      const votes = loadOfflineVotes();
+      const pending = votes.filter(v => !v.synced);
+      const section = document.getElementById('offlineVotesSection');
+      const list = document.getElementById('offlineVotesList');
+      
+      if (pending.length === 0) {
+        section.style.display = 'none';
+        return;
+      }
+      
+      section.style.display = 'block';
+      list.innerHTML = pending.map(v => `
+        <div class="offline-vote">
+          <div>Choice: ${v.choice === 0 ? 'Yes' : v.choice === 1 ? 'No' : 'Abstain'}</div>
+          <div class="timestamp">${new Date(v.timestamp).toLocaleString()}</div>
+          <div class="status">⏳ Pending sync</div>
+        </div>
+      `).join('');
+    }
+    
+    // ============ BLOCKCHAIN ============
     const CONTRACT_ADDRESS = '0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e';
     const CONTRACT_ABI = [
       "function vote(uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata _proof) external",
@@ -246,7 +415,7 @@
     let signer;
     let contract;
     let userAddress = null;
-    let votedChoices = new Set();
+    let isOnline = navigator.onLine;
     
     // DOM elements
     const connectBtn = document.getElementById('connectBtn');
@@ -259,6 +428,35 @@
     const txHashDiv = document.getElementById('txHash');
     const toast = document.getElementById('toast');
     const connectionStatus = document.getElementById('connectionStatus');
+    const statusBanner = document.getElementById('statusBanner');
+    const statusText = document.getElementById('statusText');
+    const modeText = document.getElementById('modeText');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
+    const importFile = document.getElementById('importFile');
+    const syncBtn = document.getElementById('syncBtn');
+    
+    // Check online status
+    function updateOnlineStatus() {
+      isOnline = navigator.onLine;
+      if (isOnline) {
+        connectionStatus.textContent = '🟢 Online';
+        connectionStatus.className = 'connection-status connected';
+        statusBanner.classList.remove('offline');
+        statusText.textContent = '🟢 Online - Connected to blockchain';
+        modeText.textContent = 'Online';
+      } else {
+        connectionStatus.textContent = '🔴 Offline';
+        connectionStatus.className = 'connection-status disconnected';
+        statusBanner.classList.add('offline');
+        statusText.textContent = '🔴 Offline Mode - Votes saved locally';
+        modeText.textContent = 'Offline';
+      }
+    }
+    
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
     
     // Connect wallet
     async function connectWallet() {
@@ -290,7 +488,7 @@
         connectBtn.textContent = 'Connected';
         connectBtn.disabled = true;
         
-        ballotStatus.textContent = 'Connected! Cast your vote.';
+        ballotStatus.textContent = 'Connected! Cast your vote (or go offline to vote locally)';
         voteYes.disabled = false;
         voteNo.disabled = false;
         voteAbstain.disabled = false;
@@ -304,10 +502,6 @@
         // Listen for votes
         contract.on("VoteCast", (voter, choice, nullifierHash, event) => {
           updateResults();
-          if (voter.toLowerCase() === userAddress.toLowerCase()) {
-            votedChoices.add(choice.toNumber());
-            showToast('Vote confirmed on blockchain!');
-          }
         });
         
       } catch (err) {
@@ -316,37 +510,40 @@
       }
     }
     
-    // Cast vote
+    // Cast vote (online or offline)
     async function castVote(choice) {
-      if (!contract || !signer) {
-        showToast('Please connect wallet first!', true);
+      const btn = choice === 0 ? voteYes : choice === 1 ? voteNo : voteAbstain;
+      const originalText = btn.textContent;
+      
+      if (!isOnline || !contract) {
+        // Offline mode - save locally
+        const wallet = userAddress || 'offline-' + Date.now();
+        addOfflineVote(choice, wallet);
+        btn.textContent = '✓ Saved Offline!';
+        showToast('Vote saved locally! Will sync when online.', false, true);
+        
+        // Update local results
+        updateLocalResults(choice);
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+        }, 2000);
         return;
       }
       
-      const btn = choice === 0 ? voteYes : choice === 1 ? voteNo : voteAbstain;
-      const originalText = btn.textContent;
+      // Online mode - send to blockchain
       btn.disabled = true;
       btn.textContent = '⏳ Confirm in wallet...';
       
       try {
-        // Generate nullifier hash
-        const nullifierHash = ethers.utils.keccak256(
-          ethers.utils.randomBytes(32)
-        );
-        
-        // Empty proof for now (simplified)
+        const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
         const proof = [
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          ethers.constants.HashZero
+          ethers.constants.HashZero, ethers.constants.HashZero,
+          ethers.constants.HashZero, ethers.constants.HashZero,
+          ethers.constants.HashZero, ethers.constants.HashZero,
+          ethers.constants.HashZero, ethers.constants.HashZero
         ];
         
-        // Send transaction
         const tx = await contract.vote(choice, nullifierHash, proof);
         
         btn.textContent = '⏳ Mining...';
@@ -356,8 +553,6 @@
         await tx.wait();
         
         showToast('✅ Vote recorded on blockchain!');
-        votedChoices.add(choice);
-        
         await updateResults();
         
         btn.textContent = '✓ Voted!';
@@ -370,37 +565,113 @@
       }
     }
     
-    // Update results from contract
+    // Sync pending offline votes
+    async function syncOfflineVotes() {
+      if (!contract || !signer) {
+        showToast('Connect wallet first to sync!', true);
+        return;
+      }
+      
+      const pending = getPendingVotes();
+      if (pending.length === 0) {
+        showToast('No pending votes to sync!', false);
+        return;
+      }
+      
+      syncBtn.disabled = true;
+      syncBtn.textContent = '⏳ Syncing...';
+      
+      for (const vote of pending) {
+        try {
+          const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
+          const proof = [
+            ethers.constants.HashZero, ethers.constants.HashZero,
+            ethers.constants.HashZero, ethers.constants.HashZero,
+            ethers.constants.HashZero, ethers.constants.HashZero,
+            ethers.constants.HashZero, ethers.constants.HashZero
+          ];
+          
+          const tx = await contract.vote(vote.choice, nullifierHash, proof);
+          await tx.wait();
+          
+          markVoteSynced(vote.id, tx.hash);
+          showToast(`Synced vote ${vote.id.slice(0,8)}...`, false);
+        } catch (err) {
+          console.error('Sync error:', err);
+          showToast('Error syncing: ' + err.message, true);
+        }
+      }
+      
+      syncBtn.disabled = false;
+      syncBtn.textContent = '🔄 Sync to Blockchain';
+      await updateResults();
+    }
+    
+    // Update results from contract or local cache
     async function updateResults() {
-      if (!contract) return;
+      if (!contract || !isOnline) {
+        // Try to load from local cache
+        try {
+          const cached = JSON.parse(localStorage.getItem(VOTES_KEY));
+          if (cached) {
+            displayResults(cached.yes, cached.no, cached.abstain);
+          }
+        } catch (e) {}
+        return;
+      }
       
       try {
         const yes = await contract.getVoteCount(0);
         const no = await contract.getVoteCount(1);
         const abstain = await contract.getVoteCount(2);
         
-        const total = yes.add(no).add(abstain);
-        const max = total.gt(0) ? total : ethers.constants.One;
+        // Cache results
+        localStorage.setItem(VOTES_KEY, JSON.stringify({
+          yes: yes.toNumber(),
+          no: no.toNumber(),
+          abstain: abstain.toNumber(),
+          updated: Date.now()
+        }));
         
-        document.getElementById('yesCount').textContent = yes.toString();
-        document.getElementById('noCount').textContent = no.toString();
-        document.getElementById('abstainCount').textContent = abstain.toString();
-        
-        document.getElementById('yesBar').style.width = yes.mul(100).div(max).toString() + '%';
-        document.getElementById('noBar').style.width = no.mul(100).div(max).toString() + '%';
-        document.getElementById('abstainBar').style.width = abstain.mul(100).div(max).toString() + '%';
-        
-        document.getElementById('totalVotes').textContent = total.toString();
-        
+        displayResults(yes.toNumber(), no.toNumber(), abstain.toNumber());
       } catch (err) {
         console.error('Error fetching results:', err);
       }
     }
     
+    function updateLocalResults(choice) {
+      let cached = { yes: 0, no: 0, abstain: 0 };
+      try {
+        cached = JSON.parse(localStorage.getItem(VOTES_KEY)) || cached;
+      } catch (e) {}
+      
+      if (choice === 0) cached.yes++;
+      else if (choice === 1) cached.no++;
+      else cached.abstain++;
+      
+      localStorage.setItem(VOTES_KEY, JSON.stringify(cached));
+      displayResults(cached.yes, cached.no, cached.abstain);
+    }
+    
+    function displayResults(yes, no, abstain) {
+      const total = yes + no + abstain;
+      const max = total > 0 ? total : 1;
+      
+      document.getElementById('yesCount').textContent = yes;
+      document.getElementById('noCount').textContent = no;
+      document.getElementById('abstainCount').textContent = abstain;
+      
+      document.getElementById('yesBar').style.width = (yes / max * 100) + '%';
+      document.getElementById('noBar').style.width = (no / max * 100) + '%';
+      document.getElementById('abstainBar').style.width = (abstain / max * 100) + '%';
+      
+      document.getElementById('totalVotes').textContent = total;
+    }
+    
     // Show toast
-    function showToast(message, isError = false) {
+    function showToast(message, isError = false, isWarning = false) {
       toast.textContent = message;
-      toast.className = 'toast show' + (isError ? ' error' : '');
+      toast.className = 'toast show' + (isError ? ' error' : '') + (isWarning ? ' warning' : '');
       setTimeout(() => toast.classList.remove('show'), 5000);
     }
     
@@ -409,6 +680,12 @@
     voteYes.addEventListener(() => castVote(0));
     voteNo.addEventListener(() => castVote(1));
     voteAbstain.addEventListener(() => castVote(2));
+    exportBtn.addEventListener('click', exportVotes);
+    importBtn.addEventListener('click', () => importFile.click());
+    importFile.addEventListener('change', (e) => {
+      if (e.target.files[0]) importVotes(e.target.files[0]);
+    });
+    syncBtn.addEventListener('click', syncOfflineVotes);
     
     // Check if already connected
     if (typeof window.ethereum !== 'undefined') {
@@ -422,6 +699,10 @@
         location.reload();
       });
     }
+    
+    // Load offline votes on start
+    renderOfflineVotes();
+    updateResults();
   </script>
 </body>
 </html>
