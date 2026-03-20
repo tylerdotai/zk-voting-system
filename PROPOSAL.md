@@ -5,7 +5,7 @@
 **Project Name:** ZK DID Voting System  
 **Organization:** Fort Worth DAO  
 **Bounty:** Zero Knowledge DID Blockchain Voting System ($2,500)  
-**Repository:** https://codeberg.org/tylerdotai/zk-voting-system
+**Repository:** https://github.com/tylerdotai/zk-voting-system
 
 ---
 
@@ -97,7 +97,7 @@ Our implementation enables:
 
 ## Submission
 
-- **Repository:** https://codeberg.org/tylerdotai/zk-voting-system
+- **Repository:** https://github.com/tylerdotai/zk-voting-system
 - **Live Contract:** https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e
 - **Demo Video:** [To be added]
 - **Author:** Tyler Delano
