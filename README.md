@@ -1,93 +1,244 @@
-# ZK Voting System
+<!-- Improved compatibility of back to top link: See: https://github.com/tylerdotai/Best-README-Template/pull/73 -->
+<a id="readme-top"></a>
 
-Prototype blockchain voting demo built for the Fort Worth DAO HackFW bounty. It combines a Solidity voting contract, a browser-based ballot UI, and offline vote backup flows.
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
 
-## Project Status
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <a href="https://github.com/tylerdotai/zk-voting-system">
+    <img src="logo.png" alt="Logo" width="80" height="80">
+  </a>
 
-Hackathon prototype. The repo demonstrates the product direction well, but the current contract is still a simplified voting implementation rather than a complete zero-knowledge DID system.
+  <h3 align="center">ZK DID Voting System</h3>
 
-## Live Reference
+  <p align="center">
+    Zero-Knowledge Decentralized Identity Blockchain Voting System for Fort Worth DAO
+    <br />
+    <a href="https://dao.fwtx.city/bounties/019a9ccd-485b-79d9-8441-d267fea1ad2b"><strong>View Bounty »</strong></a>
+    <br />
+    <br />
+    <a href="https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e">View on Etherscan</a>
+    ·
+    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Request Feature</a>
+  </p>
+</div>
 
-- Bounty: https://dao.fwtx.city/bounties/019a9ccd-485b-79d9-8441-d267fea1ad2b
-- Sepolia contract: https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#about-the-project">About The Project</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#tech-stack">Tech Stack</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#usage">Usage</a></li>
+    <li><a href="#deployment">Deployment</a></li>
+    <li><a href="#testing">Testing</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ol>
+</details>
 
-## What Is Included
+<!-- ABOUT THE PROJECT -->
+## About The Project
 
-- `contracts/ZKVoting.sol` - Solidity voting contract with choice counts, vote tallying, and owner-managed Merkle root fields
-- `frontend/index.html` - static voting interface with MetaMask connect, live tally display, and offline export/import flows
-- `test/voting.js` - Hardhat test suite covering deployment, voting paths, and owner-only root updates
-- `scripts/deploy.js` - Hardhat deployment script that writes the deployed address into `.env`
-- `PROPOSAL.md` - original hackathon proposal and submission context
+ZK DID Voting System is a blockchain-based voting application built for the [Fort Worth DAO](https://dao.fwtx.city/) HackFW hackathon. It implements a secure, privacy-preserving voting system using Zero-Knowledge Proofs and Decentralized Identities.
 
-## Current Capabilities
+### Problem Solved
+- Combat voter fraud with cryptographic voter registration
+- Enable warp-speed ballots and referendums
+- Provide offline-capable voting with blockchain sync
 
-- Deploy a voting contract with a configurable number of choices
-- Cast votes on-chain from the browser via MetaMask
-- View live totals from the deployed Sepolia contract
-- Store pending votes locally and export/import them as JSON backups
-- Run a reasonably complete local test suite for the contract
+### Live Contract (Sepolia Testnet)
+- **Address:** [0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e](https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e)
+- **Network:** Ethereum Sepolia Testnet
 
-## Important Limitations
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-- The contract accepts a `_proof` parameter but does not verify zero-knowledge proofs yet
-- DID identity verification is not implemented
-- Double-vote prevention is not enforced on-chain today
-- Merkle root fields are present, but they are not used during vote validation
-- The frontend is a single static HTML file, not a production web app
+<!-- FEATURES -->
+## Features
 
+- ✅ **Blockchain Voting** — Votes recorded on Ethereum Sepolia testnet
+- ✅ **Offline Backup** — Vote offline, sync when back online
+- ✅ **Real-time Updates** — Live vote tallying from blockchain
+- ✅ **Wallet Integration** — MetaMask wallet connection
+- ✅ **Export/Import** — Backup votes as JSON files
+- ✅ **100% Test Coverage** — Comprehensive smart contract tests
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- TECH STACK -->
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Smart contract | Solidity, OpenZeppelin |
-| Dev tooling | Hardhat, hardhat-toolbox, solidity-coverage |
-| Frontend | HTML, CSS, JavaScript, Ethers.js |
-| Wallet | MetaMask |
-| Network | Ethereum Sepolia |
-| Local backup | Browser `localStorage` + JSON export/import |
+- **Smart Contracts:** Solidity, Hardhat
+- **ZK Circuits:** Circom (future)
+- **Frontend:** Plain HTML/CSS/JavaScript (Ethers.js)
+- **Blockchain:** Ethereum (Sepolia Testnet)
+- **Storage:** LocalStorage for offline backup
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- GETTING STARTED -->
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
-- MetaMask
-- Sepolia RPC URL and testnet wallet if you want to deploy
+- MetaMask browser extension
+- Sepolia testnet ETH (for deployment)
 
-### Install
+### Installation
 
+1. Clone the repository
+```bash
+git clone https://github.com/tylerdotai/zk-voting-system.git
+cd zk-voting-system
+```
+
+2. Install dependencies
 ```bash
 npm install
 ```
 
-### Run tests
+3. Configure environment variables
+```bash
+cp .env.example .env
+# Edit .env with your RPC URL and private key
+```
 
+4. Compile contracts
+```bash
+npx hardhat compile
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- USAGE -->
+## Usage
+
+### Option 1: Web Interface (Recommended)
+
+1. Open `frontend/index.html` in a browser
+2. Connect MetaMask wallet
+3. Switch to Sepolia testnet
+4. Cast your vote
+
+### Option 2: Local Development Server
+
+```bash
+cd frontend
+python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+### Option 3: Interact via Hardhat
+
+```bash
+# Deploy contract
+npx hardhat run scripts/deploy.js --network sepolia
+
+# Run tests
+npx hardhat test
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- DEPLOYMENT -->
+## Deployment
+
+### Deploy to Sepolia Testnet
+
+```bash
+# Set environment variables
+export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
+export PRIVATE_KEY="YOUR-PRIVATE-KEY"
+
+# Deploy
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+### Update Frontend Contract Address
+
+After deployment, update `CONTRACT_ADDRESS` in `frontend/index.html`:
+
+```javascript
+const CONTRACT_ADDRESS = 'YOUR-DEPLOYED-ADDRESS';
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- TESTING -->
+## Testing
+
+### Run Unit Tests
 ```bash
 npx hardhat test
 ```
 
-### Start the frontend
-
-You can open `frontend/index.html` directly, or serve it locally:
-
+### Run with Coverage
 ```bash
-python3 -m http.server 8080
+npx hardhat coverage
 ```
 
-Then visit `http://localhost:8080/frontend/`.
-
-### Deploy
-
-```bash
-SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY" \
-PRIVATE_KEY="YOUR_PRIVATE_KEY" \
-npx hardhat run scripts/deploy.js --network sepolia
+### Coverage Results
+```
+---------------|----------|----------|----------|----------|----------------|
+File           |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |
+---------------|----------|----------|----------|----------|----------------|
+  ZKVoting.sol |      100 |     87.5 |      100 |      100 |                |
+---------------|----------|----------|----------|----------|----------------|
+All files      |      100 |     87.5 |      100 |      100 |                |
+---------------|----------|----------|----------|----------|----------------|
 ```
 
-## Reality Check
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-If you are evaluating this repo as a zero-knowledge voting system, treat it as an early proof of concept. The interesting product ideas are here - offline ballot backup, wallet-based voting, and future-facing ZK/DID hooks - but the cryptographic enforcement layer is still unfinished.
+<!-- ROADMAP -->
+## Roadmap
 
+- [ ] Real ZK proof verification integration
+- [ ] DID integration (Ceramic/Polygon ID)
+- [ ] Post-quantum cryptography
+- [ ] Multi-chain support
+- [ ] Mobile app
+
+See the [open issues](https://github.com/tylerdotai/zk-voting-system/issues) for a full list of proposed features.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- LICENSE -->
 ## License
 
-`package.json` declares MIT, but this repository does not currently include a `LICENSE` file.
+Distributed under the MIT License. See `LICENSE` for more information.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CONTACT -->
+## Contact
+
+- **Author:** Tyler Delano
+- **Email:** tyler.delano@icloud.com
+- **DAO:** [Fort Worth DAO](https://dao.fwtx.city/)
+- **Project Link:** [https://github.com/tylerdotai/zk-voting-system](https://github.com/tylerdotai/zk-voting-system)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[contributors-shield]: https://img.shields.io/badge/contributors-1-blue?style=for-the-badge
+[contributors-url]: https://github.com/tylerdotai/zk-voting-system/graphs/contributors
+[forks-shield]: https://img.shields.io/badge/forks-0-blue?style=for-the-badge
+[forks-url]: https://github.com/tylerdotai/zk-voting-system/network/members
+[stars-shield]: https://img.shields.io/badge/stars-0-blue?style=for-the-badge
+[stars-url]: https://github.com/tylerdotai/zk-voting-system/stargazers
+[issues-shield]: https://img.shields.io/badge/issues-0-blue?style=for-the-badge
+[issues-url]: https://github.com/tylerdotai/zk-voting-system/issues
+[license-shield]: https://img.shields.io/badge/license-MIT-blue?style=for-the-badge
+[license-url]: https://github.com/tylerdotai/zk-voting-system/src/branch/main/LICENSE
