@@ -324,8 +324,10 @@
   
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
+    // For local Hardhat demo - update as needed
+    const LOCAL_RPC_URL = 'http://100.79.252.47:8545';
     // Contract configuration - DEPLOY THIS CONTRACT AND UPDATE ADDRESS
-    const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'; // UPDATE THIS
+    const CONTRACT_ADDRESS = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
     const ROB_RULES_ABI = [
       "event ChairUpdated(address indexed oldChair, address indexed newChair)",
       "event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair)",
@@ -363,14 +365,21 @@
       }
       
       try {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
+        // Use custom RPC for local Hardhat, window.ethereum for MetaMask
+        if (typeof window.ethereum !== 'undefined') {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+        } else {
+          provider = new ethers.providers.JsonRpcProvider(LOCAL_RPC_URL);
+        }
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         
         const network = await provider.getNetwork();
-        if (network.chainId.toString() !== '11155111') {
-          showToast('Please switch to Sepolia testnet!', true);
+        const chainId = network.chainId.toString();
+        // Accept Sepolia (11155111) or Hardhat (31337)
+        if (chainId !== '11155111' && chainId !== '31337') {
+          showToast('Please switch to Sepolia or Hardhat network!', true);
           return;
         }
         
