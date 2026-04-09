@@ -6,6 +6,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
+[![Build][build-shield]][build-url]
 
 <!-- PROJECT LOGO -->
 <br />
@@ -22,7 +23,7 @@
     <a href="https://dao.fwtx.city/bounties/019a9ccd-485b-79d9-8441-d267fea1ad2b"><strong>View Bounty »</strong></a>
     <br />
     <br />
-    <a href="https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e">View on Etherscan</a>
+    <a href="https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e">View ZKVoting on Etherscan</a>
     ·
     <a href="https://github.com/tylerdotai/zk-voting-system/issues">Report Bug</a>
     ·
@@ -37,6 +38,7 @@
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#tech-stack">Tech Stack</a></li>
+    <li><a href="#contracts">Smart Contracts</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#deployment">Deployment</a></li>
@@ -56,16 +58,20 @@ ZK DID Voting System is a blockchain-based voting application built for the [For
 - Combat voter fraud with cryptographic voter registration
 - Enable warp-speed ballots and referendums
 - Provide offline-capable voting with blockchain sync
+- Scale Rob's Rules parliamentary process for DAOs
 
-### Live Contract (Sepolia Testnet)
-- **Address:** [0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e](https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e)
-- **Network:** Ethereum Sepolia Testnet
+### Live Contracts (Sepolia Testnet)
+| Contract | Address |
+|----------|---------|
+| ZKVoting | [0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e](https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e) |
+| ZKVotingRobRules | Contact for deployment |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- FEATURES -->
 ## Features
 
+### ZKVoting — Simple Blockchain Voting
 - ✅ **Blockchain Voting** — Votes recorded on Ethereum Sepolia testnet
 - ✅ **Offline Backup** — Vote offline, sync when back online
 - ✅ **Real-time Updates** — Live vote tallying from blockchain
@@ -73,16 +79,45 @@ ZK DID Voting System is a blockchain-based voting application built for the [For
 - ✅ **Export/Import** — Backup votes as JSON files
 - ✅ **100% Test Coverage** — Comprehensive smart contract tests
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### ZKVotingRobRules — Rob's Rules Parliamentary Voting
+- ✅ **Full Parliamentary Flow** — Created → Seconded → Amendments → Voting → Passed/Failed
+- ✅ **Chair Role Management** — Designated chair creates and manages proposals
+- ✅ **Amendment System** — Members submit, chair approves amendments
+- ✅ **Timed Voting Periods** — Configurable voting duration
+- ✅ **Immutable Record** — All actions recorded on-chain
+
+<p align="right">(<a href="#readme-top">back to top)</p>
 
 <!-- TECH STACK -->
 ## Tech Stack
 
-- **Smart Contracts:** Solidity, Hardhat
+- **Smart Contracts:** Solidity 0.8.19, Hardhat, OpenZeppelin
 - **ZK Circuits:** Circom (future)
-- **Frontend:** Plain HTML/CSS/JavaScript (Ethers.js)
-- **Blockchain:** Ethereum (Sepolia Testnet)
+- **Frontend:** Plain HTML/CSS/JavaScript (Ethers.js v5)
+- **Blockchain:** Ethereum (Sepolia Testnet), Local Hardhat
 - **Storage:** LocalStorage for offline backup
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- CONTRACTS -->
+## Smart Contracts
+
+### ZKVoting.sol
+Simple yes/no/abstain voting with offline backup support.
+
+### ZKVotingRobRules.sol
+Full Rob's Rules of Order parliamentary process on-chain:
+
+```
+Proposal Lifecycle:
+1. Chair creates proposal (Created)
+2. Chair seconds proposal (Seconded)
+3. Members submit amendments
+4. Chair approves amendments
+5. Chair opens voting period
+6. Members vote on motion (Yes/No/Abstain)
+7. After voting ends → Finalized (Passed/Failed)
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -92,8 +127,8 @@ ZK DID Voting System is a blockchain-based voting application built for the [For
 ### Prerequisites
 
 - Node.js 18+
+- npm or yarn
 - MetaMask browser extension
-- Sepolia testnet ETH (for deployment)
 
 ### Installation
 
@@ -108,13 +143,7 @@ cd zk-voting-system
 npm install
 ```
 
-3. Configure environment variables
-```bash
-cp .env.example .env
-# Edit .env with your RPC URL and private key
-```
-
-4. Compile contracts
+3. Compile contracts
 ```bash
 npx hardhat compile
 ```
@@ -124,54 +153,70 @@ npx hardhat compile
 <!-- USAGE -->
 ## Usage
 
-### Option 1: Web Interface (Recommended)
+### ZKVoting — Simple Voting
 
-1. Open `frontend/index.html` in a browser
-2. Connect MetaMask wallet
-3. Switch to Sepolia testnet
-4. Cast your vote
-
-### Option 2: Local Development Server
-
+1. Start local frontend:
 ```bash
 cd frontend
 python3 -m http.server 8080
 # Open http://localhost:8080
 ```
 
-### Option 3: Interact via Hardhat
+2. Connect MetaMask and switch to Sepolia testnet
 
+3. Cast your vote
+
+### ZKVotingRobRules — Rob's Rules Parliamentary Voting
+
+1. Start local Hardhat node:
 ```bash
-# Deploy contract
-npx hardhat run scripts/deploy.js --network sepolia
-
-# Run tests
-npx hardhat test
+npx hardhat node
 ```
+
+2. Deploy RobRules contract (in another terminal):
+```bash
+npx hardhat run scripts/deploy-rob-rules.js --network hardhat
+```
+
+3. Start local frontend:
+```bash
+cd frontend
+python3 -m http.server 8080
+# Open http://localhost:8080/rob-rules.html
+```
+
+4. Connect MetaMask to Hardhat local network:
+   - RPC URL: `http://localhost:8545`
+   - Chain ID: `31337`
+
+5. As Chair, create proposals and manage the parliamentary process
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DEPLOYMENT -->
 ## Deployment
 
-### Deploy to Sepolia Testnet
+### Deploy ZKVoting to Sepolia
 
 ```bash
-# Set environment variables
 export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
 export PRIVATE_KEY="YOUR-PRIVATE-KEY"
 
-# Deploy
 npx hardhat run scripts/deploy.js --network sepolia
+```
+
+### Deploy ZKVotingRobRules to Sepolia
+
+```bash
+export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
+export PRIVATE_KEY="YOUR-PRIVATE-KEY"
+
+npx hardhat run scripts/deploy-rob-rules.js --network sepolia
 ```
 
 ### Update Frontend Contract Address
 
-After deployment, update `CONTRACT_ADDRESS` in `frontend/index.html`:
-
-```javascript
-const CONTRACT_ADDRESS = 'YOUR-DEPLOYED-ADDRESS';
-```
+After deployment, update the `CONTRACT_ADDRESS` in the frontend HTML file.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -188,29 +233,20 @@ npx hardhat test
 npx hardhat coverage
 ```
 
-### Coverage Results
-```
----------------|----------|----------|----------|----------|----------------|
-File           |  % Stmts | % Branch |  % Funcs |  % Lines |Uncovered Lines |
----------------|----------|----------|----------|----------|----------------|
-  ZKVoting.sol |      100 |     87.5 |      100 |      100 |                |
----------------|----------|----------|----------|----------|----------------|
-All files      |      100 |     87.5 |      100 |      100 |                |
----------------|----------|----------|----------|----------|----------------|
-```
-
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
 
+- [x] ZKVoting contract with basic voting
+- [x] Rob's Rules parliamentary flow (ZKVotingRobRules)
 - [ ] Real ZK proof verification integration
-- [ ] DID integration (Ceramic/Polygon ID)
-- [ ] Post-quantum cryptography
+- [ ] DID integration (Polygon ID)
 - [ ] Multi-chain support
 - [ ] Mobile app
+- [ ] Post-quantum cryptography
 
-See the [open issues](https://github.com/tylerdotai/zk-voting-system/issues) for a full list of proposed features.
+See the [open issues](https://github.com/tylerdotai/zk-voting-system/issues) for full details.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -242,3 +278,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 [issues-url]: https://github.com/tylerdotai/zk-voting-system/issues
 [license-shield]: https://img.shields.io/badge/license-MIT-blue?style=for-the-badge
 [license-url]: https://github.com/tylerdotai/zk-voting-system/src/branch/main/LICENSE
+[build-shield]: https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge
+[build-url]: https://github.com/tylerdotai/zk-voting-system/actions
