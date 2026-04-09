@@ -11,15 +11,15 @@ import "./GovVerifier.sol";
  * Flow:
  * 1. User proves credential via Polygon ID → GovVerifier.submitZKPResponse()
  * 2. GovVerifier._afterProofSubmit() → ZKVotingRobRulesWithCredentials.verifyCredential(user)
- * 3. All parliamentary actions require credentialVerified[user] == true
+ * 3. All parliamentary actions require allowedUsers[user] == true
  */
 contract ZKVotingRobRulesWithCredentials is Ownable {
     
     // Address of the GovVerifier contract
     GovVerifier public govVerifier;
     
-    // Track users who have verified their credentials
-    mapping(address => bool) public credentialVerified;
+    // Track users who have verified their credentials (via GovVerifier)
+    mapping(address => bool) public allowedUsers;
     
     // Chair role
     address public chair;
@@ -78,7 +78,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     modifier requiresCredential() {
-        require(credentialVerified[msg.sender], "Credential not verified");
+        require(allowedUsers[msg.sender], "Credential not verified");
         _;
     }
     
@@ -95,14 +95,14 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     // Credential Management
-    function verifyCredential(address _user) external {
-        // Anyone can call this - it will be called by the frontend after ZKP verification
-        credentialVerified[_user] = true;
+    function setAllowedUser(address _user) external {
+        // Called by GovVerifier after ZKP proof is verified
+        allowedUsers[_user] = true;
         emit CredentialVerified(_user);
     }
     
     function isCredentialVerified(address _user) public view returns (bool) {
-        return credentialVerified[_user];
+        return allowedUsers[_user];
     }
     
     // Chair Management

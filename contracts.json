@@ -1,0 +1,21 @@
+
+# Credential-Gated Voting Deployment
+# Deployed at: 2026-04-09T03:32:16.012Z
+# Network: hardhat
+# Deployer: 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+ZKVOTING_WITH_CREDS_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+GOV_VERIFIER_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+VOTING_CHAIR=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+
+# For frontend
+NEXT_PUBLIC_VOTING_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3
+NEXT_PUBLIC_GOV_VERIFIER_ADDRESS=0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
+
+# Flow:
+# 1. User connects wallet
+# 2. Frontend generates QR with proof request (Polygon ID)
+# 3. User scans QR → Polygon ID app generates ZK proof
+# 4. Proof submitted to GovVerifier.submitZKPResponse()
+# 5. GovVerifier._afterProofSubmit() → votingContract.setAllowedUser(user)
+# 6. User now allowed → can create proposals / vote

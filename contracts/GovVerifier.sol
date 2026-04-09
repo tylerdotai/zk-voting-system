@@ -61,9 +61,9 @@ contract GovVerifier is ZKPVerifier {
         
         // Call the voting contract to mark user as verified
         if (votingContract != address(0)) {
-            // Try to call verifyCredential on the voting contract
+            // Try to call setAllowedUser on the voting contract
             (bool success, ) = votingContract.call(
-                abi.encodeWithSignature("verifyCredential(address)", user)
+                abi.encodeWithSignature("setAllowedUser(address)", user)
             );
             if (success) {
                 emit CredentialVerified(user);

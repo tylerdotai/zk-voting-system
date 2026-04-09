@@ -11,7 +11,7 @@ import "./GovVerifier.sol";
  * Flow:
  * 1. User proves credential via Polygon ID → GovVerifier.submitZKPResponse()
  * 2. GovVerifier._afterProofSubmit() → setCredentialVerified(user)
- * 3. User calls vote() → only if credentialVerified[user] == true
+ * 3. User calls vote() → only if allowedUsers[user] == true
  */
 contract ZKVotingWithCredentials is Ownable {
     
@@ -19,7 +19,7 @@ contract ZKVotingWithCredentials is Ownable {
     GovVerifier public govVerifier;
     
     // Track users who have verified their credentials
-    mapping(address => bool) public credentialVerified;
+    mapping(address => bool) public allowedUsers;
     
     // Vote tracking
     mapping(address => bool) public hasVoted;
@@ -54,8 +54,8 @@ contract ZKVotingWithCredentials is Ownable {
      * @dev Manually verify a credential (for testing or manual approval)
      * @param _user Address to verify
      */
-    function verifyCredential(address _user) external onlyOwner {
-        credentialVerified[_user] = true;
+    function setAllowedUser(address _user) external onlyOwner {
+        allowedUsers[_user] = true;
         emit CredentialVerified(_user);
     }
     
@@ -65,7 +65,7 @@ contract ZKVotingWithCredentials is Ownable {
      * @param _user Address to check
      */
     function isCredentialVerified(address _user) public view returns (bool) {
-        return credentialVerified[_user];
+        return allowedUsers[_user];
     }
     
     /**
@@ -73,7 +73,7 @@ contract ZKVotingWithCredentials is Ownable {
      * @param _choice 0 = Yes, 1 = No, 2 = Abstain
      */
     function vote(uint256 _choice) external {
-        require(credentialVerified[msg.sender], "Credential not verified");
+        require(allowedUsers[msg.sender], "Credential not verified");
         require(!hasVoted[msg.sender], "Already voted");
         require(_choice < 3, "Invalid choice");
         
