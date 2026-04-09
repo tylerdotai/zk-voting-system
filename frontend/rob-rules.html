@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZK Voting - Rob's Rules Parliamentary Process</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 2rem;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 0.5rem; }
+    h2 { color: #4ade80; margin-bottom: 1rem; font-size: 1.2rem; }
+    .subtitle { text-align: center; color: #888; margin-bottom: 2rem; }
+    
+    .status-banner {
+      background: rgba(74, 222, 128, 0.2);
+      border: 1px solid #4ade80;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+    .status-banner.offline {
+      background: rgba(248, 113, 113, 0.2);
+      border-color: #f87171;
+    }
+    
+    .connect-section { text-align: center; margin-bottom: 2rem; }
+    .connect-btn {
+      background: #4ade80;
+      color: #000;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .connect-btn:hover { transform: scale(1.02); }
+    .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .wallet-info {
+      background: rgba(255,255,255,0.1);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      display: none;
+    }
+    .wallet-info div { margin: 0.3rem 0; }
+    
+    .section {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .proposal-list { display: flex; flex-direction: column; gap: 1rem; }
+    
+    .proposal-card {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .proposal-card:hover { background: rgba(255,255,255,0.12); transform: translateX(4px); }
+    .proposal-card.active { border-color: #4ade80; }
+    
+    .proposal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .proposal-id { color: #60a5fa; font-size: 0.85rem; }
+    .proposal-state {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .state-created { background: rgba(148, 163, 184, 0.3); color: #94a3b8; }
+    .state-seconded { background: rgba(251, 191, 36, 0.3); color: #fbbf24; }
+    .state-voting { background: rgba(74, 222, 128, 0.3); color: #4ade80; }
+    .state-passed { background: rgba(34, 197, 94, 0.3); color: #22c55e; }
+    .state-failed { background: rgba(248, 113, 113, 0.3); color: #f87171; }
+    
+    .proposal-desc { color: #e2e8f0; font-size: 0.95rem; }
+    .proposal-meta { color: #64748b; font-size: 0.8rem; margin-top: 0.5rem; }
+    
+    .votes-bar {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.75rem;
+      background: rgba(255,255,255,0.1);
+    }
+    .votes-yes { background: #22c55e; }
+    .votes-no { background: #ef4444; }
+    .votes-abstain { background: #64748b; }
+    
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .btn:hover:not(:disabled) { transform: scale(1.02); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #4ade80; color: #000; }
+    .btn-secondary { background: rgba(255,255,255,0.2); color: #fff; }
+    .btn-warning { background: #fbbf24; color: #000; }
+    .btn-danger { background: #f87171; color: #fff; }
+    
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; color: #94a3b8; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 1rem;
+    }
+    .form-group textarea { min-height: 100px; resize: vertical; }
+    
+    .detail-view { display: none; }
+    .detail-view.active { display: block; }
+    
+    .back-btn {
+      background: none;
+      border: none;
+      color: #60a5fa;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .back-btn:hover { text-decoration: underline; }
+    
+    .amendment-list { margin-top: 1rem; }
+    .amendment-item {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .amendment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+    .amendment-proposer { color: #60a5fa; font-size: 0.85rem; }
+    .amendment-status { font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; }
+    .amendment-status.pending { background: rgba(148, 163, 184, 0.3); color: #94a3b8; }
+    .amendment-status.approved { background: rgba(74, 222, 128, 0.3); color: #4ade80; }
+    
+    .vote-buttons { display: flex; gap: 1rem; margin-top: 1rem; }
+    .vote-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .vote-btn.yes { background: rgba(34, 197, 94, 0.3); color: #22c55e; border: 2px solid #22c55e; }
+    .vote-btn.no { background: rgba(239, 68, 68, 0.3); color: #ef4444; border: 2px solid #ef4444; }
+    .vote-btn.abstain { background: rgba(100, 116, 139, 0.3); color: #94a3b8; border: 2px solid #94a3b8; }
+    .vote-btn:hover { transform: scale(1.02); }
+    .vote-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    
+    .chair-controls {
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .chair-controls h3 { color: #fbbf24; margin-bottom: 0.75rem; font-size: 1rem; }
+    .chair-controls .btn { margin-right: 0.5rem; margin-top: 0.5rem; }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(255,255,255,0.95);
+      color: #000;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { background: #f87171; color: #fff; }
+    
+    .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem; }
+    .tab { padding: 0.5rem 1rem; background: none; border: none; color: #64748b; cursor: pointer; border-radius: 6px 6px 0 0; transition: all 0.2s; }
+    .tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .tab.active { color: #4ade80; background: rgba(74, 222, 128, 0.1); }
+    
+    .hidden { display: none !important; }
+    .address { font-family: monospace; color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🗳️ Rob's Rules Voting</h1>
+    <p class="subtitle">Parliamentary Process on Blockchain</p>
+    
+    <div class="status-banner" id="statusBanner">
+      <span id="statusText">🟢 Online - Connected to blockchain</span>
+    </div>
+    
+    <div class="connect-section">
+      <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+      <button class="connect-btn" id="disconnectBtn" style="display:none; background: #f87171; margin-left: 10px;">Disconnect</button>
+    </div>
+    
+    <div class="wallet-info" id="walletInfo">
+      <div>Connected: <span id="walletAddress"></span></div>
+      <div>Network: <span id="networkName">Sepolia Testnet</span></div>
+      <div>Role: <span id="userRole">Member</span></div>
+    </div>
+    
+    <!-- Main List View -->
+    <div class="section" id="listView">
+      <h2>📋 Active Proposals</h2>
+      <div class="proposal-list" id="proposalList">
+        <p style="color: #64748b; text-align: center; padding: 2rem;">No proposals yet</p>
+      </div>
+    </div>
+    
+    <!-- Proposal Detail View -->
+    <div class="detail-view" id="detailView">
+      <button class="back-btn" onclick="showListView()">← Back to Proposals</button>
+      
+      <div class="section">
+        <h2 id="detailTitle">Proposal #1</h2>
+        <p id="detailDesc" style="color: #e2e8f0; margin: 1rem 0;"></p>
+        <p class="proposal-meta">
+          Created: <span id="detailCreated"></span> | 
+          Chair: <span id="detailChair" class="address"></span>
+        </p>
+      </div>
+      
+      <!-- Chair Controls -->
+      <div class="chair-controls" id="chairControls" style="display: none;">
+        <h3>⚡ Chair Actions</h3>
+        <button class="btn btn-warning" id="btnSecond" onclick="secondProposal()">Second Motion</button>
+        <button class="btn btn-primary" id="btnOpenVoting" onclick="openVoting()">Open Voting (3 days)</button>
+        <button class="btn btn-secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting (custom)</button>
+      </div>
+      
+      <!-- Amendment Section -->
+      <div class="section" id="amendmentSection">
+        <h2>📝 Amendments</h2>
+        
+        <div class="form-group hidden" id="amendmentForm">
+          <textarea id="amendmentText" placeholder="Enter your amendment..."></textarea>
+          <button class="btn btn-secondary" style="margin-top: 0.5rem;" onclick="submitAmendment()">Submit Amendment</button>
+        </div>
+        
+        <div class="amendment-list" id="amendmentList"></div>
+      </div>
+      
+      <!-- Voting Section -->
+      <div class="section" id="votingSection" style="display: none;">
+        <h2>🗳️ Vote on Motion</h2>
+        <div class="vote-buttons">
+          <button class="vote-btn yes" id="voteYes" onclick="voteOnMotion(0)">✅ Yes</button>
+          <button class="vote-btn no" id="voteNo" onclick="voteOnMotion(1)">❌ No</button>
+          <button class="vote-btn abstain" id="voteAbstain" onclick="voteOnMotion(2)">➖ Abstain</button>
+        </div>
+        <p id="voteStatus" style="color: #64748b; margin-top: 1rem; text-align: center;"></p>
+      </div>
+      
+      <!-- Results Section -->
+      <div class="section" id="resultsSection">
+        <h2>📊 Current Results</h2>
+        <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; color: #22c55e;" id="yesCount">0</div>
+            <div style="color: #64748b; font-size: 0.85rem;">Yes</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; color: #ef4444;" id="noCount">0</div>
+            <div style="color: #64748b; font-size: 0.85rem;">No</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; color: #94a3b8;" id="abstainCount">0</div>
+            <div style="color: #64748b; font-size: 0.85rem;">Abstain</div>
+          </div>
+        </div>
+        <div class="votes-bar" id="votesBar">
+          <div class="votes-yes" id="votesBarYes" style="width: 33%"></div>
+          <div class="votes-no" id="votesBarNo" style="width: 33%"></div>
+          <div class="votes-abstain" id="votesBarAbstain" style="width: 34%"></div>
+        </div>
+        <p id="finalStatus" style="text-align: center; margin-top: 1rem; font-weight: 600;"></p>
+      </div>
+    </div>
+    
+    <!-- Create Proposal (Chair Only) -->
+    <div class="section" id="createSection" style="display: none;">
+      <h2>➕ New Proposal</h2>
+      <div class="form-group">
+        <label>Motion Description</label>
+        <textarea id="newProposalDesc" placeholder="Enter the motion..."></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="createProposal()">Create Proposal</button>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script>
+    // Contract configuration - DEPLOY THIS CONTRACT AND UPDATE ADDRESS
+    const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000'; // UPDATE THIS
+    const ROB_RULES_ABI = [
+      "event ChairUpdated(address indexed oldChair, address indexed newChair)",
+      "event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair)",
+      "event ProposalSeconded(uint256 indexed proposalId)",
+      "event AmendmentSubmitted(uint256 indexed proposalId, uint256 indexed amendmentId, address indexed proposer)",
+      "event AmendmentApproved(uint256 indexed proposalId, uint256 indexed amendmentId)",
+      "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)",
+      "event ProposalFinalized(uint256 indexed proposalId, uint8 finalState)",
+      "event VoteCast(address indexed voter, uint256 indexed proposalId, uint256 choice, bytes32 nullifierHash)",
+      "function chair() view returns (address)",
+      "function choiceCount() view returns (uint256)",
+      "function proposalCount() view returns (uint256)",
+      "function createProposal(string calldata _description) returns (uint256)",
+      "function secondProposal(uint256 _proposalId)",
+      "function submitAmendment(uint256 _proposalId, string calldata _description) returns (uint256)",
+      "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
+      "function openVoting(uint256 _proposalId, uint256 _duration)",
+      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
+      "function voteOnAmendment(uint256 _proposalId, uint256 _amendmentId, uint256 _choice)",
+      "function finalizeProposal(uint256 _proposalId)",
+      "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+      "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
+      "function proposals(uint256 _proposalId) view returns (string memory description, address chair, uint256 state, uint256 createdAt, uint256 secondedAt, uint256 votingStartsAt, uint256 votingEndsAt, uint256 yesVotes, uint256 noVotes, uint256 abstainVotes, uint256 amendmentCount)"
+    ];
+    
+    const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
+    const STATE_CLASSES = ['state-created', 'state-seconded', 'state-voting', 'state-passed', 'state-failed'];
+    
+    let provider, signer, contract, userAddress, currentProposalId = null;
+    
+    async function connectWallet() {
+      if (typeof window.ethereum === 'undefined') {
+        showToast('Please install MetaMask!', true);
+        return;
+      }
+      
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        
+        const network = await provider.getNetwork();
+        if (network.chainId.toString() !== '11155111') {
+          showToast('Please switch to Sepolia testnet!', true);
+          return;
+        }
+        
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, signer);
+        
+        document.getElementById('walletAddress').textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
+        document.getElementById('walletInfo').style.display = 'block';
+        document.getElementById('connectBtn').style.display = 'none';
+        document.getElementById('disconnectBtn').style.display = 'inline-block';
+        
+        await checkChairRole();
+        await refreshProposals();
+        
+        showToast('Wallet connected!');
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    function disconnect() {
+      userAddress = null;
+      signer = null;
+      contract = null;
+      document.getElementById('walletInfo').style.display = 'none';
+      document.getElementById('connectBtn').style.display = 'inline-block';
+      document.getElementById('disconnectBtn').style.display = 'none';
+      document.getElementById('createSection').style.display = 'none';
+    }
+    
+    async function checkChairRole() {
+      if (!contract) return;
+      try {
+        const chair = await contract.chair();
+        const isChair = chair.toLowerCase() === userAddress.toLowerCase();
+        document.getElementById('userRole').textContent = isChair ? 'Chair' : 'Member';
+        document.getElementById('createSection').style.display = isChair ? 'block' : 'none';
+        document.getElementById('chairControls').style.display = isChair ? 'block' : 'none';
+      } catch (e) {
+        console.error('Error checking chair role:', e);
+      }
+    }
+    
+    async function refreshProposals() {
+      if (!contract) return;
+      
+      try {
+        const count = await contract.proposalCount();
+        const list = document.getElementById('proposalList');
+        
+        if (count === 0) {
+          list.innerHTML = '<p style="color: #64748b; text-align: center; padding: 2rem;">No proposals yet</p>';
+          return;
+        }
+        
+        list.innerHTML = '';
+        
+        for (let i = count - 1; i >= 0; i--) {
+          const p = await contract.proposals(i);
+          const card = document.createElement('div');
+          card.className = 'proposal-card';
+          card.onclick = () => showProposalDetail(i);
+          
+          const stateClass = STATE_CLASSES[p.state] || 'state-created';
+          const total = parseInt(p.yesVotes) + parseInt(p.noVotes) + parseInt(p.abstainVotes);
+          const yesPct = total > 0 ? (parseInt(p.yesVotes) / total * 100) : 33;
+          const noPct = total > 0 ? (parseInt(p.noVotes) / total * 100) : 33;
+          const abstainPct = total > 0 ? (parseInt(p.abstainVotes) / total * 100) : 34;
+          
+          card.innerHTML = `
+            <div class="proposal-header">
+              <span class="proposal-id">#${i}</span>
+              <span class="proposal-state ${stateClass}">${STATES[p.state] || 'Unknown'}</span>
+            </div>
+            <div class="proposal-desc">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</div>
+            <div class="proposal-meta">
+              ${new Date(p.createdAt * 1000).toLocaleDateString()} • 
+              Yes: ${p.yesVotes} • No: ${p.noVotes} • Abstain: ${p.abstainVotes}
+            </div>
+            ${p.state >= 2 ? `
+            <div class="votes-bar" style="margin-top: 0.5rem;">
+              <div class="votes-yes" style="width: ${yesPct}%"></div>
+              <div class="votes-no" style="width: ${noPct}%"></div>
+              <div class="votes-abstain" style="width: ${abstainPct}%"></div>
+            </div>
+            ` : ''}
+          `;
+          
+          list.appendChild(card);
+        }
+      } catch (err) {
+        console.error('Error loading proposals:', err);
+      }
+    }
+    
+    async function showProposalDetail(id) {
+      currentProposalId = id;
+      const listView = document.getElementById('listView');
+      const detailView = document.getElementById('detailView');
+      
+      listView.style.display = 'none';
+      detailView.classList.add('active');
+      
+      await loadProposalDetail(id);
+    }
+    
+    async function loadProposalDetail(id) {
+      if (!contract) return;
+      
+      try {
+        const p = await contract.proposals(id);
+        
+        document.getElementById('detailTitle').textContent = `Proposal #${id}`;
+        document.getElementById('detailDesc').textContent = p.description;
+        document.getElementById('detailCreated').textContent = new Date(p.createdAt * 1000).toLocaleString();
+        document.getElementById('detailChair').textContent = p.chair;
+        document.getElementById('yesCount').textContent = p.yesVotes;
+        document.getElementById('noCount').textContent = p.noVotes;
+        document.getElementById('abstainCount').textContent = p.abstainVotes;
+        
+        // Update vote bar
+        const total = parseInt(p.yesVotes) + parseInt(p.noVotes) + parseInt(p.abstainVotes);
+        if (total > 0) {
+          document.getElementById('votesBarYes').style.width = (parseInt(p.yesVotes) / total * 100) + '%';
+          document.getElementById('votesBarNo').style.width = (parseInt(p.noVotes) / total * 100) + '%';
+          document.getElementById('votesBarAbstain').style.width = (parseInt(p.abstainVotes) / total * 100) + '%';
+        }
+        
+        // Show final status if passed/failed
+        const finalStatus = document.getElementById('finalStatus');
+        if (p.state === 3) {
+          finalStatus.textContent = '✅ MOTION PASSED';
+          finalStatus.style.color = '#22c55e';
+        } else if (p.state === 4) {
+          finalStatus.textContent = '❌ MOTION FAILED';
+          finalStatus.style.color = '#ef4444';
+        } else {
+          finalStatus.textContent = '';
+        }
+        
+        // Update chair controls visibility
+        const chair = await contract.chair();
+        const isChair = chair.toLowerCase() === userAddress.toLowerCase();
+        document.getElementById('chairControls').style.display = isChair ? 'block' : 'none';
+        
+        // Update chair action buttons
+        document.getElementById('btnSecond').style.display = p.state === 0 ? 'inline-block' : 'none';
+        document.getElementById('btnOpenVoting').style.display = p.state === 1 ? 'inline-block' : 'none';
+        document.getElementById('btnSetVotingDuration').style.display = p.state === 1 ? 'inline-block' : 'none';
+        
+        // Amendment section visibility
+        document.getElementById('amendmentSection').style.display = p.state >= 1 && p.state <= 2 ? 'block' : 'none';
+        document.getElementById('amendmentForm').classList.toggle('hidden', p.state !== 1);
+        
+        // Show amendments
+        await loadAmendments(id, p.state);
+        
+        // Voting section
+        const votingSection = document.getElementById('votingSection');
+        if (p.state === 2) {
+          votingSection.style.display = 'block';
+          const hasVoted = await contract.hasVoted(id, userAddress);
+          const voteStatus = document.getElementById('voteStatus');
+          
+          document.getElementById('voteYes').disabled = hasVoted;
+          document.getElementById('voteNo').disabled = hasVoted;
+          document.getElementById('voteAbstain').disabled = hasVoted;
+          
+          voteStatus.textContent = hasVoted ? 'You have already voted on this motion' : 'Cast your vote';
+        } else {
+          votingSection.style.display = 'none';
+        }
+        
+      } catch (err) {
+        console.error('Error loading proposal detail:', err);
+        showToast('Error loading proposal', true);
+      }
+    }
+    
+    async function loadAmendments(proposalId, state) {
+      if (!contract) return;
+      
+      try {
+        const p = await contract.proposals(proposalId);
+        const count = parseInt(p.amendmentCount);
+        const list = document.getElementById('amendmentList');
+        
+        if (count === 0) {
+          list.innerHTML = '<p style="color: #64748b;">No amendments submitted</p>';
+          return;
+        }
+        
+        list.innerHTML = '';
+        const chair = await contract.chair();
+        const isChair = chair.toLowerCase() === userAddress.toLowerCase();
+        
+        for (let i = 0; i < count; i++) {
+          try {
+            const a = await contract.getAmendment(proposalId, i);
+            const item = document.createElement('div');
+            item.className = 'amendment-item';
+            
+            const statusClass = a.approved ? 'approved' : 'pending';
+            const statusText = a.approved ? '✓ Approved' : '⏳ Pending Approval';
+            
+            item.innerHTML = `
+              <div class="amendment-header">
+                <span class="amendment-proposer">Amendment #${i} by ${a.proposer.slice(0,6)}...</span>
+                <span class="amendment-status ${statusClass}">${statusText}</span>
+              </div>
+              <div style="color: #e2e8f0; margin: 0.5rem 0;">${a.description}</div>
+              ${isChair && !a.approved && state === 1 ? `
+                <button class="btn btn-primary" onclick="approveAmendment(${proposalId}, ${i})">Approve Amendment</button>
+              ` : ''}
+              ${a.approved ? `
+                <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #64748b;">
+                  Yes: ${a.yesVotes} | No: ${a.noVotes} | Abstain: ${a.abstainVotes}
+                </div>
+              ` : ''}
+            `;
+            
+            list.appendChild(item);
+          } catch (e) {
+            console.error('Error loading amendment:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading amendments:', err);
+      }
+    }
+    
+    function showListView() {
+      currentProposalId = null;
+      document.getElementById('listView').style.display = 'block';
+      document.getElementById('detailView').classList.remove('active');
+      refreshProposals();
+    }
+    
+    async function createProposal() {
+      const desc = document.getElementById('newProposalDesc').value.trim();
+      if (!desc) {
+        showToast('Please enter a motion description', true);
+        return;
+      }
+      
+      try {
+        const tx = await contract.createProposal(desc);
+        await tx.wait();
+        document.getElementById('newProposalDesc').value = '';
+        showToast('Proposal created!');
+        refreshProposals();
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function secondProposal() {
+      if (currentProposalId === null) return;
+      
+      try {
+        const tx = await contract.secondProposal(currentProposalId);
+        await tx.wait();
+        showToast('Proposal seconded!');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function openVoting() {
+      if (currentProposalId === null) return;
+      
+      try {
+        const tx = await contract.openVoting(currentProposalId, 3 * 24 * 60 * 60); // 3 days
+        await tx.wait();
+        showToast('Voting opened for 3 days!');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function openVotingCustom() {
+      const days = prompt('Enter voting duration in days:', '3');
+      if (!days) return;
+      
+      try {
+        const tx = await contract.openVoting(currentProposalId, parseInt(days) * 24 * 60 * 60);
+        await tx.wait();
+        showToast(`Voting opened for ${days} days!`);
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function submitAmendment() {
+      const text = document.getElementById('amendmentText').value.trim();
+      if (!text) {
+        showToast('Please enter amendment text', true);
+        return;
+      }
+      
+      try {
+        const tx = await contract.submitAmendment(currentProposalId, text);
+        await tx.wait();
+        document.getElementById('amendmentText').value = '';
+        showToast('Amendment submitted!');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function approveAmendment(proposalId, amendmentId) {
+      try {
+        const tx = await contract.approveAmendment(proposalId, amendmentId);
+        await tx.wait();
+        showToast('Amendment approved!');
+        await loadProposalDetail(proposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    async function voteOnMotion(choice) {
+      if (currentProposalId === null) return;
+      
+      try {
+        const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
+        const tx = await contract.voteOnMotion(currentProposalId, choice, nullifierHash, [0,0,0,0,0,0,0,0]);
+        await tx.wait();
+        showToast('Vote cast!');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        console.error(err);
+        showToast('Error: ' + err.message, true);
+      }
+    }
+    
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = 'toast' + (isError ? ' error' : '');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+    
+    // Event listeners
+    document.getElementById('connectBtn').addEventListener('click', connectWallet);
+    document.getElementById('disconnectBtn').addEventListener('click', disconnect);
+    
+    // Poll for new proposals every 10 seconds
+    setInterval(() => {
+      if (contract) refreshProposals();
+    }, 10000);
+  </script>
+</body>
+</html>
