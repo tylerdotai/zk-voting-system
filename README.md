@@ -37,12 +37,12 @@
   <ol>
     <li><a href="#about-the-project">About The Project</a></li>
     <li><a href="#features">Features</a></li>
-    <li><a href="#tech-stack">Tech Stack</a></li>
     <li><a href="#contracts">Smart Contracts</a></li>
+    <li><a href="#frontend">Frontend</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#deployment">Deployment</a></li>
-    <li><a href="#testing">Testing</a></li>
+    <li><a href="#polygon-id">Polygon ID Integration</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -59,12 +59,14 @@ ZK DID Voting System is a blockchain-based voting application built for the [For
 - Enable warp-speed ballots and referendums
 - Provide offline-capable voting with blockchain sync
 - Scale Rob's Rules parliamentary process for DAOs
+- Gate voting access with DID credentials (Polygon ID)
 
 ### Live Contracts (Sepolia Testnet)
 | Contract | Address |
 |----------|---------|
 | ZKVoting | [0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e](https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e) |
-| ZKVotingRobRules | Contact for deployment |
+| ZKVotingWithCredentials | Contact for deployment |
+| ZKVotingRobRulesWithCredentials | Contact for deployment |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -86,30 +88,30 @@ ZK DID Voting System is a blockchain-based voting application built for the [For
 - ✅ **Timed Voting Periods** — Configurable voting duration
 - ✅ **Immutable Record** — All actions recorded on-chain
 
-<p align="right">(<a href="#readme-top">back to top)</p>
-
-<!-- TECH STACK -->
-## Tech Stack
-
-- **Smart Contracts:** Solidity 0.8.19, Hardhat, OpenZeppelin
-- **ZK Circuits:** Circom (future)
-- **Frontend:** Plain HTML/CSS/JavaScript (Ethers.js v5)
-- **Blockchain:** Ethereum (Sepolia Testnet), Local Hardhat
-- **Storage:** LocalStorage for offline backup
+### Polygon ID Integration — Credential-Gated Voting
+- ✅ **DID Verification** — Verify identity without revealing it
+- ✅ **ZK Proofs** — Zero-knowledge proofs for privacy
+- ✅ **Credential Schema** — Define what attributes are required to vote
+- ✅ **Issuer Integration** — Issue credentials to eligible voters
+- ✅ **Demo Mode** — Test without setting up issuer node
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRACTS -->
 ## Smart Contracts
 
-### ZKVoting.sol
-Simple yes/no/abstain voting with offline backup support.
+| Contract | Purpose | Credentials |
+|----------|---------|-------------|
+| `ZKVoting.sol` | Simple yes/no/abstain voting | No |
+| `ZKVotingRobRules.sol` | Rob's Rules parliamentary voting | No |
+| `ZKVotingWithCredentials.sol` | Simple voting + credential gate | ✅ |
+| `ZKVotingRobRulesWithCredentials.sol` | Rob's Rules + credential gate | ✅ |
+| `GovVerifier.sol` | Polygon ID ZK proof verifier | - |
+| `ZKPVerifier.sol` | Base verifier (from ETHGlobal) | - |
 
-### ZKVotingRobRules.sol
-Full Rob's Rules of Order parliamentary process on-chain:
+### ZKVotingRobRules.sol — Proposal Lifecycle
 
 ```
-Proposal Lifecycle:
 1. Chair creates proposal (Created)
 2. Chair seconds proposal (Seconded)
 3. Members submit amendments
@@ -118,6 +120,34 @@ Proposal Lifecycle:
 6. Members vote on motion (Yes/No/Abstain)
 7. After voting ends → Finalized (Passed/Failed)
 ```
+
+### Credential-Gated Flow (Polygon ID)
+
+```
+User → Polygon ID App → ZK Proof → GovVerifier → Voting Contract (allowedUsers[])
+                                        ↓
+                        setAllowedUser(wallet) called
+                                        ↓
+                        User can now create proposals / vote
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- FRONTEND -->
+## Frontend
+
+| File | Purpose |
+|------|---------|
+| `frontend/index.html` | Main landing page |
+| `frontend/rob-rules.html` | Rob's Rules parliamentary voting UI |
+| `frontend/verify.html` | Polygon ID credential verification |
+
+### Demo Mode
+
+For testing without setting up Polygon ID issuer:
+- Go to `verify.html`
+- Click **"Demo Verify"**
+- This directly calls `setAllowedUser()` on the contract
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -129,6 +159,7 @@ Proposal Lifecycle:
 - Node.js 18+
 - npm or yarn
 - MetaMask browser extension
+- Docker (for Polygon ID issuer, optional)
 
 ### Installation
 
@@ -153,85 +184,112 @@ npx hardhat compile
 <!-- USAGE -->
 ## Usage
 
-### ZKVoting — Simple Voting
-
-1. Start local frontend:
-```bash
-cd frontend
-python3 -m http.server 8080
-# Open http://localhost:8080
-```
-
-2. Connect MetaMask and switch to Sepolia testnet
-
-3. Cast your vote
-
-### ZKVotingRobRules — Rob's Rules Parliamentary Voting
+### Quick Start (Local Hardhat)
 
 1. Start local Hardhat node:
 ```bash
 npx hardhat node
 ```
 
-2. Deploy RobRules contract (in another terminal):
+2. In another terminal, deploy credential-gated contracts:
 ```bash
-npx hardhat run scripts/deploy-rob-rules.js --network hardhat
+npx hardhat run scripts/deploy-with-credentials.js --network hardhat
 ```
 
 3. Start local frontend:
 ```bash
 cd frontend
 python3 -m http.server 8080
-# Open http://localhost:8080/rob-rules.html
 ```
 
-4. Connect MetaMask to Hardhat local network:
+4. Open in browser:
+   - Voting: `http://localhost:8080/rob-rules.html`
+   - Verification: `http://localhost:8080/verify.html`
+
+5. Connect MetaMask to Hardhat local network:
+   - Network name: `Hardhat Local`
    - RPC URL: `http://localhost:8545`
    - Chain ID: `31337`
 
-5. As Chair, create proposals and manage the parliamentary process
+### Demo Flow
+
+1. Go to `verify.html` → Connect wallet → Click **"Demo Verify"**
+2. Go to `rob-rules.html` → Full access to create proposals and vote
+
+### Full Polygon ID Flow
+
+1. Set up Polygon ID issuer node (see Polygon ID Integration section)
+2. Configure credential schema
+3. Replace demo verification with real QR code flow
+4. Users scan QR → Polygon ID verifies → `setAllowedUser()` called
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- DEPLOYMENT -->
 ## Deployment
 
-### Deploy ZKVoting to Sepolia
+### Deploy to Sepolia
 
 ```bash
 export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
 export PRIVATE_KEY="YOUR-PRIVATE-KEY"
 
+# Deploy basic contracts
 npx hardhat run scripts/deploy.js --network sepolia
-```
-
-### Deploy ZKVotingRobRules to Sepolia
-
-```bash
-export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
-export PRIVATE_KEY="YOUR-PRIVATE-KEY"
-
 npx hardhat run scripts/deploy-rob-rules.js --network sepolia
+
+# Deploy credential-gated contracts
+npx hardhat run scripts/deploy-with-credentials.js --network sepolia
 ```
 
-### Update Frontend Contract Address
+### Update Frontend
 
-After deployment, update the `CONTRACT_ADDRESS` in the frontend HTML file.
+After deployment, update `CONTRACT_ADDRESS` in the HTML files:
+- `frontend/rob-rules.html`
+- `frontend/verify.html`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- TESTING -->
-## Testing
+<!-- POLYGON ID -->
+## Polygon ID Integration
 
-### Run Unit Tests
-```bash
-npx hardhat test
+### Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Frontend      │────▶│   GovVerifier   │────▶│ Voting Contract │
+│  (verify.html)  │ QR  │  (ZK Verifier)  │     │ (allowedUsers)  │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
 
-### Run with Coverage
-```bash
-npx hardhat coverage
-```
+### Setup (Production)
+
+1. **Set up Polygon ID issuer node**
+   ```bash
+   git clone https://github.com/Abhishek-2416/PolygonId-IssuerNode
+   cd PolygonId-IssuerNode
+   cp .env-api.sample .env-api
+   cp .env-issuer.sample .env-issuer
+   # Configure ISSUER_ETHEREUM_URL and ISSUER_SERVER_URL
+   make up
+   make run
+   ```
+
+2. **Create credential schema**
+   - Access issuer UI at `http://localhost:3001`
+   - Define what attributes users must prove
+
+3. **Configure frontend**
+   - Update `ISSUER_DID` in `verify.html`
+   - Update `SCHEMA_URL` and `SCHEMA_TYPE`
+
+4. **Deploy to production**
+   - Deploy contracts to mainnet
+   - Update contract addresses in frontend
+
+### Reference Implementation
+
+Based on [ETHGlobal ZK Vote](https://ethglobal.com/showcase/zk-vote-9ipgt) project.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -240,8 +298,10 @@ npx hardhat coverage
 
 - [x] ZKVoting contract with basic voting
 - [x] Rob's Rules parliamentary flow (ZKVotingRobRules)
+- [x] Polygon ID credential-gated contracts
+- [x] Credential verification UI (verify.html)
 - [ ] Real ZK proof verification integration
-- [ ] DID integration (Polygon ID)
+- [ ] DID integration (Polygon ID issuer node)
 - [ ] Multi-chain support
 - [ ] Mobile app
 - [ ] Post-quantum cryptography
