@@ -301,6 +301,51 @@ describe("ZKVotingRobRules", function () {
     });
   });
 
+  describe("Amendment Voting", function () {
+    beforeEach(async function () {
+      await contract.connect(chair).createProposal("Test proposal");
+      await contract.connect(chair).secondProposal(0);
+      await contract.connect(member1).submitAmendment(0, "Add clause A");
+      await contract.connect(chair).approveAmendment(0, 0);
+    });
+
+    it("should allow voting on approved amendment", async function () {
+      await contract.connect(member1).voteOnAmendment(0, 0, 0); // Yes
+      const amendment = await contract.getAmendment(0, 0);
+      expect(amendment.yesVotes).to.equal(1);
+    });
+
+    it("should allow voting No on amendment", async function () {
+      await contract.connect(member1).voteOnAmendment(0, 0, 1); // No
+      const amendment = await contract.getAmendment(0, 0);
+      expect(amendment.noVotes).to.equal(1);
+    });
+
+    it("should reject voting on unapproved amendment", async function () {
+      // Submit and approve a second amendment but don't approve it
+      await contract.connect(member2).submitAmendment(0, "Add clause B");
+      // amendmentId 1 is not approved
+      await expect(
+        contract.connect(member1).voteOnAmendment(0, 1, 0)
+      ).to.be.revertedWith("Amendment must be approved");
+    });
+
+    it("should allow multiple members to vote on amendment", async function () {
+      // Multiple members can vote on the same amendment
+      await contract.connect(member1).voteOnAmendment(0, 0, 0); // Yes
+      await contract.connect(member2).voteOnAmendment(0, 0, 1); // No
+      const amendment = await contract.getAmendment(0, 0);
+      expect(amendment.yesVotes).to.equal(1);
+      expect(amendment.noVotes).to.equal(1);
+    });
+
+    it("should reject invalid amendment ID", async function () {
+      await expect(
+        contract.connect(member1).voteOnAmendment(0, 999, 0)
+      ).to.be.reverted;
+    });
+  });
+
   describe("View Functions", function () {
     beforeEach(async function () {
       await contract.connect(chair).createProposal("Test proposal");
