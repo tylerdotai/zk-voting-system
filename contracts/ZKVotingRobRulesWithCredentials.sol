@@ -245,4 +245,24 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     function hasVoted(uint256 _proposalId, address _voter) external view returns (bool) {
         return proposals[_proposalId].hasVotedOnMotion[_voter];
     }
+    
+    function getAmendment(uint256 _proposalId, uint256 _amendmentId) external view returns (
+        string memory description,
+        address proposer,
+        bool approved,
+        uint256 yesVotes,
+        uint256 noVotes,
+        uint256 abstainVotes
+    ) {
+        require(_amendmentId < proposals[_proposalId].amendments.length, "Invalid amendment ID");
+        Amendment storage a = proposals[_proposalId].amendments[_amendmentId];
+        return (
+            a.description,
+            a.proposer,
+            a.approved,
+            a.yesVotes,
+            a.noVotes,
+            a.abstainVotes
+        );
+    }
 }

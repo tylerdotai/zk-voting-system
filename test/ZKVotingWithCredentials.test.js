@@ -15,6 +15,27 @@ describe("ZKVotingWithCredentials", function () {
     await contract.waitForDeployment();
   });
 
+  describe("View Functions", function () {
+    it("should return isCredentialVerified correctly", async function () {
+      expect(await contract.isCredentialVerified(voter1.address)).to.equal(false);
+      await contract.connect(owner).setAllowedUser(voter1.address);
+      expect(await contract.isCredentialVerified(voter1.address)).to.equal(true);
+    });
+  });
+
+  describe("GovVerifier Management", function () {
+    it("should allow owner to set GovVerifier", async function () {
+      await contract.connect(owner).setGovVerifier(voter1.address);
+      // Just verify it doesn't revert
+    });
+
+    it("should reject setting GovVerifier to zero address", async function () {
+      await expect(
+        contract.connect(owner).setGovVerifier(ethers.ZeroAddress)
+      ).to.be.revertedWith("GovVerifier cannot be zero");
+    });
+  });
+
   describe("Deployment", function () {
     it("should set the owner", async function () {
       expect(await contract.owner()).to.equal(owner.address);
