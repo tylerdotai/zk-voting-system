@@ -231,6 +231,15 @@
       <div>Role: <span id="userRole">Member</span></div>
     </div>
     
+    <div id="verifyCredentialsBanner" class="section" style="display: none; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3);">
+      <div style="text-align: center;">
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔐</div>
+        <div style="color: #fbbf24; font-weight: 600;">Credentials Required</div>
+        <div style="color: #94a3b8; font-size: 0.9rem; margin: 0.5rem 0;">You need to verify your credentials before participating in voting.</div>
+        <a href="verify.html" style="background: #7f56d9; color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; display: inline-block;">🔐 Verify Credentials</a>
+      </div>
+    </div>
+    
     <!-- Main List View -->
     <div class="section" id="listView">
       <h2>📋 Active Proposals</h2>
@@ -350,7 +359,9 @@
       "function finalizeProposal(uint256 _proposalId)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
-      "function proposals(uint256 _proposalId) view returns (string memory description, address chair, uint256 state, uint256 createdAt, uint256 secondedAt, uint256 votingStartsAt, uint256 votingEndsAt, uint256 yesVotes, uint256 noVotes, uint256 abstainVotes, uint256 amendmentCount)"
+      "function proposals(uint256 _proposalId) view returns (string memory description, address chair, uint256 state, uint256 createdAt, uint256 secondedAt, uint256 votingStartsAt, uint256 votingEndsAt, uint256 yesVotes, uint256 noVotes, uint256 abstainVotes, uint256 amendmentCount)",
+      "function allowedUsers(address) view returns (bool)",
+      "event CredentialVerified(address indexed user)"
     ];
     
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
@@ -391,6 +402,7 @@
         document.getElementById('disconnectBtn').style.display = 'inline-block';
         
         await checkChairRole();
+        await checkCredentialVerification();
         await refreshProposals();
         
         showToast('Wallet connected!');
@@ -420,6 +432,24 @@
         document.getElementById('chairControls').style.display = isChair ? 'block' : 'none';
       } catch (e) {
         console.error('Error checking chair role:', e);
+      }
+    }
+    
+    async function checkCredentialVerification() {
+      if (!contract) return;
+      try {
+        const isVerified = await contract.allowedUsers(userAddress);
+        const verifySection = document.getElementById('verifyCredentialsBanner');
+        if (!isVerified) {
+          verifySection.style.display = 'block';
+          // Disable all voting-related buttons
+          document.getElementById('btnSecond')?.removeAttribute('onclick');
+          document.getElementById('btnOpenVoting')?.removeAttribute('onclick');
+        } else {
+          verifySection.style.display = 'none';
+        }
+      } catch (e) {
+        console.error('Error checking credential verification:', e);
       }
     }
     
