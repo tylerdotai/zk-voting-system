@@ -216,6 +216,7 @@
     
     <div class="connect-section">
       <button class="connect-btn" id="connectBtn">Connect Wallet</button>
+      <button class="connect-btn" id="disconnectBtn" style="display:none; background: #f87171; margin-left: 10px;">Disconnect</button>
     </div>
     
     <div class="wallet-info" id="walletInfo" style="display: none;">
@@ -474,7 +475,8 @@
         
         // Check network
         const network = await provider.getNetwork();
-        if (network.chainId !== 11155111n) {
+        const chainId = network.chainId.toString();
+        if (chainId !== '11155111') {
           showToast('Please switch to Sepolia testnet!', true);
           return;
         }
@@ -495,6 +497,10 @@
         
         connectionStatus.textContent = '🟢 Connected';
         connectionStatus.className = 'connection-status connected';
+        
+        // Show disconnect button
+        document.getElementById('disconnectBtn').style.display = 'inline-block';
+        document.getElementById('connectBtn').style.display = 'none';
         
         // Load current results
         await updateResults();
@@ -677,9 +683,25 @@
     
     // Event listeners
     connectBtn.addEventListener('click', connectWallet);
-    voteYes.addEventListener(() => castVote(0));
-    voteNo.addEventListener(() => castVote(1));
-    voteAbstain.addEventListener(() => castVote(2));
+    document.getElementById('disconnectBtn').addEventListener('click', () => {
+      userAddress = null;
+      signer = null;
+      walletAddress.textContent = '';
+      walletInfo.style.display = 'none';
+      document.getElementById('disconnectBtn').style.display = 'none';
+      document.getElementById('connectBtn').style.display = 'inline-block';
+      document.getElementById('connectBtn').disabled = false;
+      document.getElementById('connectBtn').textContent = 'Connect Wallet';
+      ballotStatus.textContent = 'Connect wallet to vote (or vote offline)';
+      voteYes.disabled = true;
+      voteNo.disabled = true;
+      voteAbstain.disabled = true;
+      connectionStatus.textContent = '🔴 Disconnected';
+      connectionStatus.className = 'connection-status disconnected';
+    });
+    voteYes.addEventListener('click', () => castVote(0));
+    voteNo.addEventListener('click', () => castVote(1));
+    voteAbstain.addEventListener('click', () => castVote(2));
     exportBtn.addEventListener('click', exportVotes);
     importBtn.addEventListener('click', () => importFile.click());
     importFile.addEventListener('change', (e) => {
