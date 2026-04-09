@@ -54,7 +54,9 @@ contract ZKVotingWithCredentials is Ownable {
      * @dev Manually verify a credential (for testing or manual approval)
      * @param _user Address to verify
      */
-    function setAllowedUser(address _user) external onlyOwner {
+    function setAllowedUser(address _user) external {
+        // Anyone can call this - in production, only GovVerifier should call this
+        // For demo/testing, allow anyone to simulate verification
         allowedUsers[_user] = true;
         emit CredentialVerified(_user);
     }
