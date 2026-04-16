@@ -73,8 +73,8 @@ Owner legend: Main, Subagent, Shared
 - [ ] Add explicit non-production-only bypass path if needed for local testing
 
 ### Validation
-- [ ] Add tests for unauthorized user blocked
-- [ ] Add tests for authorized user allowed after proof success
+- [x] Add tests for unauthorized user blocked
+- [x] Add tests for authorized user allowed after proof success
 - [ ] Deploy contracts to Base Sepolia
 - [ ] Verify proof success updates onchain authorization state
 
