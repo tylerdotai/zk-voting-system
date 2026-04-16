@@ -63,6 +63,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     
     // Events
     event ChairUpdated(address indexed oldChair, address indexed newChair);
+    event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
     event CredentialVerified(address indexed user);
     event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair);
     event ProposalSeconded(uint256 indexed proposalId);
@@ -87,16 +88,27 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         _;
     }
     
-    // Constructor
+    // Constructor — allows address(0) for verifier to break circular deploy dependency.
+    // Use setVerifier() after deployment to bind the real GovVerifier address.
     constructor(address _govVerifier, address _chair, uint256 _choiceCount) {
-        require(_govVerifier != address(0), "GovVerifier cannot be zero");
         require(_chair != address(0), "Chair cannot be zero address");
         require(_choiceCount >= 2, "Must have at least 2 choices");
         
         _transferOwnership(msg.sender);
-        govVerifier = GovVerifier(_govVerifier);
+        if (_govVerifier != address(0)) {
+            govVerifier = GovVerifier(_govVerifier);
+        }
         chair = _chair;
         choiceCount = _choiceCount;
+    }
+
+    /// @dev Post-deploy setter to bind the real GovVerifier after both contracts exist.
+    ///      Resolves the circular-dependency problem where both contracts need each other's address.
+    function setVerifier(address _newVerifier) external onlyOwner {
+        require(_newVerifier != address(0), "Verifier cannot be zero address");
+        address oldVerifier = address(govVerifier);
+        govVerifier = GovVerifier(_newVerifier);
+        emit VerifierUpdated(oldVerifier, _newVerifier);
     }
     
     // Credential Management

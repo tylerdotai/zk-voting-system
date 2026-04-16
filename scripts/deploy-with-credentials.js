@@ -12,13 +12,13 @@ async function main() {
   const [deployer] = await hre.ethers.getSigners();
   console.log("Deployer:", deployer.address);
   
-  // Deploy ZKVotingRobRulesWithCredentials first
-  console.log("\n1. Deploying ZKVotingRobRulesWithCredentials...");
+  // Deploy ZKVotingRobRulesWithCredentials first with address(0) for verifier placeholder
+  console.log("\n1. Deploying ZKVotingRobRulesWithCredentials (verifier placeholder)...");
   const ZKVotingRobRulesWithCredentials = await hre.ethers.getContractFactory("ZKVotingRobRulesWithCredentials");
   const votingContract = await ZKVotingRobRulesWithCredentials.deploy(
-    deployer.address, // govVerifier (placeholder - will be updated)
-    deployer.address, // initial chair
-    3 // choiceCount (Yes, No, Abstain)
+    hre.ethers.ZeroAddress, // govVerifier placeholder — will be wired in step 3
+    deployer.address,       // initial chair
+    3                       // choiceCount (Yes, No, Abstain)
   );
   await votingContract.waitForDeployment();
   const votingAddress = await votingContract.getAddress();
@@ -32,8 +32,12 @@ async function main() {
   const govVerifierAddress = await govVerifier.getAddress();
   console.log(`   GovVerifier: ${govVerifierAddress}`);
   
-  // Note: In this architecture, GovVerifier calls votingContract.setAllowedUser(user)
-  // after ZKP proof is verified. No need to update voting contract with GovVerifier address.
+  // Wire verifier into voting contract (fixes circular dependency)
+  console.log("\n3. Wiring verifier into voting contract...");
+  const tx = await votingContract.setVerifier(govVerifierAddress);
+  await tx.wait();
+  console.log(`   Verifier wired: ${govVerifierAddress}`);
+
   
   // Save deployment info as structured JSON
   const deploymentsDir = path.join(process.cwd(), "deployments");

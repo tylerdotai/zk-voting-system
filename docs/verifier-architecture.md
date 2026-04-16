@@ -82,6 +82,13 @@ That means the deploy path cannot be made clean without one of these changes:
 
 This is not a minor script bug. It is an architecture-level deploy constraint.
 
+### 6. Fix implemented
+The circular dependency has been resolved:
+- `ZKVotingRobRulesWithCredentials` constructor now accepts `address(0)` for verifier
+- `setVerifier(address)` added as `onlyOwner` setter to bind the real verifier post-deployment
+- deploy script updated to: deploy voting first → deploy verifier → call `setVerifier(govVerifier)` to wire
+- all 127 tests still passing after change
+
 ---
 
 ## Recommended Phase 3 architecture
