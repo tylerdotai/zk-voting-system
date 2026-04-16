@@ -76,6 +76,11 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         require(msg.sender == chair, "Only chair can perform this action");
         _;
     }
+
+    modifier onlyGovVerifier() {
+        require(msg.sender == address(govVerifier), "Only GovVerifier can perform this action");
+        _;
+    }
     
     modifier requiresCredential() {
         require(allowedUsers[msg.sender], "Credential not verified");
@@ -95,7 +100,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     // Credential Management
-    function setAllowedUser(address _user) external {
+    function setAllowedUser(address _user) external onlyGovVerifier {
         // Called by GovVerifier after ZKP proof is verified
         allowedUsers[_user] = true;
         emit CredentialVerified(_user);
