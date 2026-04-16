@@ -52,9 +52,9 @@ Owner legend: Main, Subagent, Shared
 ## P0 — Onchain Verifier Integration (Phase 3)
 
 ### Contract audit
-- [ ] Audit `GovVerifier.sol` against Polygon ID real verifier requirements
-- [ ] Decide whether to adapt current verifier bridge or replace it
-- [ ] Document final verifier architecture in `docs/verifier-architecture.md`
+- [x] Audit `GovVerifier.sol` against Polygon ID real verifier requirements
+- [x] Decide whether to adapt current verifier bridge or replace it
+- [x] Document final verifier architecture in `docs/verifier-architecture.md`
 
 ### Base Sepolia deployment path
 - [ ] Add Base Sepolia network config
