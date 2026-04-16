@@ -64,9 +64,11 @@ Owner legend: Main, Subagent, Shared
 - [x] Add contract config file for frontend consumption
 
 ### Contract implementation
+- [ ] Resolve circular dependency between voting contract and GovVerifier deployment flow
 - [ ] Implement Polygon ID-compatible verifier bridge
 - [ ] Wire proof success to `setAllowedUser(address)` or equivalent gate path
-- [ ] Restrict dev/demo bypasses behind explicit non-production flag
+- [x] Restrict direct authorization writes to GovVerifier only (remove public bypass on voting contract)
+- [ ] Add explicit non-production-only bypass path if needed for local testing
 - [ ] Add authorization state read helpers where needed
 
 ### Validation

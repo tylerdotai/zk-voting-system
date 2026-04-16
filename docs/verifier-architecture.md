@@ -70,6 +70,18 @@ Then it deploys `GovVerifier`, but never updates the voting contract's verifier 
 
 That means the contract graph is wrong from the start.
 
+### 5. There is a real circular dependency
+The current constructor design creates a circular dependency:
+- voting contract wants verifier address at deploy time
+- verifier wants voting contract address at deploy time
+
+That means the deploy path cannot be made clean without one of these changes:
+1. add a post-deploy setter on one side
+2. deploy a minimal proxy/placeholder and rebind later
+3. refactor constructor dependencies so only one side needs the other at deployment time
+
+This is not a minor script bug. It is an architecture-level deploy constraint.
+
 ---
 
 ## Recommended Phase 3 architecture
@@ -123,6 +135,32 @@ Correct order should be:
 4. optionally set voting contract in verifier if still needed
 5. call `setZKPRequest()`
 6. persist deployment config
+
+### D. Authorization write hardening
+The voting contract previously exposed a public `setAllowedUser(address)` path, which meant anyone could mark any wallet as verified without a real proof.
+
+That is now hardened so only the configured `GovVerifier` contract can call `setAllowedUser(address)`.
+
+This closes the most obvious fake-proof bypass before real validator wiring is finished.
+
+### E. Query initialization
+The deploy script must explicitly configure:
+- `requestId = 1`
+- `schema`
+- `slotIndex`
+- `operator`
+- `value`
+- `circuitId`
+
+These values must match the live proof request design.
+
+### F. Input mapping validation
+Before trusting `_afterProofSubmit()`, run one real proof and compare:
+- raw proof inputs
+- expected user identifier field
+- how address/session mapping should actually work
+
+If address is not directly available in proof inputs, use a safer binding strategy.
 
 ### D. Query initialization
 The deploy script must explicitly configure:
