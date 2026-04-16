@@ -226,3 +226,48 @@ It is now:
 **can the onchain verifier path be initialized correctly and tied to the real proof format without making fake assumptions?**
 
 That is the next serious engineering problem to solve.
+
+---
+
+## CRITICAL — Circuit Input Mapping (added 2026-04-16)
+
+The `vote.circom` circuit does NOT include the user's Ethereum address as a raw input.
+
+### vote.circom inputs
+```
+voterIdentity   — Poseidon hash of voter's DID (NOT address)
+nullifier       — random value
+voterMerkleRoot — merkle root for eligibility
+voteChoice      — the vote selection
+voteOptionIndex — index of selected option
+merklePathElements[16] — merkle proof path
+merklePathIndices[16]  — merkle proof directions
+```
+
+### vote.circom outputs
+```
+nullifierHash — for double-spend prevention
+voterHash     — Poseidon hash of voterIdentity
+```
+
+### Implication for _afterProofSubmit()
+
+Current GovVerifier does:
+```solidity
+address user = address(uint160(uint256(inputs[inputs.length - 1])));
+```
+
+This is **incorrect** for the vote circuit. The circuit does not output the user address.
+
+The credential proof (Polygon ID) and the vote circuit are separate:
+1. **Credential proof** — proves the wallet holds a valid Polygon ID credential (DID-based)
+2. **Vote circuit** — proves the vote is valid and not double-spent (nullifier-based)
+
+The `_afterProofSubmit()` must use a different strategy to link credential proof → Ethereum address:
+- Option A: The credential proof itself must carry or bind the Ethereum address (credential schema includes `ethereumAddress` field, circuit reveals it)
+- Option B: A separate binding step maps DID → Ethereum address at credential issuance time
+- Option C: The voting contract requires credential verification before accepting a vote submission, and the vote circuit only proves the vote itself is valid
+
+### Phase 3 must resolve before wiring setAllowedUser()
+
+Do not wire `_afterProofSubmit()` → `setAllowedUser()` until the address-binding strategy is validated with a real proof.
