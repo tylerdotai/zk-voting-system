@@ -64,11 +64,11 @@ Example identity creation payload:
 A real wallet-consumable credential offer flow is now generating successfully.
 
 Working values from current run:
-- Public issuer URL: `https://zk-voting-issuer.loca.lt`
+- Public issuer URL: `https://weak-tiger-12.loca.lt`
 - Issuer DID: `did:polygonid:polygon:amoy:2qSugB8VLKyAxEDwo8EMsqq9bwmToR2HT4XgBoVXxX`
 - Polygon-ID-ready schema URL: `https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json`
 - Imported schema id: `0aaf97ad-3136-4c2e-bba5-571f9bb94b4f`
-- Credential link id: `62672ea0-e7f0-47b5-a2c7-d23fab70734a`
+- Credential link id: `a3d95603-dbab-4e59-b7d7-476177622203`
 
 Commands that worked:
 ```bash
@@ -109,6 +109,9 @@ curl -X POST http://localhost:3001/v2/identities/$IDENT/credentials/links/62672e
 
 Saved sample payload:
 - `docs/credential-offer-sample.json`
+
+Note:
+- localtunnel subdomains can die or rotate overnight, so the tunnel had to be re-established and the issuer restarted to regenerate a current live offer payload.
 
 ## Current blocker to clear next
 The issuer now produces a real Privado wallet link payload. Remaining work is to test this offer with a real wallet scan/accept flow, then capture the issued credential evidence and move on to proof-request generation for verification.

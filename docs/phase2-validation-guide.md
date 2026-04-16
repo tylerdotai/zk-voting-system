@@ -57,7 +57,8 @@ Evidence:
 
 ### Gate 2.3 current status
 - Identity creation validated (`POST /v2/identities`)
-- Public tunnel established: `https://zk-voting-issuer.loca.lt`
+- Public tunnel established and re-established after tunnel process death. Current live URL: `https://weak-tiger-12.loca.lt`
+- Issuer restarted after tunnel rotation so offer payloads now reference the current live callback URL
 - Custom Polygon-ID-ready schema imported successfully from repo-hosted raw GitHub URL
 - Credential link created successfully (`POST /v2/identities/{identifier}/credentials/links`)
 - Wallet offer generated successfully (`POST /v2/identities/{identifier}/credentials/links/{id}/offer`)
@@ -65,7 +66,7 @@ Evidence:
 
 ### Gate 2.4 current status
 - Proof request template created (`docs/proof-request-template.md`)
-- Real wallet-consumable credential offer payload captured in `docs/credential-offer-sample.json`
+- Real wallet-consumable credential offer payload captured in `docs/credential-offer-sample.json` and refreshed after tunnel rotation
 - Wallet-accepted verification proof payload still pending
 - While blocked on holder-wallet interaction, Phase 3 groundwork continued with Base Sepolia planning (`docs/base-sepolia-plan.md`) and Hardhat network config updates
 
