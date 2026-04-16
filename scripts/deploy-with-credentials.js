@@ -1,4 +1,10 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
+
+function ensureDir(dirPath) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
 
 async function main() {
   console.log("Deploying Credential-Gated Voting Contracts...\n");
@@ -29,31 +35,41 @@ async function main() {
   // Note: In this architecture, GovVerifier calls votingContract.setAllowedUser(user)
   // after ZKP proof is verified. No need to update voting contract with GovVerifier address.
   
-  // Save deployment info
-  const fs = require("fs");
-  const deploymentInfo = `
-# Credential-Gated Voting Deployment
-# Deployed at: ${new Date().toISOString()}
-# Network: ${hre.network.name}
-# Deployer: ${deployer.address}
+  // Save deployment info as structured JSON
+  const deploymentsDir = path.join(process.cwd(), "deployments");
+  ensureDir(deploymentsDir);
 
-ZKVOTING_WITH_CREDS_ADDRESS=${votingAddress}
-GOV_VERIFIER_ADDRESS=${govVerifierAddress}
-VOTING_CHAIR=${deployer.address}
+  const deploymentInfo = {
+    generatedAt: new Date().toISOString(),
+    network: hre.network.name,
+    deployer: deployer.address,
+    env: {
+      baseSepoliaRpcUrlConfigured: Boolean(process.env.BASE_SEPOLIA_RPC_URL),
+      sepoliaRpcUrlConfigured: Boolean(process.env.SEPOLIA_RPC_URL),
+      privateKeyConfigured: Boolean(process.env.PRIVATE_KEY),
+    },
+    contracts: {
+      voting: {
+        name: "ZKVotingRobRulesWithCredentials",
+        address: votingAddress,
+      },
+      govVerifier: {
+        name: "GovVerifier",
+        address: govVerifierAddress,
+      },
+    },
+    frontend: {
+      NEXT_PUBLIC_VOTING_ADDRESS: votingAddress,
+      NEXT_PUBLIC_GOV_VERIFIER_ADDRESS: govVerifierAddress,
+    },
+    notes: [
+      "Current deploy flow is still interim and does not initialize a Polygon ID validator or setZKPRequest.",
+      "Phase 3 must correct deploy ordering and verifier initialization before proof submission can work onchain."
+    ]
+  };
 
-# For frontend
-NEXT_PUBLIC_VOTING_ADDRESS=${votingAddress}
-NEXT_PUBLIC_GOV_VERIFIER_ADDRESS=${govVerifierAddress}
-
-# Flow:
-# 1. User connects wallet
-# 2. Frontend generates QR with proof request (Polygon ID)
-# 3. User scans QR → Polygon ID app generates ZK proof
-# 4. Proof submitted to GovVerifier.submitZKPResponse()
-# 5. GovVerifier._afterProofSubmit() → votingContract.setAllowedUser(user)
-# 6. User now allowed → can create proposals / vote
-`;
-  fs.writeFileSync("contracts.json", deploymentInfo);
+  fs.writeFileSync(path.join(deploymentsDir, `${hre.network.name}-credentials.json`), JSON.stringify(deploymentInfo, null, 2));
+  fs.writeFileSync("contracts.json", JSON.stringify(deploymentInfo, null, 2));
   
   console.log("\n" + "=".repeat(60));
   console.log("DEPLOYMENT COMPLETE");
@@ -61,7 +77,7 @@ NEXT_PUBLIC_GOV_VERIFIER_ADDRESS=${govVerifierAddress}
   console.log(`\nZKVotingRobRulesWithCredentials: ${votingAddress}`);
   console.log(`GovVerifier:                       ${govVerifierAddress}`);
   console.log(`Chair (you):                        ${deployer.address}`);
-  console.log(`\nDeployment info saved to contracts.json`);
+  console.log(`\nDeployment info saved to contracts.json and deployments/${hre.network.name}-credentials.json`);
   console.log("\nNext steps:");
   console.log("1. Set up Polygon ID issuer node");
   console.log("2. Configure credential schema");

@@ -58,9 +58,9 @@ Owner legend: Main, Subagent, Shared
 
 ### Base Sepolia deployment path
 - [x] Add Base Sepolia network config
-- [ ] Normalize env var names for deploy scripts
-- [ ] Update deploy scripts for credential-gated contracts
-- [ ] Add deterministic contract address output file
+- [x] Normalize env var names for deploy scripts
+- [x] Update deploy scripts for credential-gated contracts
+- [x] Add deterministic contract address output file
 - [ ] Add contract config file for frontend consumption
 
 ### Contract implementation
