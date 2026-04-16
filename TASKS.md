@@ -14,36 +14,36 @@ Owner legend: Main, Subagent, Shared
 - [x] Create roadmap
 - [x] Create tasks board
 - [x] Create acceptance gates
-- [ ] Confirm final chain target as Base Sepolia for demo
-- [ ] Confirm canonical credential name and schema fields
-- [ ] Confirm demo story: issuer → proof → verify → proposal → vote
+- [x] Confirm final chain target as Base Sepolia for demo
+- [x] Confirm canonical credential name and schema fields
+- [x] Confirm demo story: issuer → proof → verify → proposal → vote
 
 ---
 
 ## P0 — Identity Foundation (Phase 2)
 
 ### Research and setup
-- [ ] Audit official Polygon ID issuer node deployment path
-- [ ] Document required services, env vars, ports, and secrets
-- [ ] Decide local vs hosted issuer runtime for demo
-- [ ] Create `docs/issuer-setup.md`
+- [x] Audit official Polygon ID issuer node deployment path
+- [x] Document required services, env vars, ports, and secrets
+- [x] Decide local vs hosted issuer runtime for demo (start local + public tunnel)
+- [x] Create `docs/issuer-setup.md`
 
 ### Schema and credential model
-- [ ] Define Fort Worth DAO Member credential schema
-- [ ] Define required fields: `memberId`, `jurisdiction`, `memberSince`
-- [ ] Decide optional eligibility flags
-- [ ] Store schema in repo with versioning
-- [ ] Create example credential payload
+- [x] Define Fort Worth DAO Member credential schema (`FortWorthDAOMembershipCredential`)
+- [x] Define required fields: `membershipId`, `membershipStatus`, `jurisdiction`, `memberSince`, `votingEligible`
+- [x] Decide optional eligibility flags
+- [x] Store schema in repo with versioning
+- [x] Create example credential payload
 
 ### Issuer implementation
-- [ ] Stand up Polygon ID issuer services
-- [ ] Verify issuer health endpoints or UI
-- [ ] Register or load schema into issuer flow
+- [x] Stand up Polygon ID issuer services
+- [x] Verify issuer health endpoints or UI
+- [x] Register or load schema into issuer flow
 - [ ] Issue first test credential to a test identity
 - [ ] Document issuance walkthrough step-by-step
 
 ### Proof request setup
-- [ ] Define proof request payload for app verification flow
+- [x] Define proof request payload for app verification flow
 - [ ] Confirm wallet compatibility with chosen proof request
 - [ ] Test QR or deep-link request end-to-end
 
