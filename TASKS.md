@@ -61,7 +61,7 @@ Owner legend: Main, Subagent, Shared
 - [x] Normalize env var names for deploy scripts
 - [x] Update deploy scripts for credential-gated contracts
 - [x] Add deterministic contract address output file
-- [ ] Add contract config file for frontend consumption
+- [x] Add contract config file for frontend consumption
 
 ### Contract implementation
 - [ ] Implement Polygon ID-compatible verifier bridge

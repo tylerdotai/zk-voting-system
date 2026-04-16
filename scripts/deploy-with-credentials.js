@@ -39,8 +39,20 @@ async function main() {
   const deploymentsDir = path.join(process.cwd(), "deployments");
   ensureDir(deploymentsDir);
 
-  const deploymentInfo = {
+  const frontendConfig = {
+    network: hre.network.name,
+    chainId: hre.network.config.chainId || null,
+    votingAddress,
+    govVerifierAddress,
+    chair: deployer.address,
     generatedAt: new Date().toISOString(),
+    notes: [
+      "Interim config only. Proof verification is not fully wired until Phase 3 validator + setZKPRequest initialization work is complete."
+    ]
+  };
+
+  const deploymentInfo = {
+    generatedAt: frontendConfig.generatedAt,
     network: hre.network.name,
     deployer: deployer.address,
     env: {
@@ -58,10 +70,7 @@ async function main() {
         address: govVerifierAddress,
       },
     },
-    frontend: {
-      NEXT_PUBLIC_VOTING_ADDRESS: votingAddress,
-      NEXT_PUBLIC_GOV_VERIFIER_ADDRESS: govVerifierAddress,
-    },
+    frontend: frontendConfig,
     notes: [
       "Current deploy flow is still interim and does not initialize a Polygon ID validator or setZKPRequest.",
       "Phase 3 must correct deploy ordering and verifier initialization before proof submission can work onchain."
@@ -69,6 +78,7 @@ async function main() {
   };
 
   fs.writeFileSync(path.join(deploymentsDir, `${hre.network.name}-credentials.json`), JSON.stringify(deploymentInfo, null, 2));
+  fs.writeFileSync(path.join(deploymentsDir, `${hre.network.name}-frontend.json`), JSON.stringify(frontendConfig, null, 2));
   fs.writeFileSync("contracts.json", JSON.stringify(deploymentInfo, null, 2));
   
   console.log("\n" + "=".repeat(60));
@@ -77,7 +87,7 @@ async function main() {
   console.log(`\nZKVotingRobRulesWithCredentials: ${votingAddress}`);
   console.log(`GovVerifier:                       ${govVerifierAddress}`);
   console.log(`Chair (you):                        ${deployer.address}`);
-  console.log(`\nDeployment info saved to contracts.json and deployments/${hre.network.name}-credentials.json`);
+  console.log(`\nDeployment info saved to contracts.json, deployments/${hre.network.name}-credentials.json, and deployments/${hre.network.name}-frontend.json`);
   console.log("\nNext steps:");
   console.log("1. Set up Polygon ID issuer node");
   console.log("2. Configure credential schema");
