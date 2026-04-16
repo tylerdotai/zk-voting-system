@@ -117,6 +117,13 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         allowedUsers[_user] = true;
         emit CredentialVerified(_user);
     }
+
+    // Test/demo bypass — allows owner to simulate GovVerifier verification
+    // without going through actual ZKP proof flow. Remove before production.
+    function testSetAllowedUser(address _user) external onlyOwner {
+        allowedUsers[_user] = true;
+        emit CredentialVerified(_user);
+    }
     
     function isCredentialVerified(address _user) public view returns (bool) {
         return allowedUsers[_user];
