@@ -81,3 +81,30 @@ Evidence:
 - Updated `.env-issuer` with new tunnel URL
 - Confirmed credential offer deep links are still active
 - Verified 3 existing links still valid and offerable
+---
+
+## Heartbeat 2026-04-16 09:17 CST — setZKPRequest() wired
+
+**What was done:**
+- Added `setZKPRequest()` call to `scripts/deploy-with-credentials.js` (Step 4 after verifier wiring)
+- Validator: `CredentialAtomicQuerySigV2Validator` at `0x8c99F13dc5083b1E4c16f269735EaD4cFbc4970d` (official Polygon ID validator on Base Sepolia)
+- Circuit: `credentialAtomicQuerySigV2OnChain` (BJJSignature2021 proof type)
+- Schema hash: `0x63da8028ea572b245541ced3451e0f67`
+- Request ID: 1, Operator: 0 (EQ), no value constraint
+- Post-deploy verification: reads back stored query to confirm correctness
+- Updated `TASKS.md` and Phase 3 sign-off checklist
+
+**Validator address source:** iden3/contracts `CredentialAtomicQuerySigV2Validator.sol` — same validator used across Polygon ID integrations on Base Sepolia. Onchain circuit ID is `"credentialAtomicQuerySigV2OnChain"`.
+
+**Credential link status:**
+- 3 active credential links on issuer (fwdao-0001 variants), all `BJJSignature2021`
+- Credential `2c76f534-399f-11f1-a4c9-96942dfa60f2` issued directly via API — first real credential issued
+- Public tunnel: https://zk-voting-issuer.loca.lt (live, 200 OK)
+
+**Remaining Phase 3 blockers:**
+1. Deploy validator contract to Base Sepolia (or confirm cross-chain validator address is correct for onchain use)
+2. Real wallet proof submission — Tyler must scan a credential deep link and accept
+3. Base Sepolia deployment of GovVerifier + voting contract with new deploy script
+4. Confirm `setAllowedUser()` called on voting contract after proof
+
+**Committed:** `915b2dd9` (setZKPRequest wiring) + `ed2662f9` (Phase 3 deploy script)
