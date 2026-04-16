@@ -146,8 +146,8 @@ if (!activeLink) {
 5. **Document** the full deployment config in `deployments/` as machine-readable JSON
 
 ## Phase 3 sign-off checklist
-- [ ] `GovVerifier._afterProofSubmit()` uses `msg.sender` — DONE
-- [ ] `setZKPRequest()` called in deploy script with real values
+- [x] `GovVerifier._afterProofSubmit()` uses `msg.sender` — DONE
+- [x] `setZKPRequest()` called in deploy script with real values — DONE (2026-04-16 heartbeat)
 - [ ] Validator contract deployed on Base Sepolia (or cross-chain path documented)
 - [ ] One real credential proof submitted and `setAllowedUser()` confirmed onchain
 - [ ] Vote circuit compiled to .zkey (proving key available)
