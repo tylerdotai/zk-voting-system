@@ -67,6 +67,7 @@ Evidence:
 - Proof request template created (`docs/proof-request-template.md`)
 - Real wallet-consumable credential offer payload captured in `docs/credential-offer-sample.json`
 - Wallet-accepted verification proof payload still pending
+- While blocked on holder-wallet interaction, Phase 3 groundwork continued with Base Sepolia planning (`docs/base-sepolia-plan.md`) and Hardhat network config updates
 
 ## Phase 2 sign-off checklist
 - [x] Gate 2.1 passed

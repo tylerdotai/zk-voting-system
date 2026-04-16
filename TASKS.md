@@ -57,7 +57,7 @@ Owner legend: Main, Subagent, Shared
 - [x] Document final verifier architecture in `docs/verifier-architecture.md`
 
 ### Base Sepolia deployment path
-- [ ] Add Base Sepolia network config
+- [x] Add Base Sepolia network config
 - [ ] Normalize env var names for deploy scripts
 - [ ] Update deploy scripts for credential-gated contracts
 - [ ] Add deterministic contract address output file
