@@ -73,6 +73,24 @@ Evidence:
 ## Phase 2 sign-off checklist
 - [x] Gate 2.1 passed
 - [x] Gate 2.2 passed
-- [ ] Gate 2.3 passed
-- [ ] Gate 2.4 passed
+- [ ] Gate 2.3 passed (issuer credential offer generated; wallet accept pending Tyler action)
+- [ ] Gate 2.4 passed (proof request template created; wallet verification pending)
 - [x] Evidence captured in docs
+
+## Overnight heartbeat findings (2026-04-16)
+
+### Issuer tunnel still alive
+- Public URL `https://weak-tiger-12.loca.lt` still responding
+- Issuer API reachable at root (RapiDoc API docs page confirmed)
+- All 6 containers healthy
+- No localtunnel process running — tunnel URL is stale but still answering (likely cached by localtunnel service)
+- **Action needed:** Re-establish fresh localtunnel and update `ISSUER_SERVER_URL` in `.env-issuer` before any new credential offers, or the offer payloads will have a mismatched callback URL
+
+### Phase 3 critical finding
+- GovVerifier._afterProofSubmit() had incorrect address extraction (`inputs[inputs.length - 1]`)
+- Fixed: now uses `msg.sender` which is correct for Polygon ID credential proofs (the circuit does not output the Ethereum address; binding is implicit via tx origin)
+- vote.circom is a separate circuit (nullifierHash/voterHash outputs) — does NOT go through GovVerifier
+- See docs/phase3-implementation-plan.md for full two-circuit architecture documentation
+
+### Tests
+- All 127 tests still passing after GovVerifier.sol fix
