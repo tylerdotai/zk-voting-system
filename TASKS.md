@@ -65,11 +65,10 @@ Owner legend: Main, Subagent, Shared
 
 ### Contract implementation
 - [x] Resolve circular dependency between voting contract and GovVerifier deployment flow
+- [x] Fix _afterProofSubmit() address binding — now uses msg.sender (correct for Polygon ID credential proofs; vote circuit is a separate concern)
+- [x] Document two-circuit architecture in docs/phase3-implementation-plan.md
+- [ ] Wire setZKPRequest() in deploy script (missing — needs validator contract + proof request config values from issuer)
 - [ ] Implement Polygon ID-compatible verifier bridge (requires real validator contract + setZKPRequest initialization)
-- [ ] Resolve circuit input → address binding strategy before wiring _afterProofSubmit() → setAllowedUser() (see docs/verifier-architecture.md "CRITICAL — Circuit Input Mapping")
-- [ ] Wire proof success to `setAllowedUser(address)` or equivalent gate path
-- [x] Restrict direct authorization writes to GovVerifier only (remove public bypass on voting contract)
-- [ ] Add explicit non-production-only bypass path if needed for local testing
 - [x] Restrict direct authorization writes to GovVerifier only (remove public bypass on voting contract)
 - [ ] Add explicit non-production-only bypass path if needed for local testing
 
