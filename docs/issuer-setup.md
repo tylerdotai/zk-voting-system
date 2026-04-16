@@ -60,8 +60,58 @@ Example identity creation payload:
 }
 ```
 
+## Current working path
+A real wallet-consumable credential offer flow is now generating successfully.
+
+Working values from current run:
+- Public issuer URL: `https://zk-voting-issuer.loca.lt`
+- Issuer DID: `did:polygonid:polygon:amoy:2qSugB8VLKyAxEDwo8EMsqq9bwmToR2HT4XgBoVXxX`
+- Polygon-ID-ready schema URL: `https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json`
+- Imported schema id: `0aaf97ad-3136-4c2e-bba5-571f9bb94b4f`
+- Credential link id: `62672ea0-e7f0-47b5-a2c7-d23fab70734a`
+
+Commands that worked:
+```bash
+# create schema import
+curl -X POST http://localhost:3001/v2/identities/$IDENT/schemas \
+  -H "Authorization: Basic $AUTH" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "url":"https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json",
+    "schemaType":"FortWorthDAOMembershipCredential",
+    "title":"Fort Worth DAO Membership",
+    "description":"Polygon ID membership schema for voting eligibility",
+    "version":"1.0.0"
+  }'
+
+# create credential link
+curl -X POST http://localhost:3001/v2/identities/$IDENT/credentials/links \
+  -H "Authorization: Basic $AUTH" \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "schemaID":"0aaf97ad-3136-4c2e-bba5-571f9bb94b4f",
+    "signatureProof":true,
+    "mtProof":false,
+    "credentialSubject":{
+      "membershipId":"fwdao-0001",
+      "membershipStatus":"active",
+      "jurisdiction":"Fort Worth, TX",
+      "memberSince":20250115,
+      "votingEligible":true
+    },
+    "limitedClaims":1
+  }'
+
+# create wallet offer
+curl -X POST http://localhost:3001/v2/identities/$IDENT/credentials/links/62672ea0-e7f0-47b5-a2c7-d23fab70734a/offer \
+  -H "Authorization: Basic $AUTH"
+```
+
+Saved sample payload:
+- `docs/credential-offer-sample.json`
+
 ## Current blocker to clear next
-Direct `POST /v2/identities/{identifier}/credentials` issuance still needs final payload tuning against a schema/type pair that the API accepts cleanly for our custom credential. Use wallet link issuance path in UI as fallback for first successful issue.
+The issuer now produces a real Privado wallet link payload. Remaining work is to test this offer with a real wallet scan/accept flow, then capture the issued credential evidence and move on to proof-request generation for verification.
 
 ## Gate evidence checklist
 - Gate 2.1: service health + reachable UI/API

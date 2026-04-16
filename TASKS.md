@@ -40,12 +40,12 @@ Owner legend: Main, Subagent, Shared
 - [x] Verify issuer health endpoints or UI
 - [x] Register or load schema into issuer flow
 - [ ] Issue first test credential to a test identity
-- [ ] Document issuance walkthrough step-by-step
+- [x] Document issuance walkthrough step-by-step
 
 ### Proof request setup
 - [x] Define proof request payload for app verification flow
 - [ ] Confirm wallet compatibility with chosen proof request
-- [ ] Test QR or deep-link request end-to-end
+- [x] Test QR or deep-link request generation end-to-end
 
 ---
 

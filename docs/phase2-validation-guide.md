@@ -57,11 +57,16 @@ Evidence:
 
 ### Gate 2.3 current status
 - Identity creation validated (`POST /v2/identities`)
-- Full credential issuance to holder wallet still pending final flow lock (API payload tuning vs UI link issuance path)
+- Public tunnel established: `https://zk-voting-issuer.loca.lt`
+- Custom Polygon-ID-ready schema imported successfully from repo-hosted raw GitHub URL
+- Credential link created successfully (`POST /v2/identities/{identifier}/credentials/links`)
+- Wallet offer generated successfully (`POST /v2/identities/{identifier}/credentials/links/{id}/offer`)
+- Remaining step: holder wallet must accept the offer and receive the credential
 
 ### Gate 2.4 current status
 - Proof request template created (`docs/proof-request-template.md`)
-- Wallet-accepted real payload capture still pending
+- Real wallet-consumable credential offer payload captured in `docs/credential-offer-sample.json`
+- Wallet-accepted verification proof payload still pending
 
 ## Phase 2 sign-off checklist
 - [x] Gate 2.1 passed
