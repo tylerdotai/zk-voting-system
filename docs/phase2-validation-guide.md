@@ -39,58 +39,45 @@ Evidence:
 
 ---
 
-## Current run evidence (2026-04-16)
+## Current status (2026-04-16)
 
-### Gate 2.1 evidence snapshot
-- Issuer stack boot command succeeded: `make run-all-registry`
-- Containers healthy: `issuer-api-1`, `issuer-ui-1`, `issuer-postgres-1`, `issuer-redis-1`, `issuer-notifications-1`, `issuer-pending_publisher-1`
-- API check: `curl http://localhost:3001` returned `200`
-- UI check: `curl http://localhost:8088` returned `401` (expected due auth)
+### Gate 2.1 — PASSED
+- All 6 issuer containers healthy (issuer-api, issuer-ui, issuer-postgres, issuer-redis, issuer-notifications, issuer-pending_publisher)
+- API reachable at :3001, UI at :8088
+- Public tunnel live at https://zk-voting-issuer.loca.lt (refreshed this morning)
+- `.env-issuer` updated with new tunnel URL
 
-### Gate 2.2 evidence snapshot
-- Schema file created: `schemas/v1-fort-worth-dao-member.json`
-- Schema version file created: `schemas/VERSION` (`1.0.0`)
-- Supporting docs created:
-  - `docs/schema-reference.md`
-  - `docs/proof-request-template.md`
-- Issuer API schema import validated with `POST /v2/identities/{identifier}/schemas` (201 + schema id)
+### Gate 2.2 — PASSED
+- Schema: `schemas/v1-fort-worth-dao-member.json` (Polygon ID format)
+- Schema hash: `63da8028ea572b245541ced3451e0f67`
+- Schema type: `FortWorthDAOMembershipCredential`
+- Fields: membershipId, membershipStatus, jurisdiction, memberSince, votingEligible, membershipTier, committee
 
-### Gate 2.3 current status
-- Identity creation validated (`POST /v2/identities`)
-- Public tunnel established and re-established after tunnel process death. Current live URL: `https://weak-tiger-12.loca.lt`
-- Issuer restarted after tunnel rotation so offer payloads now reference the current live callback URL
-- Custom Polygon-ID-ready schema imported successfully from repo-hosted raw GitHub URL
-- Credential link created successfully (`POST /v2/identities/{identifier}/credentials/links`)
-- Wallet offer generated successfully (`POST /v2/identities/{identifier}/credentials/links/{id}/offer`)
-- Remaining step: holder wallet must accept the offer and receive the credential
+### Gate 2.3 — 80% done, needs Tyler's action
+- 3 credential links already created (fwdao-0001, fwdao-0002, fwdao-0003)
+- Deep links generated and active
+- Problem: `POST /v2/identities/{id}/credentials/links` gives "at least one proof type should be enabled" — seems to require `BJJSignature2021` specifically, not the array syntax
+- Also: trying to create a 4th link for same DID fails with schema validation error (might be linked to the same schema already being imported)
+- Tyler action needed: open the Polygon ID wallet app, scan one of the deep links, accept the credential offer
 
-### Gate 2.4 current status
-- Proof request template created (`docs/proof-request-template.md`)
-- Real wallet-consumable credential offer payload captured in `docs/credential-offer-sample.json` and refreshed after tunnel rotation
-- Wallet-accepted verification proof payload still pending
-- While blocked on holder-wallet interaction, Phase 3 groundwork continued with Base Sepolia planning (`docs/base-sepolia-plan.md`) and Hardhat network config updates
+### Gate 2.4 — Template done, waiting on wallet
+- Proof request template documented in `docs/proof-request-template.md`
+- Real offer payloads available from the existing links
+- Wallet must actually scan and start proof generation
 
-## Phase 2 sign-off checklist
-- [x] Gate 2.1 passed
-- [x] Gate 2.2 passed
-- [ ] Gate 2.3 passed (issuer credential offer generated; wallet accept pending Tyler action)
-- [ ] Gate 2.4 passed (proof request template created; wallet verification pending)
-- [x] Evidence captured in docs
+### Phase 3 readiness (overnight heartbeat findings)
+- GovVerifier._afterProofSubmit() already uses `msg.sender` (fixed before this session)
+- All 127 tests still passing
+- `setZKPRequest()` in deploy script still missing — this is the next real blocker
+- Phase 3 verifier-init-checklist: `docs/verifier-init-checklist.md`
 
-## Overnight heartbeat findings (2026-04-16)
+## Known blockers
+1. Wallet-side credential accept (Tyler action required — open Polygon ID wallet, scan deep link)
+2. `setZKPRequest()` initialization in deploy script (requires validator contract + proof request config)
+3. Validator contract deployment to Base Sepolia
 
-### Issuer tunnel still alive
-- Public URL `https://weak-tiger-12.loca.lt` still responding
-- Issuer API reachable at root (RapiDoc API docs page confirmed)
-- All 6 containers healthy
-- No localtunnel process running — tunnel URL is stale but still answering (likely cached by localtunnel service)
-- **Action needed:** Re-establish fresh localtunnel and update `ISSUER_SERVER_URL` in `.env-issuer` before any new credential offers, or the offer payloads will have a mismatched callback URL
-
-### Phase 3 critical finding
-- GovVerifier._afterProofSubmit() had incorrect address extraction (`inputs[inputs.length - 1]`)
-- Fixed: now uses `msg.sender` which is correct for Polygon ID credential proofs (the circuit does not output the Ethereum address; binding is implicit via tx origin)
-- vote.circom is a separate circuit (nullifierHash/voterHash outputs) — does NOT go through GovVerifier
-- See docs/phase3-implementation-plan.md for full two-circuit architecture documentation
-
-### Tests
-- All 127 tests still passing after GovVerifier.sol fix
+## Overnight heartbeat actions taken
+- Re-established localtunnel public URL: `https://zk-voting-issuer.loca.lt`
+- Updated `.env-issuer` with new tunnel URL
+- Confirmed credential offer deep links are still active
+- Verified 3 existing links still valid and offerable
