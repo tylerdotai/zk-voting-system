@@ -189,7 +189,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🗳️ Voter Portal</h1>
+    <h1>Voter Portal</h1>
     <p class="subtitle">Rob's Rules Parliamentary Voting</p>
     
     <!-- Wallet Bar -->
@@ -207,9 +207,7 @@
     <div class="proposals-title">Active Proposals</div>
     <div id="proposalsList">
       <div class="empty-state">
-        <div class="emoji">📋</div>
-        <div>No proposals yet</div>
-        <div style="font-size: 0.8rem; margin-top: 0.5rem;">The chair will create proposals for voting.</div>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">NO PROPOSALS</div>
       </div>
     </div>
     
@@ -217,9 +215,9 @@
     <div class="vote-section hidden" id="voteSection">
       <h3 id="selectedProposalTitle">Proposal #0</h3>
       <div class="votes-display">
-        <span>👍 Yes: <strong id="voteYesCount">0</strong></span>
-        <span>👎 No: <strong id="voteNoCount">0</strong></span>
-        <span>➡️ Abstain: <strong id="voteAbstainCount">0</strong></span>
+        <span>Yes: <strong id="voteYesCount">0</strong></span>
+        <span>No: <strong id="voteNoCount">0</strong></span>
+        <span>Abstain: <strong id="voteAbstainCount">0</strong></span>
       </div>
       <div id="votingControls">
         <div class="vote-buttons">
@@ -311,12 +309,12 @@
         if (eligible) {
           banner.style.display = 'block';
           banner.className = 'voter-status eligible';
-          banner.innerHTML = '✅ You are an eligible voter';
+          banner.innerHTML = 'You are an eligible voter';
           enableVoting();
         } else {
           banner.style.display = 'block';
           banner.className = 'voter-status not-eligible';
-          banner.innerHTML = '❌ You are not registered to vote. Ask the chair to add you.';
+          banner.innerHTML = 'You are not registered to vote. Ask the chair to add you.';
           disableVoting();
         }
       } catch (e) {
@@ -342,9 +340,7 @@
         if (count.toString() === '0') {
           list.innerHTML = `
             <div class="empty-state">
-              <div class="emoji">📋</div>
-              <div>No proposals yet</div>
-              <div style="font-size: 0.8rem; margin-top: 0.5rem;">The chair will create proposals for voting.</div>
+              <div style="font-size: 3rem; margin-bottom: 1rem;">NO PROPOSALS</div>
             </div>`;
           return;
         }
@@ -368,8 +364,8 @@
             </div>
             <div class="proposal-desc">${p[0]}</div>
             <div class="proposal-meta">
-              <span>👤 ${p[1].slice(0,6)}...</span>
-              <span>🗳️ ${p[7]} yes / ${p[8]} no / ${p[9]} abstain</span>
+              <span>${p[1].slice(0,6)}...</span>
+              <span>${p[7]} yes / ${p[8]} no / ${p[9]} abstain</span>
               <span>${timeAgoStr}</span>
             </div>
           `;
@@ -411,7 +407,7 @@
           // Voting open
           const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
           if (alreadyVoted) {
-            statusEl.textContent = '✅ You have already voted on this proposal.';
+            statusEl.textContent = 'You have already voted on this proposal.';
             controls.innerHTML = '<em style="color:#94a3b8">You have cast your vote.</em>';
           } else {
             statusEl.textContent = '';
@@ -423,13 +419,13 @@
               </div>`;
           }
         } else if (state === 0 || state === 1) {
-          statusEl.textContent = '⏳ Voting is not yet open for this proposal.';
+          statusEl.textContent = 'Voting is not yet open for this proposal.';
           controls.innerHTML = '<em style="color:#94a3b8">Voting has not started yet.</em>';
         } else if (state === 3) {
-          statusEl.textContent = '✅ Proposal passed.';
+          statusEl.textContent = 'Proposal passed.';
           controls.innerHTML = '<em style="color:#4ade80">This proposal has passed.</em>';
         } else if (state === 4) {
-          statusEl.textContent = '❌ Proposal failed.';
+          statusEl.textContent = 'Proposal failed.';
           controls.innerHTML = '<em style="color:#f87171">This proposal did not pass.</em>';
         }
         
@@ -451,7 +447,7 @@
       }
       
       const btns = document.querySelectorAll('.vote-btn');
-      btns.forEach(b => { b.disabled = true; b.textContent = '⏳...'; });
+      btns.forEach((b, i) => { b.disabled = false; b.textContent = ['Yes','No','Abstain'][i]; });
       
       try {
         const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
@@ -466,11 +462,11 @@
         showToast('Transaction submitted...', false);
         
         await tx.wait();
-        showToast('✅ Vote recorded!');
+        showToast('Vote recorded!');
         await refreshSelectedProposal();
         await loadProposals();
         
-        document.getElementById('voteStatus').textContent = '✅ You have already voted on this proposal.';
+        document.getElementById('voteStatus').textContent = 'You have already voted on this proposal.';
         document.getElementById('votingControls').innerHTML = '<em style="color:#94a3b8">You have cast your vote.</em>';
         
       } catch (err) {

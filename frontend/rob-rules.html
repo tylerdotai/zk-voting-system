@@ -215,7 +215,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🗳️ Rob's Rules Voting</h1>
+    <h1>Rob's Rules Voting</h1>
     <p class="subtitle">Parliamentary Process on Blockchain</p>
     
     <div class="status-banner" id="statusBanner">
@@ -237,7 +237,7 @@
     
     <!-- Main List View -->
     <div class="section" id="listView">
-      <h2>📋 Active Proposals</h2>
+      <h2>Active Proposals</h2>
       <div class="proposal-list" id="proposalList">
         <p style="color: #64748b; text-align: center; padding: 2rem;">No proposals yet</p>
       </div>
@@ -258,16 +258,16 @@
       
       <!-- Chair Controls -->
       <div class="chair-controls" id="chairControls" style="display: none;">
-        <h3>⚡ Chair Actions</h3>
+        <h3>Chair Actions</h3>
         <button class="btn btn-warning" id="btnSecond" onclick="secondProposal()">Second Motion</button>
         <button class="btn btn-primary" id="btnOpenVoting" onclick="openVoting()">Open Voting (3 days)</button>
         <button class="btn btn-secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting (custom)</button>
-        <button class="btn btn-success" id="btnFinalize" onclick="finalizeProposal()">✅ Finalize Proposal</button>
+        <button class="btn btn-success" id="btnFinalize" onclick="finalizeProposal()">Finalize Proposal</button>
       </div>
       
       <!-- Amendment Section -->
       <div class="section" id="amendmentSection">
-        <h2>📝 Amendments</h2>
+        <h2>Amendments</h2>
         
         <div class="form-group hidden" id="amendmentForm">
           <textarea id="amendmentText" placeholder="Enter your amendment..."></textarea>
@@ -279,10 +279,10 @@
       
       <!-- Voting Section -->
       <div class="section" id="votingSection" style="display: none;">
-        <h2>🗳️ Vote on Motion</h2>
+        <h2>Vote on Motion</h2>
         <div class="vote-buttons">
-          <button class="vote-btn yes" id="voteYes" onclick="voteOnMotion(0)">✅ Yes</button>
-          <button class="vote-btn no" id="voteNo" onclick="voteOnMotion(1)">❌ No</button>
+          <button class="vote-btn yes" id="voteYes" onclick="voteOnMotion(0)">Yes</button>
+          <button class="vote-btn no" id="voteNo" onclick="voteOnMotion(1)">No</button>
           <button class="vote-btn abstain" id="voteAbstain" onclick="voteOnMotion(2)">➖ Abstain</button>
         </div>
         <p id="voteStatus" style="color: #64748b; margin-top: 1rem; text-align: center;"></p>
@@ -290,7 +290,7 @@
       
       <!-- Results Section -->
       <div class="section" id="resultsSection">
-        <h2>📊 Current Results</h2>
+        <h2>Current Results</h2>
         <div style="display: flex; gap: 2rem; margin-top: 1rem;">
           <div style="text-align: center;">
             <div style="font-size: 2rem; color: #22c55e;" id="yesCount">0</div>
@@ -441,7 +441,7 @@
         if (!isEligible) {
           if (voterBanner) {
             voterBanner.style.display = 'block';
-            voterBanner.innerHTML = '❌ You are not registered to vote. <button class="action-btn" onclick="registerAsVoter()">Register Now</button>';
+            voterBanner.innerHTML = 'You are not registered to vote. <button class="action-btn" onclick="registerAsVoter()">Register Now</button>';
             voterBanner.style.background = 'rgba(248, 113, 113, 0.2)';
             voterBanner.style.borderColor = '#f87171';
           }
@@ -451,7 +451,7 @@
         } else {
           if (voterBanner) {
             voterBanner.style.display = 'block';
-            voterBanner.innerHTML = '✅ You are an eligible voter';
+            voterBanner.innerHTML = 'You are an eligible voter';
             voterBanner.style.background = 'rgba(74, 222, 128, 0.2)';
             voterBanner.style.borderColor = '#4ade80';
           }
@@ -567,10 +567,10 @@
         // Show final status if passed/failed
         const finalStatus = document.getElementById('finalStatus');
         if (parseInt(p[2]) === 3) {
-          finalStatus.textContent = '✅ MOTION PASSED';
+          finalStatus.textContent = 'MOTION PASSED';
           finalStatus.style.color = '#22c55e';
         } else if (parseInt(p[2]) === 4) {
-          finalStatus.textContent = '❌ MOTION FAILED';
+          finalStatus.textContent = 'MOTION FAILED';
           finalStatus.style.color = '#ef4444';
         } else {
           finalStatus.textContent = '';
@@ -639,7 +639,7 @@
             item.className = 'amendment-item';
             
             const statusClass = a[2] ? 'approved' : 'pending';
-            const statusText = a[2] ? '✓ Approved' : '⏳ Pending Approval';
+            const statusText = a[2] ? '✓ Approved' : 'Pending Approval';
             
             item.innerHTML = `
               <div class="amendment-header">
