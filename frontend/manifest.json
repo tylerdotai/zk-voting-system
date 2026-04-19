@@ -1,7 +1,7 @@
 {
   "name": "ZK DID Voting",
   "short_name": "ZK Voting",
-  "description": "Polygon ID credential-gated voting on Sepolia",
+  "description": "ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#1a1a2e",
