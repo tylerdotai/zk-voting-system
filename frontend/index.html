@@ -359,7 +359,7 @@
           card.className = 'proposal-card';
           card.onclick = () => selectProposal(i, state, p[0]);
           
-          const timeAgo = p[3] > 0 ? timeAgo(parseInt(p[3])) : '—';
+          const timeAgoStr = p[3] > 0 ? timeAgo(parseInt(p[3])) : '—';
           
           card.innerHTML = `
             <div class="proposal-header">
@@ -370,7 +370,7 @@
             <div class="proposal-meta">
               <span>👤 ${p[1].slice(0,6)}...</span>
               <span>🗳️ ${p[7]} yes / ${p[8]} no / ${p[9]} abstain</span>
-              <span>${timeAgo}</span>
+              <span>${timeAgoStr}</span>
             </div>
           `;
           
