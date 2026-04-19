@@ -2,168 +2,279 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#ffffff">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Voter Portal — Rob's Rules Voting</title>
+  <title>Rob's Rules Voting — Voter Portal</title>
   <link rel="manifest" href="/manifest.json">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      min-height: 100vh;
-      color: #fff;
-      padding: 1rem;
+    
+    :root {
+      --fw-orange: #ff6b00;
+      --fw-dark: #1a1a1a;
+      --fw-gray: #6b7280;
+      --fw-light: #f9fafb;
+      --fw-border: #e5e7eb;
+      --state-created: #9ca3af;
+      --state-seconded: #f59e0b;
+      --state-voting: #22c55e;
+      --state-passed: #10b981;
+      --state-failed: #ef4444;
     }
-    .container { max-width: 700px; margin: 0 auto; }
     
-    h1 { text-align: center; margin-bottom: 0.25rem; font-size: 1.5rem; }
-    .subtitle { text-align: center; color: #888; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--fw-light);
+      color: var(--fw-dark);
+      min-height: 100vh;
+    }
     
-    /* Wallet Section */
-    .wallet-bar {
+    /* Header */
+    .header {
+      background: var(--fw-dark);
+      color: #fff;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .header .network {
+      font-size: 0.75rem;
+      color: var(--fw-gray);
+      background: rgba(255,255,255,0.1);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+    }
+    
+    /* Main */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    /* Wallet + Voter Status Bar */
+    .status-bar {
+      background: #fff;
+      border: 1px solid var(--fw-border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .wallet-section {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      background: rgba(255,255,255,0.05);
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
+      gap: 1rem;
     }
     .connect-btn {
-      background: #4ade80;
-      color: #000;
+      background: var(--fw-orange);
+      color: #fff;
       border: none;
-      padding: 0.6rem 1.2rem;
-      font-size: 0.95rem;
-      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 700;
       border-radius: 8px;
       cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
     }
     .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    #walletAddress { color: #94a3b8; font-size: 0.85rem; }
-    #walletInfo { display: none; }
-    
-    /* Voter Status Banner */
-    .voter-status {
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      margin-bottom: 1rem;
-      display: none;
+    .wallet-addr {
+      font-family: monospace;
       font-size: 0.9rem;
-      text-align: center;
+      color: var(--fw-gray);
     }
-    .voter-status.eligible {
-      background: rgba(74, 222, 128, 0.2);
-      border: 1px solid #4ade80;
-      color: #4ade80;
+    
+    .voter-badge {
+      padding: 0.6rem 1.5rem;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .voter-status.not-eligible {
-      background: rgba(248, 113, 113, 0.2);
-      border: 1px solid #f87171;
-      color: #f87171;
-    }
-    .action-btn {
-      background: #4ade80;
-      color: #000;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    .action-btn:hover { opacity: 0.85; }
+    .voter-badge.eligible { background: rgba(34, 197, 94, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
+    .voter-badge.not-eligible { background: rgba(239, 68, 68, 0.1); color: var(--state-failed); border: 2px solid var(--state-failed); }
     
     /* Proposal Cards */
     .proposals-title {
-      font-size: 1.1rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: #94a3b8;
+      color: var(--fw-gray);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      font-size: 0.8rem;
+      margin-bottom: 1rem;
     }
-    .proposal-card {
-      background: rgba(255,255,255,0.05);
-      border-radius: 12px;
-      padding: 1rem;
-      margin-bottom: 0.75rem;
-      cursor: pointer;
-      border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.2s;
-    }
-    .proposal-card:hover { border-color: rgba(74, 222, 128, 0.4); transform: translateY(-1px); }
-    .proposal-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; }
-    .proposal-id { font-size: 0.75rem; color: #64748b; }
-    .proposal-desc { font-size: 0.95rem; color: #e2e8f0; margin-bottom: 0.5rem; }
-    .proposal-meta { display: flex; gap: 0.75rem; font-size: 0.8rem; color: #64748b; }
-    .state-badge {
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-    .state-created { background: rgba(148, 163, 184, 0.2); color: #94a3b8; }
-    .state-seconded { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-    .state-voting { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
-    .state-passed { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
-    .state-failed { background: rgba(248, 113, 113, 0.2); color: #f87171; }
     
-    /* Vote Section (shown when card clicked) */
-    .vote-section {
-      background: rgba(74, 222, 128, 0.1);
-      border: 1px solid rgba(74, 222, 128, 0.3);
+    .proposal-card {
+      background: #fff;
+      border: 2px solid var(--fw-border);
       border-radius: 12px;
-      padding: 1.25rem;
-      margin: 1rem 0;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.15s;
     }
-    .vote-section h3 { font-size: 1rem; margin-bottom: 1rem; }
-    .vote-buttons { display: flex; gap: 0.75rem; }
-    .vote-btn {
-      flex: 1;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 8px;
+    .proposal-card:hover { border-color: var(--fw-orange); box-shadow: 0 4px 12px rgba(255,107,0,0.1); }
+    .proposal-card.selected { border-color: var(--fw-orange); border-width: 3px; }
+    .proposal-card.voting-open { border-left: 6px solid var(--state-voting); }
+    .proposal-card.closed { opacity: 0.7; }
+    
+    .proposal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .proposal-id {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--fw-gray);
+      text-transform: uppercase;
+    }
+    .state-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.35rem 1rem;
+      border-radius: 20px;
+      color: #fff;
+    }
+    .state-0 { background: var(--state-created); }
+    .state-1 { background: var(--state-seconded); }
+    .state-2 { background: var(--state-voting); }
+    .state-3 { background: var(--state-passed); }
+    .state-4 { background: var(--state-failed); }
+    
+    .proposal-desc {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--fw-dark);
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+    
+    .proposal-votes {
+      display: flex;
+      gap: 2.5rem;
+      font-size: 1.1rem;
+      color: var(--fw-gray);
+    }
+    .proposal-votes strong {
+      font-weight: 800;
+      font-size: 1.5rem;
+      color: var(--fw-dark);
+    }
+    .proposal-votes span { display: flex; align-items: baseline; gap: 0.5rem; }
+    
+    /* Vote Section */
+    .vote-section {
+      background: #fff;
+      border: 2px solid var(--fw-orange);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 1.5rem 0;
+    }
+    .vote-section h3 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    
+    /* Large Vote Counts */
+    .vote-display {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .vote-cell {
+      background: var(--fw-light);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .vote-cell .count {
+      font-size: 4rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .vote-cell .label {
       font-size: 1rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
+      color: var(--fw-gray);
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    .vote-btn.yes { background: #22c55e; color: #fff; }
-    .vote-btn.no { background: #ef4444; color: #fff; }
-    .vote-btn.abstain { background: #64748b; color: #fff; }
+    .vote-cell.yes .count { color: var(--state-passed); }
+    .vote-cell.no .count { color: var(--state-failed); }
+    .vote-cell.abstain .count { color: var(--state-created); }
+    
+    /* Vote Buttons — BIG AND READABLE */
+    .vote-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .vote-btn {
+      padding: 1.5rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.15s;
+    }
     .vote-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .vote-btn:hover:not(:disabled) { transform: scale(1.03); }
+    .vote-btn.yes { background: var(--state-passed); color: #fff; }
+    .vote-btn.yes:hover:not(:disabled) { background: #0ea572; transform: translateY(-2px); }
+    .vote-btn.no { background: var(--state-failed); color: #fff; }
+    .vote-btn.no:hover:not(:disabled) { background: #dc2626; transform: translateY(-2px); }
+    .vote-btn.abstain { background: var(--state-created); color: #fff; }
+    .vote-btn.abstain:hover:not(:disabled) { background: #6b7280; transform: translateY(-2px); }
+    
+    .vote-status {
+      text-align: center;
+      font-size: 1rem;
+      color: var(--fw-gray);
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--fw-border);
+    }
+    
     .close-btn {
       background: none;
-      border: 1px solid #64748b;
-      color: #94a3b8;
-      padding: 0.4rem 0.8rem;
-      border-radius: 6px;
+      border: 1px solid var(--fw-border);
+      color: var(--fw-gray);
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 0.8rem;
-      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      margin-top: 1rem;
     }
-    .close-btn:hover { border-color: #94a3b8; color: #e2e8f0; }
+    .close-btn:hover { border-color: var(--fw-dark); color: var(--fw-dark); }
     
-    .votes-display {
-      display: flex;
-      justify-content: space-around;
-      margin: 0.75rem 0;
-      font-size: 0.85rem;
-      color: #94a3b8;
-    }
-    .votes-display span { text-align: center; }
-    
-    /* Empty state */
+    /* Empty State */
     .empty-state {
       text-align: center;
-      padding: 3rem 1rem;
-      color: #64748b;
+      padding: 4rem 2rem;
+      color: var(--fw-gray);
     }
-    .empty-state .emoji { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .empty-state p { font-size: 1.1rem; }
     
     /* Toast */
     .toast {
@@ -171,62 +282,76 @@
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
-      background: #1e293b;
+      background: var(--fw-dark);
       color: #fff;
-      padding: 0.75rem 1.5rem;
+      padding: 0.75rem 2rem;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 1rem;
       opacity: 0;
       transition: opacity 0.3s;
       z-index: 100;
-      border: 1px solid rgba(255,255,255,0.1);
     }
     .toast.show { opacity: 1; }
-    .toast.error { border-color: #f87171; }
+    .toast.error { background: var(--state-failed); }
     
     .hidden { display: none; }
+    
+    @media (min-width: 900px) {
+      .proposal-desc { font-size: 1.75rem; }
+      .vote-cell .count { font-size: 5rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Voter Portal</h1>
-    <p class="subtitle">Rob's Rules Parliamentary Voting</p>
-    
-    <!-- Wallet Bar -->
-    <div class="wallet-bar">
-      <button class="connect-btn" id="connectBtn">Connect Wallet</button>
-      <div id="walletInfo">
-        <span id="walletAddress"></span>
+  <div class="header">
+    <h1>Rob's Rules Voting — Voter Portal</h1>
+    <span class="network">Sepolia Testnet</span>
+  </div>
+  
+  <div class="main">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="wallet-section">
+        <button class="connect-btn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+        <span class="wallet-addr" id="walletAddress" style="display:none;"></span>
       </div>
+      <div class="voter-badge not-eligible" id="voterStatusBanner" style="display:none;"></div>
     </div>
     
-    <!-- Voter Status -->
-    <div class="voter-status" id="voterStatusBanner"></div>
-    
-    <!-- Proposals List -->
+    <!-- Proposals -->
     <div class="proposals-title">Active Proposals</div>
     <div id="proposalsList">
       <div class="empty-state">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">NO PROPOSALS</div>
+        <h3>No Proposals Yet</h3>
+        <p>The chair will create proposals for voting.</p>
       </div>
     </div>
     
-    <!-- Vote Section (shown when proposal selected) -->
+    <!-- Vote Section -->
     <div class="vote-section hidden" id="voteSection">
       <h3 id="selectedProposalTitle">Proposal #0</h3>
-      <div class="votes-display">
-        <span>Yes: <strong id="voteYesCount">0</strong></span>
-        <span>No: <strong id="voteNoCount">0</strong></span>
-        <span>Abstain: <strong id="voteAbstainCount">0</strong></span>
+      <div class="vote-display">
+        <div class="vote-cell yes">
+          <div class="count" id="voteYesCount">0</div>
+          <div class="label">Yes</div>
+        </div>
+        <div class="vote-cell no">
+          <div class="count" id="voteNoCount">0</div>
+          <div class="label">No</div>
+        </div>
+        <div class="vote-cell abstain">
+          <div class="count" id="voteAbstainCount">0</div>
+          <div class="label">Abstain</div>
+        </div>
       </div>
       <div id="votingControls">
         <div class="vote-buttons">
-          <button class="vote-btn yes" id="btnYes" onclick="castVote(0)">Yes</button>
-          <button class="vote-btn no" id="btnNo" onclick="castVote(1)">No</button>
-          <button class="vote-btn abstain" id="btnAbstain" onclick="castVote(2)">Abstain</button>
+          <button class="vote-btn yes" onclick="castVote(0)">Yes</button>
+          <button class="vote-btn no" onclick="castVote(1)">No</button>
+          <button class="vote-btn abstain" onclick="castVote(2)">Abstain</button>
         </div>
       </div>
-      <div id="voteStatus" style="font-size: 0.85rem; color: #94a3b8; margin-top: 0.75rem;"></div>
+      <div class="vote-status" id="voteStatus"></div>
       <button class="close-btn" onclick="closeVoteSection()">Close</button>
     </div>
   </div>
@@ -235,7 +360,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // ============ CONFIG ============
     const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
     const CONTRACT_ABI = [
       "function proposalCount() view returns (uint256)",
@@ -243,24 +367,17 @@
       "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
-      "function choiceCount() view returns (uint256)",
-      "event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair)",
       "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)"
     ];
     
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
-    const STATE_CLASSES = ['state-created', 'state-seconded', 'state-voting', 'state-passed', 'state-failed'];
-    const STATE_TO_INDEX = { Created: 0, Seconded: 1, Voting: 2, Passed: 3, Failed: 4 };
     
-    // State
     let provider, signer, contract, userAddress;
     let selectedProposalId = null;
-    let selectedProposalState = null;
     
-    // ============ WALLET ============
     async function connectWallet() {
       if (typeof window.ethereum === 'undefined') {
-        showToast('Please install MetaMask!', true);
+        showToast('Install MetaMask to use this application', true);
         return;
       }
       try {
@@ -268,228 +385,144 @@
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
-          showToast('Please switch to Sepolia testnet!', true);
+          showToast('Switch to Sepolia testnet', true);
           return;
         }
         
-        contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-        
-        document.getElementById('walletAddress').textContent = `${userAddress.slice(0,6)}...${userAddress.slice(-4)}`;
-        document.getElementById('walletInfo').style.display = 'flex';
+        document.getElementById('walletAddress').style.display = 'inline';
+        document.getElementById('walletAddress').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
         document.getElementById('connectBtn').textContent = 'Connected';
         document.getElementById('connectBtn').disabled = true;
         
         await checkVoterStatus();
         await loadProposals();
         
-        // Listen for new votes
         contract.on("MotionVoted", async () => {
-          if (selectedProposalId !== null) {
-            await refreshSelectedProposal();
-          }
+          if (selectedProposalId !== null) await refreshSelectedProposal();
           await loadProposals();
         });
-        
       } catch (err) {
-        console.error(err);
         showToast('Error: ' + (err.reason || err.message), true);
       }
     }
     
-    // ============ VOTER STATUS ============
     async function checkVoterStatus() {
-      if (!contract || !userAddress) return;
-      try {
-        const eligible = await contract.isEligible(userAddress);
-        const banner = document.getElementById('voterStatusBanner');
-        
-        if (eligible) {
-          banner.style.display = 'block';
-          banner.className = 'voter-status eligible';
-          banner.innerHTML = 'You are an eligible voter';
-          enableVoting();
-        } else {
-          banner.style.display = 'block';
-          banner.className = 'voter-status not-eligible';
-          banner.innerHTML = 'You are not registered to vote. Ask the chair to add you.';
-          disableVoting();
-        }
-      } catch (e) {
-        console.error('Error checking voter status:', e);
+      const eligible = await contract.isEligible(userAddress);
+      const badge = document.getElementById('voterStatusBanner');
+      badge.style.display = 'block';
+      if (eligible) {
+        badge.className = 'voter-badge eligible';
+        badge.textContent = 'Eligible Voter';
+      } else {
+        badge.className = 'voter-badge not-eligible';
+        badge.textContent = 'Not Registered';
       }
     }
     
-    function enableVoting() {
-      document.querySelectorAll('.vote-btn').forEach(b => b.disabled = false);
-    }
-    
-    function disableVoting() {
-      document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
-    }
-    
-    // ============ LOAD PROPOSALS ============
     async function loadProposals() {
       if (!contract) return;
-      try {
-        const count = await contract.proposalCount();
-        const list = document.getElementById('proposalsList');
-        
-        if (count.toString() === '0') {
-          list.innerHTML = `
-            <div class="empty-state">
-              <div style="font-size: 3rem; margin-bottom: 1rem;">NO PROPOSALS</div>
-            </div>`;
-          return;
-        }
-        
-        list.innerHTML = '';
-        for (let i = count - 1; i >= 0; i--) {
-          const p = await contract.getProposal(i);
-          const state = parseInt(p[2]);
-          const stateName = STATES[state] || 'Unknown';
-          
-          const card = document.createElement('div');
-          card.className = 'proposal-card';
-          card.onclick = () => selectProposal(i, state, p[0]);
-          
-          const timeAgoStr = p[3] > 0 ? timeAgo(parseInt(p[3])) : '—';
-          
-          card.innerHTML = `
-            <div class="proposal-header">
-              <span class="proposal-id">#${i}</span>
-              <span class="state-badge ${STATE_CLASSES[state]}">${stateName}</span>
-            </div>
-            <div class="proposal-desc">${p[0]}</div>
-            <div class="proposal-meta">
-              <span>${p[1].slice(0,6)}...</span>
-              <span>${p[7]} yes / ${p[8]} no / ${p[9]} abstain</span>
-              <span>${timeAgoStr}</span>
-            </div>
-          `;
-          
-          list.appendChild(card);
-        }
-      } catch (e) {
-        console.error('Error loading proposals:', e);
+      const count = parseInt((await contract.proposalCount()).toString());
+      const list = document.getElementById('proposalsList');
+      
+      if (count === 0) {
+        list.innerHTML = '<div class="empty-state"><h3>No Proposals Yet</h3><p>The chair will create proposals for voting.</p></div>';
+        return;
+      }
+      
+      list.innerHTML = '';
+      for (let i = count - 1; i >= 0; i--) {
+        const p = await contract.getProposal(i);
+        const state = parseInt(p[2]);
+        const card = document.createElement('div');
+        const isVoting = state === 2;
+        card.className = 'proposal-card' + (isVoting ? ' voting-open' : '') + (state >= 3 ? ' closed' : '');
+        card.onclick = () => selectProposal(i);
+        card.innerHTML = `
+          <div class="proposal-header">
+            <span class="proposal-id">Proposal #${i}</span>
+            <span class="state-badge state-${state}">${STATES[state]}</span>
+          </div>
+          <div class="proposal-desc">${p[0]}</div>
+          <div class="proposal-votes">
+            <span>Yes <strong>${p[7]}</strong></span>
+            <span>No <strong>${p[8]}</strong></span>
+            <span>Abstain <strong>${p[9]}</strong></span>
+          </div>
+        `;
+        list.appendChild(card);
       }
     }
     
-    // ============ SELECT PROPOSAL ============
-    async function selectProposal(id, state, desc) {
+    async function selectProposal(id) {
       selectedProposalId = id;
-      selectedProposalState = state;
+      const p = await contract.getProposal(id);
+      const state = parseInt(p[2]);
       
-      const section = document.getElementById('voteSection');
-      section.classList.remove('hidden');
-      document.getElementById('selectedProposalTitle').textContent = `Proposal #${id}: ${desc}`;
+      document.getElementById('voteSection').classList.remove('hidden');
+      document.getElementById('selectedProposalTitle').textContent = `Proposal #${id}`;
       
       await refreshSelectedProposal();
     }
     
     async function refreshSelectedProposal() {
       if (selectedProposalId === null || !contract) return;
-      try {
-        const p = await contract.getProposal(selectedProposalId);
-        document.getElementById('voteYesCount').textContent = p[7];
-        document.getElementById('voteNoCount').textContent = p[8];
-        document.getElementById('voteAbstainCount').textContent = p[9];
-        
-        const state = parseInt(p[2]);
-        selectedProposalState = state;
-        
-        const statusEl = document.getElementById('voteStatus');
-        const controls = document.getElementById('votingControls');
-        
-        if (state === 2) {
-          // Voting open
-          const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
-          if (alreadyVoted) {
-            statusEl.textContent = 'You have already voted on this proposal.';
-            controls.innerHTML = '<em style="color:#94a3b8">You have cast your vote.</em>';
-          } else {
-            statusEl.textContent = '';
-            controls.innerHTML = `
-              <div class="vote-buttons">
-                <button class="vote-btn yes" id="btnYes" onclick="castVote(0)">Yes</button>
-                <button class="vote-btn no" id="btnNo" onclick="castVote(1)">No</button>
-                <button class="vote-btn abstain" id="btnAbstain" onclick="castVote(2)">Abstain</button>
-              </div>`;
-          }
-        } else if (state === 0 || state === 1) {
-          statusEl.textContent = 'Voting is not yet open for this proposal.';
-          controls.innerHTML = '<em style="color:#94a3b8">Voting has not started yet.</em>';
-        } else if (state === 3) {
-          statusEl.textContent = 'Proposal passed.';
-          controls.innerHTML = '<em style="color:#4ade80">This proposal has passed.</em>';
-        } else if (state === 4) {
-          statusEl.textContent = 'Proposal failed.';
-          controls.innerHTML = '<em style="color:#f87171">This proposal did not pass.</em>';
+      const p = await contract.getProposal(selectedProposalId);
+      document.getElementById('voteYesCount').textContent = p[7];
+      document.getElementById('voteNoCount').textContent = p[8];
+      document.getElementById('voteAbstainCount').textContent = p[9];
+      
+      const state = parseInt(p[2]);
+      const statusEl = document.getElementById('voteStatus');
+      const controls = document.getElementById('votingControls');
+      const btns = controls.querySelectorAll('.vote-btn');
+      
+      if (state === 2) {
+        const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
+        if (alreadyVoted) {
+          statusEl.textContent = 'You have already voted on this proposal.';
+          controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-voting);font-weight:700;">Your vote has been recorded.</div>';
+        } else {
+          statusEl.textContent = 'Cast your vote below.';
+          controls.innerHTML = '<div class="vote-buttons"><button class="vote-btn yes" onclick="castVote(0)">Yes</button><button class="vote-btn no" onclick="castVote(1)">No</button><button class="vote-btn abstain" onclick="castVote(2)">Abstain</button></div>';
         }
-        
-        document.querySelectorAll('.vote-btn').forEach(b => b.disabled = false);
-      } catch (e) {
-        console.error('Error refreshing proposal:', e);
+      } else if (state === 0 || state === 1) {
+        statusEl.textContent = 'Voting has not started for this proposal.';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--fw-gray);">The chair will open voting soon.</div>';
+      } else if (state === 3) {
+        statusEl.textContent = 'This proposal has passed.';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-passed);font-weight:700;">Proposal Passed</div>';
+      } else if (state === 4) {
+        statusEl.textContent = 'This proposal did not pass.';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-failed);font-weight:700;">Proposal Failed</div>';
       }
     }
     
-    // ============ CAST VOTE ============
     async function castVote(choice) {
-      if (!contract || !userAddress) {
+      if (!contract) {
         showToast('Connect your wallet first', true);
         return;
       }
-      if (selectedProposalState !== 2) {
-        showToast('Voting is not open for this proposal', true);
-        return;
-      }
-      
-      const btns = document.querySelectorAll('.vote-btn');
-      btns.forEach((b, i) => { b.disabled = false; b.textContent = ['Yes','No','Abstain'][i]; });
-      
       try {
         const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
-        const proof = [
-          ethers.constants.HashZero, ethers.constants.HashZero,
-          ethers.constants.HashZero, ethers.constants.HashZero,
-          ethers.constants.HashZero, ethers.constants.HashZero,
-          ethers.constants.HashZero, ethers.constants.HashZero
-        ];
-        
+        const proof = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
         const tx = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash, proof);
-        showToast('Transaction submitted...', false);
-        
+        showToast('Transaction submitted...');
         await tx.wait();
-        showToast('Vote recorded!');
+        showToast('Vote recorded');
         await refreshSelectedProposal();
         await loadProposals();
-        
-        document.getElementById('voteStatus').textContent = 'You have already voted on this proposal.';
-        document.getElementById('votingControls').innerHTML = '<em style="color:#94a3b8">You have cast your vote.</em>';
-        
       } catch (err) {
-        console.error(err);
-        showToast('Error: ' + (err.reason || err.message), true);
-        btns.forEach((b, i) => { b.disabled = false; b.textContent = ['Yes','No','Abstain'][i]; });
+        showToast(err.reason || err.message, true);
       }
     }
     
     function closeVoteSection() {
       document.getElementById('voteSection').classList.add('hidden');
       selectedProposalId = null;
-      selectedProposalState = null;
-    }
-    
-    // ============ HELPERS ============
-    function timeAgo(timestamp) {
-      if (!timestamp) return '';
-      const diff = Date.now() / 1000 - parseInt(timestamp);
-      if (diff < 60) return 'just now';
-      if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-      if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-      return Math.floor(diff/86400) + 'd ago';
     }
     
     function showToast(message, isError = false) {
@@ -499,23 +532,14 @@
       setTimeout(() => toast.classList.remove('show'), 5000);
     }
     
-    // Auto-connect check
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', () => location.reload());
-      window.ethereum.on('chainChanged', () => location.reload());
     }
-    
-    document.getElementById('connectBtn').addEventListener('click', connectWallet);
-    
-    // Disable voting buttons by default
-    document.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
   </script>
   <script>
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js")
-          .then(reg => console.log("SW registered:", reg.scope))
-          .catch(err => console.warn("SW failed:", err));
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
       });
     }
   </script>
