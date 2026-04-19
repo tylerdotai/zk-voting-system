@@ -1,196 +1,45 @@
-# TASKS.md — ZK DID Voting System
+# TASKS.md — ZK Voting System
 
-Status: Active task board  
-Priority legend: P0 critical, P1 important, P2 useful  
-Owner legend: Main, Subagent, Shared
-
----
-
-## P0 — Foundation and Architecture
-
-- [x] Create whitepaper
-- [x] Create development paper
-- [x] Create skills plan
-- [x] Create roadmap
-- [x] Create tasks board
-- [x] Create acceptance gates
-- [x] Confirm final chain target as Base Sepolia for demo
-- [x] Confirm canonical credential name and schema fields
-- [x] Confirm demo story: issuer → proof → verify → proposal → vote
+Status: Active  
+Priority legend: P0 critical, P1 important, P2 useful
 
 ---
 
-## P0 — Identity Foundation (Phase 2)
+## P0 — Ship It (Must done before May 1st demo)
 
-### Research and setup
-- [x] Audit official ENS-gated allowlist issuer node deployment path
-- [x] Document required services, env vars, ports, and secrets
-- [x] Decide local vs hosted issuer runtime for demo (start local + public tunnel)
-- [x] Create `docs/issuer-setup.md`
-
-### Schema and credential model
-- [x] Define Fort Worth DAO Member credential schema (`FortWorthDAOMembershipCredential`)
-- [x] Define required fields: `membershipId`, `membershipStatus`, `jurisdiction`, `memberSince`, `votingEligible`
-- [x] Decide optional eligibility flags
-- [x] Store schema in repo with versioning
-- [x] Create example credential payload
-
-### Issuer implementation
-- [x] Stand up ENS-gated allowlist issuer services
-- [x] Verify issuer health endpoints or UI
-- [x] Register or load schema into issuer flow
-- [ ] Issue first test credential to a test identity
-- [x] Document issuance walkthrough step-by-step
-
-### Proof request setup
-- [x] Define proof request payload for app verification flow
-- [ ] Confirm wallet compatibility with chosen proof request
-- [x] Test QR or deep-link request generation end-to-end
+- [ ] **Vercel deploy** — get public URL for 60-person Fort Worth DAO demo
+- [ ] **3-voter end-to-end test** — add 2 test voters, complete full Rob's Rules flow: create → second → amend → open voting → vote → finalize
+- [ ] **Demo rehearsal** — run full flow from clean state, fix failures
+- [ ] **README update** — reflect current ENS-gated Sepolia reality
 
 ---
 
-## P0 — Onchain Verifier Integration (Phase 3)
+## P1 — Demo Hardening
 
-### Contract audit
-- [x] Audit `Voter Allowlist.sol` against ENS-gated allowlist real verifier requirements
-- [x] Decide whether to adapt current verifier bridge or replace it
-- [x] Document final verifier architecture in `docs/verifier-architecture.md`
-
-### Base Sepolia deployment path
-- [x] Add Base Sepolia network config
-- [x] Normalize env var names for deploy scripts
-- [x] Update deploy scripts for allowlist-gated contracts
-- [x] Add deterministic contract address output file
-- [x] Add contract config file for frontend consumption
-
-### Contract implementation
-- [x] Resolve circular dependency between voting contract and Voter Allowlist deployment flow
-- [x] Fix _afterProofSubmit() address binding — now uses msg.sender (correct for ENS-gated allowlist credential proofs; vote circuit is a separate concern)
-- [x] Document two-circuit architecture in docs/phase3-implementation-plan.md
-- [x] Wire setZKPRequest() in deploy script (done — CredentialAtomicQuerySigV2Validator on Base Sepolia)
-- [x] Implement ENS-gated allowlist-compatible verifier bridge (setZKPRequest initialized — Phase 3 sign-off checklist updated)
-- [x] Restrict direct authorization writes to Voter Allowlist only (remove public bypass on voting contract)
-- [ ] Add explicit non-production-only bypass path if needed for local testing
-
-### Validation
-- [x] Add tests for unauthorized user blocked
-- [x] Add tests for authorized user allowed after proof success
-- [ ] Deploy contracts to Base Sepolia
-- [ ] Verify proof success updates onchain authorization state
+- [ ] Add transaction hash display (credibility for audience)
+- [ ] Add loading / pending tx / success / error states to both HTML pages
+- [ ] Wrong network detection + switch to Sepolia prompt
+- [ ] Empty state / no-permission states for proposal list
 
 ---
 
-## P0 — Governance dApp (Phase 4)
+## P2 — Nice-to-Haves (after May 1st)
 
-### App structure
-- [ ] Decide whether to keep static HTML or move to a structured frontend app
-- [ ] Create shared config module for chain, addresses, ABI references
-- [ ] Remove hardcoded stale address assumptions
-
-### Wallet and verification UX
-- [ ] Implement wallet connect flow for Base Sepolia
-- [ ] Add wrong-network detection and switch prompt
-- [ ] Show verified vs unverified state clearly
-- [ ] Link proof verification success back into voting UI state
-
-### Proposal lifecycle UX
-- [ ] Build proposal list from live contract data
-- [ ] Build proposal detail view
-- [ ] Implement create proposal flow
-- [ ] Implement second proposal flow
-- [ ] Implement submit amendment flow
-- [ ] Implement approve amendment flow
-- [ ] Implement open voting flow
-- [ ] Implement cast vote flow
-- [ ] Implement finalize proposal flow
-
-### Product polish
-- [ ] Add loading, pending tx, success, and error states
-- [ ] Add empty states and no-permission states
-- [ ] Add transaction hash visibility for demo credibility
+- [ ] SSE real-time vote count updates (future)
+- [ ] ENS domain-gated eligibility (future — reserved slot in contract)
+- [ ] ZK vote privacy layer (future — zk-SNARKs + ML-DSA, documented in whitepaper)
+- [ ] Mobile app (native wrapper for PWA)
 
 ---
 
-## P0 — PWA Shell (Phase 5)
+## Completed
 
-### Core PWA files
-- [ ] Add `manifest.webmanifest`
-- [ ] Add app icons
-- [ ] Add service worker
-- [ ] Register service worker in app shell
-
-### Offline behavior
-- [ ] Cache static shell assets
-- [ ] Show offline banner or offline mode state
-- [ ] Handle reconnect cleanly
-- [ ] Ensure cached shell launches without network
-
-### Mobile polish
-- [ ] Verify phone-sized layout for all key screens
-- [ ] Improve tap targets and form usability
-- [ ] Test installed mode on mobile
-- [ ] Ensure wallet interaction flow remains usable on mobile
-
----
-
-## P0 — Demo Hardening (Phase 6)
-
-### Runbooks and scripts
-- [ ] Create `docs/demo-runbook.md`
-- [ ] Create `docs/demo-rehearsal.md`
-- [ ] Create clean-wallet demo checklist
-- [ ] Create fallback plan for RPC or wallet hiccups
-
-### Smoke tests
-- [ ] Add issuer smoke test
-- [ ] Add proof flow smoke test
-- [ ] Add contract authorization smoke test
-- [ ] Add governance lifecycle smoke test
-- [ ] Add PWA install/offline smoke test
-
-### Rehearsal
-- [ ] Run full demo once from clean state
-- [ ] Fix failures
-- [ ] Run full demo second time from clean state
-- [ ] Lock final demo script
-
----
-
-## P1 — Skills Package
-
-- [ ] Create `skills/zk-voting-architect/SKILL.md`
-- [ ] Create `skills/ethereum-id-ops/SKILL.md`
-- [ ] Create `skills/zk-voting-contracts/SKILL.md`
-- [ ] Create `skills/zk-voting-pwa/SKILL.md`
-- [ ] Create `skills/zk-voting-demo-qa/SKILL.md`
-
----
-
-## P1 — Documentation and Credibility Assets
-
-- [ ] Tighten whitepaper from draft to v1
-- [ ] Tighten development paper from draft to v1
-- [ ] Create architecture diagram source file
-- [ ] Add demo screenshots once flows are real
-- [ ] Add Base and ENS-gated allowlist positioning section to README
-
----
-
-## P2 — Nice-to-Haves After Core Demo
-
-- [ ] Add multiple credential types
-- [ ] Add role-based proposal permissions
-- [ ] Add richer audit history UI
-- [ ] Add admin operator panel for demo management
-- [ ] Add Base mainnet deployment checklist
-
----
-
-## Immediate Next Actions
-
-1. Audit ENS-gated allowlist issuer setup
-2. Define schema JSON and proof request
-3. Lock verifier architecture
-4. Add Base Sepolia deployment path
-
-These are the next critical moves. Everything else waits behind them.
+### Foundation ✅
+- [x] ZKVotingRobRulesWithCredentials contract — Rob's Rules parliamentary voting
+- [x] 58 tests passing
+- [x] Deployed to Sepolia at `0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`
+- [x] ENS-gated voter allowlist (no Polygon ID dependency)
+- [x] Full Rob's Rules flow: create → second → amend → open voting → vote → finalize
+- [x] Member rights: call for division, reconsider, reopen voting
+- [x] PWA service worker + manifest
+- [x] Docs: WHITEPAPER.md, DEVELOPMENT_PAPER.md, SPEC.md, README.md
