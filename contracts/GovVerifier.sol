@@ -47,21 +47,27 @@ contract GovVerifier is ZKPVerifier {
     }
     
     /**
-     * @dev Hook called after proof is successfully submitted
-     * This is where we mark the user as credential-verified
+     * @dev Hook called after proof is successfully submitted.
+     * 
+     * For Polygon ID credential proofs (Circuit 1), the Ethereum address is
+     * msg.sender — the wallet that submitted the submitZKPResponse() transaction.
+     * The circuit proof does not contain or reveal the Ethereum address; the binding
+     * is implicit because the wallet signs the proof submission transaction.
+     *
+     * This is NOT the vote circuit — vote.circom outputs (nullifierHash, voterHash)
+     * are unrelated to address binding. Vote verification happens separately in
+     * ZKVotingRobRulesWithCredentials when the user submits their vote.
      */
     function _afterProofSubmit(
-        uint64,
+        uint64 requestId,
         uint256[] memory inputs,
         ICircuitValidator validator
     ) internal override {
-        // Extract user address from inputs
-        // The address is typically at a specific index in the inputs array
-        address user = address(uint160(uint256(inputs[inputs.length - 1])));
-        
-        // Call the voting contract to mark user as verified
+        // msg.sender is the Ethereum address that submitted the proof.
+        // This is the correct binding for Polygon ID credential proofs.
+        address user = msg.sender;
+
         if (votingContract != address(0)) {
-            // Try to call setAllowedUser on the voting contract
             (bool success, ) = votingContract.call(
                 abi.encodeWithSignature("setAllowedUser(address)", user)
             );
@@ -69,7 +75,7 @@ contract GovVerifier is ZKPVerifier {
                 emit CredentialVerified(user);
             }
         }
-        
-        emit ProofSubmitted(user, TRANSFER_REQUEST_ID);
+
+        emit ProofSubmitted(user, requestId);
     }
 }

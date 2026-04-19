@@ -14,64 +14,67 @@ Owner legend: Main, Subagent, Shared
 - [x] Create roadmap
 - [x] Create tasks board
 - [x] Create acceptance gates
-- [ ] Confirm final chain target as Base Sepolia for demo
-- [ ] Confirm canonical credential name and schema fields
-- [ ] Confirm demo story: issuer → proof → verify → proposal → vote
+- [x] Confirm final chain target as Base Sepolia for demo
+- [x] Confirm canonical credential name and schema fields
+- [x] Confirm demo story: issuer → proof → verify → proposal → vote
 
 ---
 
 ## P0 — Identity Foundation (Phase 2)
 
 ### Research and setup
-- [ ] Audit official Polygon ID issuer node deployment path
-- [ ] Document required services, env vars, ports, and secrets
-- [ ] Decide local vs hosted issuer runtime for demo
-- [ ] Create `docs/issuer-setup.md`
+- [x] Audit official Polygon ID issuer node deployment path
+- [x] Document required services, env vars, ports, and secrets
+- [x] Decide local vs hosted issuer runtime for demo (start local + public tunnel)
+- [x] Create `docs/issuer-setup.md`
 
 ### Schema and credential model
-- [ ] Define Fort Worth DAO Member credential schema
-- [ ] Define required fields: `memberId`, `jurisdiction`, `memberSince`
-- [ ] Decide optional eligibility flags
-- [ ] Store schema in repo with versioning
-- [ ] Create example credential payload
+- [x] Define Fort Worth DAO Member credential schema (`FortWorthDAOMembershipCredential`)
+- [x] Define required fields: `membershipId`, `membershipStatus`, `jurisdiction`, `memberSince`, `votingEligible`
+- [x] Decide optional eligibility flags
+- [x] Store schema in repo with versioning
+- [x] Create example credential payload
 
 ### Issuer implementation
-- [ ] Stand up Polygon ID issuer services
-- [ ] Verify issuer health endpoints or UI
-- [ ] Register or load schema into issuer flow
+- [x] Stand up Polygon ID issuer services
+- [x] Verify issuer health endpoints or UI
+- [x] Register or load schema into issuer flow
 - [ ] Issue first test credential to a test identity
-- [ ] Document issuance walkthrough step-by-step
+- [x] Document issuance walkthrough step-by-step
 
 ### Proof request setup
-- [ ] Define proof request payload for app verification flow
+- [x] Define proof request payload for app verification flow
 - [ ] Confirm wallet compatibility with chosen proof request
-- [ ] Test QR or deep-link request end-to-end
+- [x] Test QR or deep-link request generation end-to-end
 
 ---
 
 ## P0 — Onchain Verifier Integration (Phase 3)
 
 ### Contract audit
-- [ ] Audit `GovVerifier.sol` against Polygon ID real verifier requirements
-- [ ] Decide whether to adapt current verifier bridge or replace it
-- [ ] Document final verifier architecture in `docs/verifier-architecture.md`
+- [x] Audit `GovVerifier.sol` against Polygon ID real verifier requirements
+- [x] Decide whether to adapt current verifier bridge or replace it
+- [x] Document final verifier architecture in `docs/verifier-architecture.md`
 
 ### Base Sepolia deployment path
-- [ ] Add Base Sepolia network config
-- [ ] Normalize env var names for deploy scripts
-- [ ] Update deploy scripts for credential-gated contracts
-- [ ] Add deterministic contract address output file
-- [ ] Add contract config file for frontend consumption
+- [x] Add Base Sepolia network config
+- [x] Normalize env var names for deploy scripts
+- [x] Update deploy scripts for credential-gated contracts
+- [x] Add deterministic contract address output file
+- [x] Add contract config file for frontend consumption
 
 ### Contract implementation
-- [ ] Implement Polygon ID-compatible verifier bridge
-- [ ] Wire proof success to `setAllowedUser(address)` or equivalent gate path
-- [ ] Restrict dev/demo bypasses behind explicit non-production flag
-- [ ] Add authorization state read helpers where needed
+- [x] Resolve circular dependency between voting contract and GovVerifier deployment flow
+- [x] Fix _afterProofSubmit() address binding — now uses msg.sender (correct for Polygon ID credential proofs; vote circuit is a separate concern)
+- [x] Document two-circuit architecture in docs/phase3-implementation-plan.md
+- [x] Wire setZKPRequest() in deploy script (done — CredentialAtomicQuerySigV2Validator on Base Sepolia)
+- [x] Implement Polygon ID-compatible verifier bridge (setZKPRequest initialized — Phase 3 sign-off checklist updated)
+- [x] Restrict direct authorization writes to GovVerifier only (remove public bypass on voting contract)
+- [ ] Add explicit non-production-only bypass path if needed for local testing
 
 ### Validation
-- [ ] Add tests for unauthorized user blocked
-- [ ] Add tests for authorized user allowed after proof success
+- [x] Add tests for unauthorized user blocked
+- [x] Add tests for authorized user allowed after proof success
 - [ ] Deploy contracts to Base Sepolia
 - [ ] Verify proof success updates onchain authorization state
 

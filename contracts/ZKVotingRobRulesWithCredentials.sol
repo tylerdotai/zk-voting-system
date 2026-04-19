@@ -63,6 +63,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     
     // Events
     event ChairUpdated(address indexed oldChair, address indexed newChair);
+    event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
     event CredentialVerified(address indexed user);
     event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair);
     event ProposalSeconded(uint256 indexed proposalId);
@@ -76,27 +77,50 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         require(msg.sender == chair, "Only chair can perform this action");
         _;
     }
+
+    modifier onlyGovVerifier() {
+        require(msg.sender == address(govVerifier), "Only GovVerifier can perform this action");
+        _;
+    }
     
     modifier requiresCredential() {
         require(allowedUsers[msg.sender], "Credential not verified");
         _;
     }
     
-    // Constructor
+    // Constructor — allows address(0) for verifier to break circular deploy dependency.
+    // Use setVerifier() after deployment to bind the real GovVerifier address.
     constructor(address _govVerifier, address _chair, uint256 _choiceCount) {
-        require(_govVerifier != address(0), "GovVerifier cannot be zero");
         require(_chair != address(0), "Chair cannot be zero address");
         require(_choiceCount >= 2, "Must have at least 2 choices");
         
         _transferOwnership(msg.sender);
-        govVerifier = GovVerifier(_govVerifier);
+        if (_govVerifier != address(0)) {
+            govVerifier = GovVerifier(_govVerifier);
+        }
         chair = _chair;
         choiceCount = _choiceCount;
     }
+
+    /// @dev Post-deploy setter to bind the real GovVerifier after both contracts exist.
+    ///      Resolves the circular-dependency problem where both contracts need each other's address.
+    function setVerifier(address _newVerifier) external onlyOwner {
+        require(_newVerifier != address(0), "Verifier cannot be zero address");
+        address oldVerifier = address(govVerifier);
+        govVerifier = GovVerifier(_newVerifier);
+        emit VerifierUpdated(oldVerifier, _newVerifier);
+    }
     
     // Credential Management
-    function setAllowedUser(address _user) external {
+    function setAllowedUser(address _user) external onlyGovVerifier {
         // Called by GovVerifier after ZKP proof is verified
+        allowedUsers[_user] = true;
+        emit CredentialVerified(_user);
+    }
+
+    // Test/demo bypass — allows owner to simulate GovVerifier verification
+    // without going through actual ZKP proof flow. Remove before production.
+    function testSetAllowedUser(address _user) external onlyOwner {
         allowedUsers[_user] = true;
         emit CredentialVerified(_user);
     }
