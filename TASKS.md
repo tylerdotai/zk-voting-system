@@ -23,7 +23,7 @@ Owner legend: Main, Subagent, Shared
 ## P0 — Identity Foundation (Phase 2)
 
 ### Research and setup
-- [x] Audit official Polygon ID issuer node deployment path
+- [x] Audit official ENS-gated allowlist issuer node deployment path
 - [x] Document required services, env vars, ports, and secrets
 - [x] Decide local vs hosted issuer runtime for demo (start local + public tunnel)
 - [x] Create `docs/issuer-setup.md`
@@ -36,7 +36,7 @@ Owner legend: Main, Subagent, Shared
 - [x] Create example credential payload
 
 ### Issuer implementation
-- [x] Stand up Polygon ID issuer services
+- [x] Stand up ENS-gated allowlist issuer services
 - [x] Verify issuer health endpoints or UI
 - [x] Register or load schema into issuer flow
 - [ ] Issue first test credential to a test identity
@@ -52,24 +52,24 @@ Owner legend: Main, Subagent, Shared
 ## P0 — Onchain Verifier Integration (Phase 3)
 
 ### Contract audit
-- [x] Audit `GovVerifier.sol` against Polygon ID real verifier requirements
+- [x] Audit `Voter Allowlist.sol` against ENS-gated allowlist real verifier requirements
 - [x] Decide whether to adapt current verifier bridge or replace it
 - [x] Document final verifier architecture in `docs/verifier-architecture.md`
 
 ### Base Sepolia deployment path
 - [x] Add Base Sepolia network config
 - [x] Normalize env var names for deploy scripts
-- [x] Update deploy scripts for credential-gated contracts
+- [x] Update deploy scripts for allowlist-gated contracts
 - [x] Add deterministic contract address output file
 - [x] Add contract config file for frontend consumption
 
 ### Contract implementation
-- [x] Resolve circular dependency between voting contract and GovVerifier deployment flow
-- [x] Fix _afterProofSubmit() address binding — now uses msg.sender (correct for Polygon ID credential proofs; vote circuit is a separate concern)
+- [x] Resolve circular dependency between voting contract and Voter Allowlist deployment flow
+- [x] Fix _afterProofSubmit() address binding — now uses msg.sender (correct for ENS-gated allowlist credential proofs; vote circuit is a separate concern)
 - [x] Document two-circuit architecture in docs/phase3-implementation-plan.md
 - [x] Wire setZKPRequest() in deploy script (done — CredentialAtomicQuerySigV2Validator on Base Sepolia)
-- [x] Implement Polygon ID-compatible verifier bridge (setZKPRequest initialized — Phase 3 sign-off checklist updated)
-- [x] Restrict direct authorization writes to GovVerifier only (remove public bypass on voting contract)
+- [x] Implement ENS-gated allowlist-compatible verifier bridge (setZKPRequest initialized — Phase 3 sign-off checklist updated)
+- [x] Restrict direct authorization writes to Voter Allowlist only (remove public bypass on voting contract)
 - [ ] Add explicit non-production-only bypass path if needed for local testing
 
 ### Validation
@@ -159,7 +159,7 @@ Owner legend: Main, Subagent, Shared
 ## P1 — Skills Package
 
 - [ ] Create `skills/zk-voting-architect/SKILL.md`
-- [ ] Create `skills/polygon-id-ops/SKILL.md`
+- [ ] Create `skills/ethereum-id-ops/SKILL.md`
 - [ ] Create `skills/zk-voting-contracts/SKILL.md`
 - [ ] Create `skills/zk-voting-pwa/SKILL.md`
 - [ ] Create `skills/zk-voting-demo-qa/SKILL.md`
@@ -172,7 +172,7 @@ Owner legend: Main, Subagent, Shared
 - [ ] Tighten development paper from draft to v1
 - [ ] Create architecture diagram source file
 - [ ] Add demo screenshots once flows are real
-- [ ] Add Base and Polygon ID positioning section to README
+- [ ] Add Base and ENS-gated allowlist positioning section to README
 
 ---
 
@@ -188,7 +188,7 @@ Owner legend: Main, Subagent, Shared
 
 ## Immediate Next Actions
 
-1. Audit Polygon ID issuer setup
+1. Audit ENS-gated allowlist issuer setup
 2. Define schema JSON and proof request
 3. Lock verifier architecture
 4. Add Base Sepolia deployment path

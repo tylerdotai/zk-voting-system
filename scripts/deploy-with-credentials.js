@@ -45,7 +45,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     notes: [
       "ENS-gated voting — chair manages voter allowlist via addVoter/removeVoter.",
-      "No Polygon ID / ZK credential dependency.",
+      "No ENS Allowlist / ZK credential dependency.",
       "ZK vote privacy layer can be layered in later (post-quantum ready)."
     ]
   };
@@ -84,7 +84,7 @@ async function main() {
   console.log("- addVoters(address[])  → batch grant (owner)");
   console.log("- isEligible(address)   → check voter status");
   console.log("\nAll Rob's Rules actions (createProposal, second, amend, vote)");
-  console.log("require isEligibleVoter — no Polygon ID needed.");
+  console.log("require isEligibleVoter — no ENS Allowlist needed.");
   
   console.log("\nNext steps:");
   console.log("1. Update frontend to use wallet connection + addVoter flow");

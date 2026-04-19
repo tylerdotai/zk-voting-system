@@ -14,7 +14,7 @@ Deploy scripts should emit structured JSON artifacts under `deployments/` so fro
 
 ## Current limitation
 The current credential deploy script still does **not**:
-- deploy a Polygon ID validator contract
+- deploy a ENS-gated allowlist validator contract
 - initialize `setZKPRequest()`
 - correct the placeholder verifier wiring issue
 

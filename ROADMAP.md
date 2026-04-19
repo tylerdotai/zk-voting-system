@@ -11,7 +11,7 @@ Execution model: main session + subagents + bounded local model support
 
 Ship a working live demo of a **credential-gated governance dApp** on **Base Sepolia** with:
 
-1. real Polygon ID credential issuance
+1. real ENS Allowlist credential issuance
 2. real proof-based authorization
 3. real onchain governance actions
 4. a usable mobile-first PWA shell
@@ -25,7 +25,7 @@ A clean wallet user can:
 1. open the app
 2. connect wallet on Base Sepolia
 3. receive or hold an eligibility credential
-4. complete a Polygon ID proof request
+4. complete a ENS Allowlist proof request
 5. become authorized onchain
 6. create or participate in a Rob's Rules vote
 7. cast a vote and see immutable onchain state update
@@ -40,7 +40,7 @@ If that flow fails, we are not done.
 | Phase | Name | Outcome | Owner |
 |------|------|---------|-------|
 | 1 | Source of truth | Whitepaper, development paper, execution pack | Main |
-| 2 | Identity foundation | Issuer node, schema, issuance flow | Main + polygon-id-ops |
+| 2 | Identity foundation | Issuer node, schema, issuance flow | Main + ethereum-id-ops |
 | 3 | Onchain verifier integration | Base Sepolia proof-gated contracts working | Main + zk-voting-contracts |
 | 4 | Governance dApp | Wallet-aware proposal and vote flows working | Main + zk-voting-contracts |
 | 5 | PWA shell | Installable mobile-first app with offline shell | Main + zk-voting-pwa |
@@ -72,7 +72,7 @@ Complete
 ## Phase 2 — Identity Foundation
 
 ### Goal
-Stand up real Polygon ID credential infrastructure.
+Stand up real ENS Allowlist credential infrastructure.
 
 ### Deliverables
 - issuer node running locally or on stable host
@@ -82,7 +82,7 @@ Stand up real Polygon ID credential infrastructure.
 - at least one test credential issued to a test identity
 
 ### Workstreams
-- research exact Polygon ID issuer deployment path
+- research exact ENS Allowlist issuer deployment path
 - choose config layout for local/dev/demo
 - define schema JSON and storage location
 - configure issuer endpoint and proof request payloads
@@ -106,12 +106,12 @@ Make real proof success unlock voting permissions on Base Sepolia.
 ### Deliverables
 - Base Sepolia network config normalized
 - deployment scripts updated for Base Sepolia
-- verifier flow corrected for Polygon ID integration
+- verifier flow corrected for ENS Allowlist integration
 - credential-gated contracts deployed
 - proof success flips authorization state onchain
 
 ### Workstreams
-- audit current `GovVerifier.sol` against Polygon ID proof semantics
+- audit current `GovVerifier.sol` against ENS Allowlist proof semantics
 - decide whether to adapt bridge contract or replace verifier flow
 - update env/config conventions
 - deploy proof-gated contracts to Base Sepolia

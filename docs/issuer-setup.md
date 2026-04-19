@@ -1,16 +1,16 @@
 # Issuer Setup (Phase 2)
 
 ## Goal
-Boot Polygon ID (Privado ID) issuer services, issue one real test credential, and capture evidence for Phase 2 gates.
+Boot Ethereum ID (Privado ID) issuer services, issue one real test credential, and capture evidence for Phase 2 gates.
 
 ## Stack
-- Upstream repo: `https://github.com/0xPolygonID/issuer-node`
+- Upstream repo: `https://github.com/0xEthereumID/issuer-node`
 - Fastest startup mode: prebuilt registry images (`make run-all-registry`)
 
 ## Prerequisites
 - Docker + Docker Compose
 - Node (for localtunnel, if needed)
-- Polygon ID wallet app on a test phone
+- Ethereum ID wallet app on a test phone
 - Base Sepolia RPC for contract side (Phase 3)
 
 ## Required env files
@@ -39,7 +39,7 @@ Boot Polygon ID (Privado ID) issuer services, issue one real test credential, an
 ## Credential issuance procedure
 1. Create/load schema (see `docs/schema-reference.md`).
 2. Create test connection in issuer UI.
-3. Scan with Polygon ID wallet.
+3. Scan with Ethereum ID wallet.
 4. Issue `FortWorthDAOMembershipCredential` with required claims.
 5. Save proof evidence (screenshot/logs) for gate 2.3.
 
@@ -51,8 +51,8 @@ Example identity creation payload:
 ```json
 {
   "didMetadata": {
-    "method": "polygonid",
-    "blockchain": "polygon",
+    "method": "ethereumid",
+    "blockchain": "ethereum",
     "network": "amoy",
     "type": "BJJ"
   },
@@ -65,8 +65,8 @@ A real wallet-consumable credential offer flow is now generating successfully.
 
 Working values from current run:
 - Public issuer URL: `https://constantly-rogers-ratios-exam.trycloudflare.com`
-- Issuer DID: `did:polygonid:polygon:amoy:2qSugB8VLKyAxEDwo8EMsqq9bwmToR2HT4XgBoVXxX`
-- Polygon-ID-ready schema URL: `https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json`
+- Issuer DID: `did:ethereumid:ethereum:amoy:2qSugB8VLKyAxEDwo8EMsqq9bwmToR2HT4XgBoVXxX`
+- Ethereum-ID-ready schema URL: `https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/ethereumid/fort-worth-dao-member.json`
 - Imported schema id: `0aaf97ad-3136-4c2e-bba5-571f9bb94b4f`
 - Credential link id: `a3d95603-dbab-4e59-b7d7-476177622203`
 
@@ -77,10 +77,10 @@ curl -X POST http://localhost:3001/v2/identities/$IDENT/schemas \
   -H "Authorization: Basic $AUTH" \
   -H 'Content-Type: application/json' \
   -d '{
-    "url":"https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json",
+    "url":"https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/ethereumid/fort-worth-dao-member.json",
     "schemaType":"FortWorthDAOMembershipCredential",
     "title":"Fort Worth DAO Membership",
-    "description":"Polygon ID membership schema for voting eligibility",
+    "description":"Ethereum ID membership schema for voting eligibility",
     "version":"1.0.0"
   }'
 

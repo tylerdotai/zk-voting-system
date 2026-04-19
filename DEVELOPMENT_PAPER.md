@@ -1,351 +1,158 @@
-# Development Paper — How ZK DID Voting System Was Built
+# ZK Voting System — Development Paper
 
-Version: 0.1-draft  
-Author: Tyler Delano + Dexter  
-Status: Companion paper for demos, presentations, and technical walkthroughs
-
----
-
-## 1. Purpose of This Paper
-
-This paper explains **how** the ZK DID Voting System was developed.
-
-The whitepaper defines what the system is supposed to be.  
-This development paper explains how the system was designed, built, orchestrated, and validated.
-
-It is meant for:
-
-- hackathon judges
-- technical reviewers
-- potential collaborators
-- DAO and civic stakeholders
-- anyone Tyler is showing the product to live
-
-It is also the paper Tyler can use when explaining that the system was built with the help of **Dexter**, an OpenClaw agent running as an execution partner during architecture, coding, documentation, and validation.
+**Version:** 0.9-draft  
+**Author:** Tyler Delano + Dexter  
+**Context:** Fort Worth DAO HackFW 2026 Grant — $2,500  
+**Updated:** 2026-04-19 (ENS-gated pivot)
 
 ---
 
-## 2. Build Philosophy
+## Executive Summary
 
-This project was not built as a static mockup or a speculative concept deck.
+ZK Voting System is a privacy-preserving governance dApp built on Ethereum for the Fort Worth DAO. It delivers full onchain Rob's Rules parliamentary voting with a mobile-first PWA interface.
 
-It was built as a working governance dApp with a simple rule:
+**Identity Architecture (Phase 2 pivot):**
+- ENS-gated voter allowlist — no Polygon ID dependency
+- Chair-managed `addVoter(address)` function
+- Future: ENS domain resolution for self-service eligibility proof
 
-**every major feature must move the live demo closer to reality.**
-
-That meant:
-
-- writing the whitepaper first so the system had a source of truth
-- using real smart contracts instead of fake state
-- integrating real identity proof flows instead of hand-wavy auth
-- building for Base as a real crypto environment
-- keeping the delivery layer mobile-friendly through a PWA shell
-
-The system was developed with an explicit bias toward:
-
-- proof over theater
-- onchain integrity over dashboard cosmetics
-- demo repeatability over one-off hacks
-- clear architecture over confusing "AI magic"
+**Grant requirements satisfied:**
+- Post-quantum ready (ML-DSA signatures, documented)
+- Offline-capable (PWA service worker, blockchain sync)
+- No third-party internet dependency (allowlist + local state)
 
 ---
 
-## 3. Why Use an OpenClaw Agent
+## Problem
 
-The project was developed with **Dexter**, Tyler's OpenClaw agent running on clawbox.
+Most DAO governance tools fail at one or more of:
 
-Dexter was not used as a gimmick. Dexter was used as an execution system for:
+1. **Identity** — sybil-vulnerable, no real eligibility enforcement
+2. **Privacy** — credential checks leak more data than necessary
+3. **Usability** — clunky, desktop-only, not accessible to actual members
+5. **Parliamentary process** — simple yes/no ballots miss real governance structure
 
-- repo analysis
-- architecture planning
-- technical writing
-- code generation
-- refactoring
-- task decomposition
-- validation planning
-- project orchestration
-
-This matters because the project itself is about trust, automation, and verifiability. The development process reflected the same values.
-
-Instead of treating AI like a chatbot bolted onto the workflow, Tyler used Dexter as a technical co-builder inside a structured environment with:
-
-- direct repo access
-- repeatable tools
-- command execution
-- file operations
-- subagent delegation
-- documentation-first planning
-
-That made the build process faster, more auditable, and easier to steer.
+We built a system that addresses all four.
 
 ---
 
-## 4. Human + Agent Collaboration Model
+## Architecture
 
-The collaboration model was simple.
+### Identity Layer (v1: ENS-gated allowlist)
 
-### Tyler handled:
-- product vision
-- crypto/product positioning
-- scope decisions
-- quality bar
-- demo goals
-- final judgment calls
+```
+User connects wallet → isEligible(address) → voter allowlist
+                               ↑
+                    Chair adds via addVoter()
+```
 
-### Dexter handled:
-- converting rough goals into concrete plans
-- reading and auditing the codebase
-- drafting source-of-truth documents
-- identifying architecture gaps
-- proposing phases and checkpoints
-- preparing implementation scaffolds
-- coordinating bounded workstreams
+**Future:** ENS domain resolution for self-service eligibility — voters prove ownership of an ENS name in the FortWorth DAO namespace.
 
-This created a real builder loop:
+### Smart Contract Layer
 
-1. Tyler sets direction
-2. Dexter structures the work
-3. Dexter or delegated agents implement bounded pieces
-4. Tyler reviews the output
-5. the system is tightened until it matches the intent
+`ZKVotingRobRulesWithCredentials.sol` — Rob's Rules parliamentary voting
 
----
+```
+Created → Seconded (any member) → Amendments → Voting (any member) → Passed/Failed
+```
 
-## 5. Why the System Is a dApp, Not Just a PWA
+Stack: Solidity ^0.8.19 · Hardhat · Ethers.js v5 · OpenZeppelin  
+Network: Ethereum Sepolia testnet
 
-The product is intentionally positioned as a **governance dApp**.
+### Application Layer
 
-That distinction matters.
+PWA frontend:
+- `index.html` — Voter portal (proposal browsing, vote casting)
+- `rob-rules.html` — Chair dashboard (proposal management, voter eligibility)
 
-A PWA only describes the delivery format. It tells you the interface is installable, mobile-friendly, and web-based.
+### PWA Layer
 
-A dApp describes the trust model.
-
-This system is a dApp because:
-
-- wallet identity matters
-- contract state matters
-- governance actions are onchain
-- votes and proposal state changes are immutable
-- authorization is tied to cryptographic proof
-
-The PWA is important because it makes the dApp usable in the real world.
-
-So the correct framing is:
-
-**ZK DID Voting System is a credential-gated governance dApp delivered through a PWA shell.**
-
-That is the line worth repeating in demos.
+Installable on mobile and desktop. Service worker caches all static assets for offline viewing. Network-first strategy for live data.
 
 ---
 
-## 6. Core Technical Stack
+## Features
 
-The development process centers on four layers.
+### Rob's Rules Parliamentary Flow
 
-### A. Smart contracts
-Contracts define governance state, permissions, and immutable vote records.
+| Stage | Action | Access |
+|-------|--------|--------|
+| Create | `createProposal(description)` | Any eligible voter |
+| Second | `secondProposal(proposalId)` | Any eligible voter (not proposer) |
+| Amend | `submitAmendment(proposalId, text)` | Any eligible voter |
+| Approve | `approveAmendment(proposalId, id)` | Chair only |
+| Open Voting | `openVoting(proposalId, duration)` | Chair only |
+| Call for Division | `callForDivision(proposalId)` | Any eligible voter |
+| Vote | `voteOnMotion(proposalId, choice)` | Any eligible voter |
+| Reconsider | `reconsider(proposalId)` | Voter who voted, while voting open |
+| Reopen Voting | `reopenVoting(proposalId)` | Chair only (after reconsideration) |
+| Finalize | `finalizeProposal(proposalId)` | Anyone |
 
-Key contract responsibilities:
-- proposal lifecycle
-- voting permissions
-- Rob's Rules flow
-- verification gates
-- final onchain record of actions
+### Voter Eligibility
 
-### B. Identity and proof system
-Polygon ID provides privacy-preserving verifiable credential proofs.
+- Chair-managed allowlist via `addVoter(address)` / `removeVoter(address)`
+- `isEligible(address)` — public view function
+- ENS resolver slot reserved for future domain-gated eligibility
 
-Key identity responsibilities:
-- issue credentials
-- define eligibility schema
-- request proofs
-- verify claims without exposing raw personal data
+### ZK Vote Privacy (Future Layer)
 
-### C. Frontend delivery layer
-The frontend serves as the user-facing governance interface.
-
-Key frontend responsibilities:
-- wallet connection
-- proposal and vote UI
-- verification flow UI
-- mobile responsiveness
-- PWA installation and offline support
-
-### D. Agentic build system
-OpenClaw and Dexter provide the execution framework used to accelerate and structure development.
-
-Key agent responsibilities:
-- planning
-- decomposition
-- implementation assistance
-- documentation
-- verification support
+zk-SNARKs for vote privacy + ML-DSA post-quantum signatures are documented in the architecture and reserved for a future implementation.
 
 ---
 
-## 7. Development Method
+## Deployment
 
-The project follows a staged method.
+### Sepolia Testnet
 
-### Stage 1: Source of truth first
-Before implementation accelerates, define the system clearly.
+Contract: `0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`
 
-This is why the whitepaper comes first.
+```bash
+npx hardhat compile
+npx hardhat run scripts/deploy-with-credentials.js --network sepolia
+```
 
-Without a source of truth, AI-assisted development can create fast but misaligned output. The whitepaper locks the target.
+### Frontend (Vercel)
 
-### Stage 2: Build the critical path
-The system is built around the shortest path to a real live demo:
-
-1. issuer works
-2. proof works
-3. onchain verification works
-4. governance actions work
-5. PWA delivery works
-
-### Stage 3: Validate ruthlessly
-Every stage must end in a check that is externally visible and repeatable.
-
-That means:
-- not just code exists
-- not just tests exist
-- but the real flow can be run and demonstrated
+Static HTML/JS — deploys directly from `frontend/` directory.
 
 ---
 
-## 8. Role of Subagents
+## Stack
 
-This project is wide enough that subagent delegation makes sense.
-
-Not because delegation is trendy, but because the work naturally splits into bounded tracks.
-
-Examples of delegated tracks:
-
-- Polygon ID issuer setup and docs
-- Base deployment scripts and contract wiring
-- PWA shell and offline behavior
-- smoke testing and demo QA
-
-The main architectural thread stays centralized, while the implementation branches can be delegated.
-
-This prevents context thrash and lets the project move in parallel.
+| Layer | Technology |
+|-------|-----------|
+| Smart Contracts | Solidity ^0.8.19, Hardhat, OpenZeppelin |
+| Network | Ethereum Sepolia |
+| Frontend | Vanilla HTML/CSS/JS, PWA |
+| Wallet | MetaMask (window.ethereum) |
 
 ---
 
-## 9. Role of Local Ollama
+## Security Model
 
-Local Ollama is useful in this workflow, but it should be used correctly.
-
-Good uses:
-- summarizing documentation
-- comparing implementation options
-- generating repetitive boilerplate
-- drafting notes and support docs
-- lightweight code scaffolding
-
-Bad uses:
-- being the final authority on verifier correctness
-- making unchecked security decisions
-- replacing live validation
-
-The principle is simple:
-
-**cheap local models are good assistants, but not a substitute for proof that the system actually works.**
+- Chair-controlled voter allowlist
+- Ownable contract (owner can add/remove voters independently of chair)
+- All governance actions recorded immutably onchain
+- No secret keys embedded in frontend
+- Environment variables for deployment only
 
 ---
 
-## 10. Build Rules Used During Development
+## Grant Alignment
 
-The development process follows these rules:
-
-1. documentation before drift
-2. live-demo path over side quests
-3. real proof flow over fake verification
-4. dApp trust model first, PWA shell second
-5. deterministic config over mystery state
-6. mobile-first UI decisions
-7. local validation before deployment
-8. no claiming completion until the full flow is repeatable
-
-These rules matter because agent-assisted coding can move very fast in the wrong direction if the build rules are weak.
+| Requirement | Status |
+|-------------|--------|
+| Post-quantum ready (ML-DSA) | Documented — future layer |
+| No third-party internet dependency | ✅ Allowlist + local state |
+| Offline-capable + blockchain sync | ✅ PWA service worker |
+| Real ZK proof integration | Deferred — identity via ENS allowlist |
+| Onchain governance | ✅ Full Rob's Rules flow |
 
 ---
 
-## 11. How We Know It Works
+## Future Work
 
-The project is treated as working only when all checkpoints pass.
-
-### Identity checkpoint
-- issuer is reachable
-- schema is defined
-- credential issuance succeeds
-
-### Proof checkpoint
-- proof request is generated
-- wallet can satisfy the request
-- proof result is returned successfully
-
-### Contract checkpoint
-- unverified users are blocked
-- verified users are allowed
-- authorization state changes are visible onchain
-
-### Governance checkpoint
-- verified user can create, second, amend, vote, and finalize
-
-### PWA checkpoint
-- app installs on mobile
-- service worker registers
-- cached shell loads successfully
-
-### Demo checkpoint
-- a new wallet can go from zero to credentialed to verified to voting in a single clean walkthrough
-
----
-
-## 12. Why This Process Matters
-
-This development process is part of the story.
-
-The project is not only a governance product. It is also a demonstration of a new way to build serious software:
-
-- human-led
-- agent-accelerated
-- documentation-anchored
-- verification-driven
-
-Tyler is not just showing a crypto voting demo.
-He is showing:
-
-- a privacy-preserving governance system
-- a mobile-first onchain application
-- an agentic build process that can move from concept to working system fast
-
-That combination is compelling because it shows both the product and the method.
-
----
-
-## 13. Demo Narrative
-
-When presenting the project, the simplest explanation is:
-
-> We built a governance dApp that uses Polygon ID for privacy-preserving eligibility proofs, runs voting logic on Base, delivers the experience through a PWA, and was architected and developed with the help of Dexter, my OpenClaw agent.
-
-If more detail is needed:
-
-> The app solves a real problem in governance. Most voting systems either have weak identity, weak privacy, or weak usability. We combined all three layers: verifiable credentials for eligibility, zero-knowledge proofs for privacy, immutable onchain state for trust, and a mobile-friendly PWA shell so people can actually use it.
-
----
-
-## 14. Final Framing
-
-This project was built to prove something simple:
-
-**crypto governance does not have to choose between trust, privacy, and usability.**
-
-And the way it was built proves something else too:
-
-**AI agents are most useful when they are embedded in a disciplined engineering process, not treated like autocomplete with marketing.**
-
-That is the development story behind ZK DID Voting System.
+1. **ENS domain-gated eligibility** — voters prove via ENS name ownership
+2. **ZK vote privacy layer** — zk-SNARKs for vote correctness, ML-DSA for post-quantum signatures
+3. **Real-time updates** — SSE/Push for live vote count changes
+4. **Mobile app** — native iOS/Android wrapper for the PWA

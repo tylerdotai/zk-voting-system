@@ -3,7 +3,7 @@
 ## Overview
 
 ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia. 
-No Polygon ID / ZK credential dependency. ZK vote privacy layer preserved for post-quantum future.
+No ENS Allowlist / ZK credential dependency. ZK vote privacy layer preserved for post-quantum future.
 
 ---
 
@@ -24,7 +24,7 @@ If not eligible → "Register Now" button → calls addVoter(address)
 
 **Deployed (Sepolia):** `0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`
 
-### Voter Eligibility (ENS-gated, no Polygon ID)
+### Voter Eligibility (ENS-gated, no ENS Allowlist)
 
 | Function | Access | Description |
 |---|---|---|
@@ -57,7 +57,7 @@ If not eligible → "Register Now" button → calls addVoter(address)
 |---|---|
 | `index.html` | PWA offline-capable voting shell |
 | `rob-rules.html` | Full Rob's Rules parliamentary UI |
-| `verify.html` | (legacy, unused without Polygon ID) |
+| `verify.html` | (legacy, unused without ENS Allowlist) |
 | `manifest.json` | PWA manifest |
 | `sw.js` | Service worker for offline caching |
 
@@ -73,7 +73,7 @@ If not eligible → "Register Now" button → calls addVoter(address)
 
 ## Out of Scope (for now)
 
-- Polygon ID / ZK credential verification
+- ENS Allowlist / ZK credential verification
 - On-chain ZK proof validation
 - Multi-chain support
 - Mobile app

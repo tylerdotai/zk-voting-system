@@ -2,22 +2,22 @@
 
 Status: Phase 3 groundwork  
 Target chain: Base Sepolia for voting contracts  
-Identity issuer/state layer: Polygon ID / Privado ID issuer on Polygon Amoy for current demo path
+Identity issuer/state layer: ENS-gated allowlist / Privado ID issuer on Ethereum Sepolia for current demo path
 
 ## Current reality
 
 The current verifier path in the repo is not demo-ready yet.
 
 ### What exists
-- `GovVerifier.sol`
-- `ZKPVerifier.sol`
-- `ZKVotingRobRulesWithCredentials.sol`
+- `Voter Allowlist.sol`
+- `IdentityPVerifier.sol`
+- `IdentityVotingRobRulesWithCredentials.sol`
 - `scripts/deploy-with-credentials.js`
 
 ### What is broken or incomplete
-1. `setZKPRequest()` is never called after deployment
+1. `setIdentityPRequest()` is never called after deployment
 2. no validator contract is deployed or wired in the deploy script
-3. `GovVerifier._afterProofSubmit()` assumes the wallet address is `inputs[inputs.length - 1]`
+3. `Voter Allowlist._afterProofSubmit()` assumes the wallet address is `inputs[inputs.length - 1]`
 4. `deploy-with-credentials.js` deploys the voting contract with a placeholder verifier address and never fixes it
 5. `hardhat.config.js` has no Base Sepolia network config
 
@@ -28,45 +28,45 @@ If left as-is, proof submission will fail even if the issuer side works.
 ## Contract findings
 
 ### 1. Request initialization is mandatory
-`ZKPVerifier.submitZKPResponse()` requires:
+`IdentityPVerifier.submitIdentityPResponse()` requires:
 - `requestValidators[requestId] != address(0)`
 - `requestQueries[requestId].schema != 0`
 
 That means the owner must call:
-- `setZKPRequest(requestId, validator, query)`
+- `setIdentityPRequest(requestId, validator, query)`
 
 Without that, every proof submission reverts.
 
 ### 2. Validator is missing from deploy flow
 The deploy script currently deploys:
 - voting contract
-- `GovVerifier`
+- `Voter Allowlist`
 
-But it does **not** deploy or configure any actual Polygon ID validator contract.
+But it does **not** deploy or configure any actual ENS-gated allowlist validator contract.
 
-So even after deployment, `submitZKPResponse()` has nothing usable to call.
+So even after deployment, `submitIdentityPResponse()` has nothing usable to call.
 
 ### 3. Address extraction is unsafe
-`GovVerifier._afterProofSubmit()` currently does:
+`Voter Allowlist._afterProofSubmit()` currently does:
 ```solidity
 address user = address(uint160(uint256(inputs[inputs.length - 1])));
 ```
 
-That is a guess, not a verified mapping for the chosen Polygon ID circuit.
+That is a guess, not a verified mapping for the chosen ENS-gated allowlist circuit.
 
 For Phase 3, the proof input layout must be validated against the actual circuit and validator in use before authorization state is changed onchain.
 
 ### 4. Deploy script wiring is wrong
-`deploy-with-credentials.js` deploys `ZKVotingRobRulesWithCredentials` first using the deployer address as a placeholder verifier address:
+`deploy-with-credentials.js` deploys `IdentityVotingRobRulesWithCredentials` first using the deployer address as a placeholder verifier address:
 ```js
-const votingContract = await ZKVotingRobRulesWithCredentials.deploy(
+const votingContract = await IdentityVotingRobRulesWithCredentials.deploy(
   deployer.address,
   deployer.address,
   3
 );
 ```
 
-Then it deploys `GovVerifier`, but never updates the voting contract's verifier reference.
+Then it deploys `Voter Allowlist`, but never updates the voting contract's verifier reference.
 
 That means the contract graph is wrong from the start.
 
@@ -84,7 +84,7 @@ This is not a minor script bug. It is an architecture-level deploy constraint.
 
 ### 6. Fix implemented
 The circular dependency has been resolved:
-- `ZKVotingRobRulesWithCredentials` constructor now accepts `address(0)` for verifier
+- `IdentityVotingRobRulesWithCredentials` constructor now accepts `address(0)` for verifier
 - `setVerifier(address)` added as `onlyOwner` setter to bind the real verifier post-deployment
 - deploy script updated to: deploy voting first → deploy verifier → call `setVerifier(govVerifier)` to wire
 - all 127 tests still passing after change
@@ -97,10 +97,10 @@ The circular dependency has been resolved:
 Adapt the current bridge architecture, but repair it properly.
 
 ### Recommended flow
-1. Deploy Polygon ID-compatible validator contract
-2. Deploy `GovVerifier`
-3. Deploy `ZKVotingRobRulesWithCredentials` with the real `GovVerifier` address
-4. Initialize `GovVerifier` with:
+1. Deploy ENS-gated allowlist-compatible validator contract
+2. Deploy `Voter Allowlist`
+3. Deploy `IdentityVotingRobRulesWithCredentials` with the real `Voter Allowlist` address
+4. Initialize `Voter Allowlist` with:
    - validator contract
    - request id
    - query schema hash
@@ -109,7 +109,7 @@ Adapt the current bridge architecture, but repair it properly.
 5. Validate proof input mapping with a real proof before enabling authorization writes
 
 ### Why keep the bridge
-Keeping `GovVerifier` as the bridge is fine for the demo because it gives one narrow responsibility:
+Keeping `Voter Allowlist` as the bridge is fine for the demo because it gives one narrow responsibility:
 - accept validated proof
 - mark user as allowed in voting contract
 
@@ -137,16 +137,16 @@ Replace ad-hoc `contracts.json` text blob with structured JSON config for:
 ### C. Deploy sequence fix
 Correct order should be:
 1. deploy validator
-2. deploy `GovVerifier`
+2. deploy `Voter Allowlist`
 3. deploy voting contract with real verifier address
 4. optionally set voting contract in verifier if still needed
-5. call `setZKPRequest()`
+5. call `setIdentityPRequest()`
 6. persist deployment config
 
 ### D. Authorization write hardening
 The voting contract previously exposed a public `setAllowedUser(address)` path, which meant anyone could mark any wallet as verified without a real proof.
 
-That is now hardened so only the configured `GovVerifier` contract can call `setAllowedUser(address)`.
+That is now hardened so only the configured `Voter Allowlist` contract can call `setAllowedUser(address)`.
 
 This closes the most obvious fake-proof bypass before real validator wiring is finished.
 
@@ -197,8 +197,8 @@ If address is not directly available in proof inputs, use a safer binding strate
 - keep frontend wallet/network flow pointed to Base Sepolia
 
 ### Identity layer
-- issuer remains on Polygon ID-compatible stack
-- current demo issuer/state path remains Polygon Amoy-backed
+- issuer remains on ENS-gated allowlist-compatible stack
+- current demo issuer/state path remains Ethereum Sepolia-backed
 - the contract gate on Base only needs proof verification compatibility and explicit configuration
 
 This split is acceptable for the demo, but it must be documented clearly.
@@ -208,9 +208,9 @@ This split is acceptable for the demo, but it must be documented clearly.
 ## Phase 3 priority checklist
 
 1. add Base Sepolia network config
-2. identify validator contract required for chosen Polygon ID circuit
+2. identify validator contract required for chosen ENS-gated allowlist circuit
 3. rewrite deploy script with correct order
-4. initialize `setZKPRequest()` explicitly
+4. initialize `setIdentityPRequest()` explicitly
 5. verify proof input mapping with one real proof
 6. only then wire successful proof to `setAllowedUser(address)`
 
@@ -220,7 +220,7 @@ This split is acceptable for the demo, but it must be documented clearly.
 
 The issuer side is now far enough along that the main technical risk has shifted.
 
-The Phase 3 risk is no longer "can we run Polygon ID tooling?"
+The Phase 3 risk is no longer "can we run ENS-gated allowlist tooling?"
 It is now:
 
 **can the onchain verifier path be initialized correctly and tied to the real proof format without making fake assumptions?**
@@ -252,15 +252,15 @@ voterHash     — Poseidon hash of voterIdentity
 
 ### Implication for _afterProofSubmit()
 
-Current GovVerifier does:
+Current Voter Allowlist does:
 ```solidity
 address user = address(uint160(uint256(inputs[inputs.length - 1])));
 ```
 
 This is **incorrect** for the vote circuit. The circuit does not output the user address.
 
-The credential proof (Polygon ID) and the vote circuit are separate:
-1. **Credential proof** — proves the wallet holds a valid Polygon ID credential (DID-based)
+The credential proof (ENS-gated allowlist) and the vote circuit are separate:
+1. **Credential proof** — proves the wallet holds a valid ENS-gated allowlist credential (DID-based)
 2. **Vote circuit** — proves the vote is valid and not double-spent (nullifier-based)
 
 The `_afterProofSubmit()` must use a different strategy to link credential proof → Ethereum address:

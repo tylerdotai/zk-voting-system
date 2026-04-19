@@ -88,7 +88,7 @@ Our implementation enables:
 ## Future Enhancements
 
 - Real ZK proof verification
-- DID integration (Ceramic/Polygon ID)
+- DID integration (Ceramic/ENS Allowlist)
 - Post-quantum cryptography
 - Multi-chain support
 - Mobile application

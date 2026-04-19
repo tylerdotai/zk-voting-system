@@ -68,4 +68,4 @@
 2. **Snapshot** — off-chain vote aggregation (future integration point)
 3. **Gitcoin Passport** — sybil resistance (future alternative to allowlist)
 4. **EIP-1271** — signature verification standard for ENS-based auth
-5. **W3C DIDs** — eventual migration path for decentralized identity (post-Polygon ID pivot)
+5. **W3C DIDs** — eventual migration path for decentralized identity (post-ENS-gated allowlist pivot)

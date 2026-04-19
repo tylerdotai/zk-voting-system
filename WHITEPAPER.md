@@ -4,7 +4,7 @@
 **Author:** Tyler Delano + Dexter  
 **Status:** Live on Sepolia testnet  
 **Chain:** Ethereum Sepolia  
-**Identity:** ENS-gated voter allowlist (Polygon ID deferred)
+**Identity:** ENS-gated voter allowlist (ENS Allowlist deferred)
 
 ---
 
@@ -68,7 +68,7 @@ That means:
 
 ### Demo Constraints
 
-- No Polygon ID / ZK credential dependency for identity
+- No ENS Allowlist / ZK credential dependency for identity
 - No third-party identity provider required
 - Offline-capable PWA with blockchain sync
 - Post-quantum ready architecture (ZK vote privacy layer reserved for future)
@@ -185,7 +185,7 @@ Key constraints from the grant:
 - Offline-capable with blockchain sync
 - Real ZK proof integration for identity
 
-The current implementation satisfies all constraints with an ENS-gated allowlist approach. Polygon ID / ZK credential verification is deferred to a future phase.
+The current implementation satisfies all constraints with an ENS-gated allowlist approach. ENS Allowlist / ZK credential verification is deferred to a future phase.
 
 ---
 

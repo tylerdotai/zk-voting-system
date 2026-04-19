@@ -10,7 +10,7 @@ Owns:
 - verifier integration choices
 - chain and identity boundary decisions
 
-### 2. polygon-id-ops
+### 2. ethereum-id-ops
 Owns:
 - issuer node setup
 - schema definitions

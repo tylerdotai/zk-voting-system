@@ -59,7 +59,7 @@ Ensure the product is framed correctly.
 Prove the issuer stack exists beyond paper.
 
 **Pass criteria**
-- Polygon ID issuer services start successfully
+- ENS Allowlist issuer services start successfully
 - required env vars and configs are documented
 - ports/endpoints are known
 
@@ -164,7 +164,7 @@ Prove the identity layer changes contract permissions.
 - transaction hash or onchain event
 
 **Failure meaning**
-- Polygon ID is not actually integrated with governance permissions
+- ENS Allowlist is not actually integrated with governance permissions
 
 ### Gate 3.4 — Dev bypass is isolated
 **Purpose**  

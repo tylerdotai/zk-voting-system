@@ -2,407 +2,155 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="theme-color" content="#1a1a2e">
+  <meta name="theme-color" content="#030816">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ZK Voting - Verify Credentials</title>
+  <title>Voter Registration — ZK Voting</title>
   <style>
+    :root {
+      --bg-primary: #030816;
+      --bg-card: #0c1b3d;
+      --accent-blue: #2563eb;
+      --accent-light: #5BA2F1;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --fw-border: #1D335F;
+      --state-voting: #4ADE80;
+      --state-failed: #ef4444;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
-      color: #fff;
-      padding: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .container { max-width: 600px; margin: 0 auto; }
-    h1 { text-align: center; margin-bottom: 0.5rem; }
-    .subtitle { text-align: center; color: #888; margin-bottom: 2rem; }
-    
-    .section {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .status {
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--fw-border);
+      border-radius: 16px;
+      padding: 3rem;
+      max-width: 500px;
+      width: 90%;
       text-align: center;
-      padding: 2rem;
     }
-    .status-icon { font-size: 4rem; margin-bottom: 1rem; }
-    .status-text { font-size: 1.2rem; font-weight: 600; }
-    .status-sub { color: #888; margin-top: 0.5rem; }
-    
-    .verified { color: #4ade80; }
-    .pending { color: #fbbf24; }
-    .not-verified { color: #f87171; }
-    
-    .btn {
-      display: block;
-      width: 100%;
-      padding: 1rem;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      margin-top: 1rem;
-    }
-    .btn:hover { transform: scale(1.02); }
-    .btn-primary { background: #7f56d9; color: #fff; }
-    .btn-secondary { background: rgba(255,255,255,0.2); color: #fff; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    
-    .info-box {
-      background: rgba(127, 86, 217, 0.1);
-      border: 1px solid rgba(127, 86, 217, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .info-box h3 { color: #7f56d9; margin-bottom: 0.5rem; font-size: 0.9rem; }
-    .info-box p { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; }
-    
-    .qr-container {
-      text-align: center;
-      padding: 1rem;
-    }
-    .qr-container canvas { 
-      border: 4px solid #7f56d9;
-      border-radius: 8px;
-    }
-    
-    .instructions {
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-    }
-    .instructions ol {
-      margin-left: 1.5rem;
-      color: #94a3b8;
-      font-size: 0.9rem;
-      line-height: 1.8;
-    }
-    
-    .link {
-      color: #60a5fa;
-      text-decoration: none;
-    }
-    .link:hover { text-decoration: underline; }
-    
-    .contract-info {
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      padding: 1rem;
+    h1 { font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; }
+    .addr {
       font-family: monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
+      color: var(--accent-light);
+      background: var(--bg-primary);
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--fw-border);
       word-break: break-all;
+      margin-bottom: 2rem;
     }
-    
-    .alert {
-      background: rgba(248, 113, 113, 0.1);
-      border: 1px solid rgba(248, 113, 113, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      color: #f87171;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
+    .status {
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
-    
-    .demo-notice {
-      background: rgba(251, 191, 36, 0.1);
-      border: 1px solid rgba(251, 191, 36, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      color: #fbbf24;
-      font-size: 0.9rem;
-      margin-bottom: 1rem;
+    .status.eligible { background: rgba(74,222,128,0.15); color: var(--state-voting); border: 2px solid var(--state-voting); }
+    .status.not-eligible { background: rgba(239,68,68,0.15); color: var(--state-failed); border: 2px solid var(--state-failed); }
+    .info { margin-top: 2rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+    .info strong { color: var(--text-primary); }
+    .contract-info { margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+    .contract-info code { color: var(--accent-light); }
+    .connect-btn {
+      background: var(--accent-blue);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 2rem;
     }
+    .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>🔐 Credential Verification</h1>
-    <p class="subtitle">Verify your identity to participate in voting</p>
-    
-    <div id="notConnected">
-      <div class="section">
-        <div class="status">
-          <div class="status-icon">👛</div>
-          <div class="status-text">Wallet Not Connected</div>
-          <div class="status-sub">Connect your wallet to verify credentials</div>
-        </div>
-        <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
-      </div>
+  <div class="card">
+    <h1>Voter Registration Status</h1>
+    <button class="connect-btn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
+    <div class="addr" id="walletAddress" style="display:none;"></div>
+    <div class="status not-eligible" id="statusBanner" style="display:none;"></div>
+    <div class="info" id="infoText">
+      Connect your wallet to check your voter eligibility status.
+      If you are not registered, contact the chair to be added to the voter allowlist.
     </div>
-    
-    <div id="connected" style="display: none;">
-      <div class="section">
-        <div class="info-box">
-          <h3>What is this?</h3>
-          <p>This system uses Polygon ID to verify you are eligible to vote without revealing your identity. You need a verifiable credential issued by an authorized issuer.</p>
-        </div>
-        
-        <div class="contract-info">
-          <strong>Voting Contract:</strong><br>
-          <span id="contractAddress">Loading...</span>
-        </div>
-      </div>
-      
-      <div class="section" id="verificationStatus">
-        <div class="status">
-          <div class="status-icon" id="statusIcon">⏳</div>
-          <div class="status-text" id="statusText">Checking verification...</div>
-          <div class="status-sub" id="statusSub">Please wait</div>
-        </div>
-      </div>
-      
-      <div class="section" id="verifySection">
-        <div class="demo-notice">
-          ⚠️ <strong>Demo Mode:</strong> Full Polygon ID requires setting up an issuer node. 
-          Click "Demo Verify" to simulate credential verification for testing.
-        </div>
-        
-        <button class="btn btn-primary" id="verifyBtn" onclick="startVerification()">
-          📱 Verify with Polygon ID
-        </button>
-        
-        <div id="qrSection" style="display: none;">
-          <div class="qr-container">
-            <canvas id="qrCanvas"></canvas>
-          </div>
-          
-          <div class="instructions">
-            <strong>To scan:</strong>
-            <ol>
-              <li>Open your Polygon ID wallet app</li>
-              <li>Tap the "Scan" button</li>
-              <li>Point your camera at the QR code</li>
-              <li>Follow the prompts to share your credential</li>
-            </ol>
-            <p style="margin-top: 0.5rem;">Or <a href="#" id="deepLink" class="link">click here</a> to open Polygon ID automatically.</p>
-          </div>
-        </div>
-        
-        <button class="btn btn-secondary" onclick="demoVerify()">
-          🧪 Demo Verify (for testing)
-        </button>
-      </div>
-      
-      <div class="section" id="verifiedSection" style="display: none;">
-        <div class="status verified">
-          <div class="status-icon">✅</div>
-          <div class="status-text">Credential Verified!</div>
-          <div class="status-sub">You are now eligible to vote and create proposals</div>
-        </div>
-        <button class="btn btn-primary" onclick="goToVoting()">
-          🗳️ Go to Voting
-        </button>
-      </div>
+    <div class="contract-info">
+      Contract: <code id="contractAddr"></code>
     </div>
   </div>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    // Contract configuration
-    const VOTING_CONTRACT = '0x5FbDB2315678afecb367f032d93F642f64180aa3'; // Update this
-    const LOCAL_RPC_URL = 'http://100.79.252.47:8545';
-    
-    // ABI for checking verification status
-    const VOTING_ABI = [
-      'function allowedUsers(address) view returns (bool)',
-      'function isCredentialVerified(address) view returns (bool)'
+    const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
+    const ABI = [
+      "function isEligible(address _user) view returns (bool)",
+      "function chair() view returns (address)"
     ];
     
-    let provider, signer, votingContract, userAddress;
+    let provider, signer, contract, userAddress;
     
     async function connectWallet() {
       if (typeof window.ethereum === 'undefined') {
-        alert('Please install MetaMask!');
+        alert('Install MetaMask to use this application');
         return;
       }
-      
       try {
-        // Check if already connected with different network
-        if (window.ethereum.isConnected()) {
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-        } else {
-          provider = new ethers.providers.JsonRpcProvider(LOCAL_RPC_URL);
-        }
-        
+        provider = new ethers.providers.Web3Provider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
         
-        votingContract = new ethers.Contract(VOTING_CONTRACT, VOTING_ABI, signer);
-        
-        document.getElementById('notConnected').style.display = 'none';
-        document.getElementById('connected').style.display = 'block';
-        document.getElementById('contractAddress').textContent = VOTING_CONTRACT;
-        
-        await checkVerificationStatus();
-      } catch (err) {
-        console.error(err);
-        alert('Error connecting: ' + err.message);
-      }
-    }
-    
-    async function checkVerificationStatus() {
-      try {
-        const isVerified = await votingContract.allowedUsers(userAddress);
-        
-        if (isVerified) {
-          showVerified();
-        } else {
-          showNotVerified();
+        const network = await provider.getNetwork();
+        if (network.chainId.toString() !== '11155111') {
+          alert('Switch to Sepolia testnet');
+          return;
         }
+        
+        document.getElementById('connectBtn').textContent = 'Connected';
+        document.getElementById('connectBtn').disabled = true;
+        document.getElementById('walletAddress').style.display = 'block';
+        document.getElementById('walletAddress').textContent = userAddress;
+        document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS;
+        
+        await checkStatus();
       } catch (err) {
-        console.error('Error checking status:', err);
-        showNotVerified();
+        alert('Error: ' + (err.reason || err.message));
       }
     }
     
-    function showVerified() {
-      document.getElementById('verifySection').style.display = 'none';
-      document.getElementById('verifiedSection').style.display = 'block';
-      document.getElementById('verificationStatus').style.display = 'none';
-    }
-    
-    function showNotVerified() {
-      document.getElementById('statusIcon').textContent = '❌';
-      document.getElementById('statusText').textContent = 'Not Verified';
-      document.getElementById('statusText').className = 'status-text not-verified';
-      document.getElementById('statusSub').textContent = 'Verify your credentials to participate';
-    }
-    
-    function startVerification() {
-      // Generate the proof request JSON (this would come from the backend/issuer in production)
-      const proofRequest = generateProofRequest();
+    async function checkStatus() {
+      const eligible = await contract.isEligible(userAddress);
+      const banner = document.getElementById('statusBanner');
+      banner.style.display = 'block';
       
-      // Generate QR code
-      generateQRCode(JSON.stringify(proofRequest));
-      
-      // Set deep link
-      document.getElementById('deepLink').href = 'iden3comm://?i_m=' + btoa(JSON.stringify(proofRequest));
-      
-      document.getElementById('qrSection').style.display = 'block';
-      document.getElementById('verifyBtn').style.display = 'none';
-    }
-    
-    function generateProofRequest() {
-      // This is a mock proof request - in production, this comes from your issuer backend
-      return {
-        id: crypto.randomUUID ? crypto.randomUUID() : 'uuid-' + Date.now(),
-        typ: 'application/iden3comm-plain-json',
-        type: 'https://iden3-communication.io/proofs/1.0/contract-invoke-request',
-        body: {
-          transaction_data: {
-            contract_address: VOTING_CONTRACT,
-            method_id: 'b68967e2', // This would be the actual method ID from your verifier contract
-            chain_id: 31337, // Hardhat chain ID - change to 11155111 for Sepolia
-            network: 'hardhat'
-          },
-          reason: 'Verify eligibility to vote in Fort Worth DAO',
-          scope: [
-            {
-              id: 1,
-              circuit_id: 'credentialAtomicQuerySig',
-              rules: {
-                query: {
-                  // These would be configured based on your credential schema
-                  allowed_issuers: ['did:polygonid:polygon:mumbai:2qLr2BymdszjFRKpJM9NPXu3HMpSSwf4nh3ZsADtPv'],
-                  req: {
-                    // Example: require a specific attribute
-                    // $lt: for numeric comparisons
-                    // $gt: for greater than
-                    // $exists: to check if attribute exists
-                  },
-                  schema: {
-                    url: 'https://s3.eu-west-1.amazonaws.com/polygonid-schemas/38bb428c-cc3a-4316-a169-ff092aa0d4e3.json-ld',
-                    type: 'KYCAgeCredential' // Example schema type
-                  }
-                }
-              }
-            }
-          ]
-        }
-      };
-    }
-    
-    function generateQRCode(data) {
-      // Simple QR code generation using a basic algorithm
-      // For production, use a proper QR library like qrcode.js
-      const canvas = document.getElementById('qrCanvas');
-      const ctx = canvas.getContext('2d');
-      const size = 200;
-      canvas.width = size;
-      canvas.height = size;
-      
-      // Clear canvas
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, size, size);
-      
-      // For demo purposes, just show the data text
-      // In production, use: new QRCode(canvas, data)
-      ctx.fillStyle = '#7f56d9';
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
-      
-      const lines = data.length > 100 ? [data.substring(0, 100), data.substring(100, 200), '...'] : [data];
-      lines.forEach((line, i) => {
-        ctx.fillText(line.substring(0, 40), size/2, 20 + i * 15);
-      });
-      
-      // NOTE: For actual QR code, include: <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-      // And use: QRCode.toCanvas(canvas, data, { width: 200 })
-      
-      // For now, show placeholder
-      ctx.fillStyle = '#333';
-      ctx.fillRect(20, 20, size - 40, size - 40);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px sans-serif';
-      ctx.fillText('QR CODE', size/2, size/2);
-      ctx.font = '10px sans-serif';
-      ctx.fillText('(Use qrcode library)', size/2, size/2 + 20);
-    }
-    
-    async function demoVerify() {
-      // In demo mode, directly call setAllowedUser
-      // This simulates what the GovVerifier would do after verifying the ZK proof
-      try {
-        const tx = await votingContract.setAllowedUser(userAddress);
-        await tx.wait();
-        showVerified();
-      } catch (err) {
-        console.error('Demo verification error:', err);
-        alert('Demo verification failed: ' + err.message);
+      if (eligible) {
+        banner.className = 'status eligible';
+        banner.textContent = 'Eligible Voter';
+        document.getElementById('infoText').innerHTML = '<strong>You are registered to vote.</strong><br><br>Go to the Voter Portal to create proposals, vote on motions, and participate in governance.';
+      } else {
+        banner.className = 'status not-eligible';
+        banner.textContent = 'Not Registered';
+        document.getElementById('infoText').innerHTML = '<strong>You are not on the voter allowlist.</strong><br><br>Contact the chair to request being added to the voter allowlist.';
       }
     }
     
-    function goToVoting() {
-      window.location.href = 'rob-rules.html';
-    }
-    
-    // Check if already connected on load
-    window.addEventListener('load', async () => {
-      if (typeof window.ethereum !== 'undefined') {
-        const accounts = window.ethereum.request({ method: 'eth_accounts' });
-        if (accounts && accounts.length > 0) {
-          connectWallet();
-        }
-      }
-    });
-  </script>
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js")
-          .then(reg => console.log("SW registered:", reg.scope))
-          .catch(err => console.warn("SW failed:", err));
-      });
+    if (typeof window.ethereum !== 'undefined') {
+      window.ethereum.on('accountsChanged', () => location.reload());
     }
   </script>
 </body>

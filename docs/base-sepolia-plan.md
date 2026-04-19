@@ -14,7 +14,7 @@ Make Base Sepolia the canonical voting-contract network for the demo.
 ## Why this matters
 - voting contracts should target Base Sepolia for the live demo path
 - frontend wallet UX should point to Base Sepolia
-- issuer/identity infrastructure can remain Polygon-ID-backed while the voting contracts live on Base
+- issuer/identity infrastructure can remain Ethereum-ID-backed while the voting contracts live on Base
 
 ## Next implementation steps
 1. update deploy scripts to support `--network baseSepolia`
