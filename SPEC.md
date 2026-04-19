@@ -1,124 +1,107 @@
-# Polygon ID Issuer Node Integration — SPEC
+# ZK Voting System — SPEC.md
 
 ## Overview
 
-Integrate Polygon ID issuer node to enable **credential-gated voting** — users prove residency/membership via ZK proofs without revealing their identity.
-
-## Goal
-
-Complete the ZK DID voting system's credential verification by setting up a real Polygon ID issuer that issues verifiable credentials to eligible voters.
+ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia. 
+No Polygon ID / ZK credential dependency. ZK vote privacy layer preserved for post-quantum future.
 
 ---
 
-## Phase 1: Issuer Node Setup
+## Architecture
 
-### Tasks
-
-1. **Set up Polygon ID issuer node via Docker**
-   - Clone issuer node repo
-   - Configure environment (Ethereum RPC, private key, server URL)
-   - Run issuer node container
-
-2. **Create credential schema**
-   - Define: "Fort Worth DAO Member" credential
-   - Attributes: `memberId`, `jurisdiction`, `memberSince`
-   - Schema URL: `https://schema.polygonid.com/fort-worth-dao-member.json`
-
-3. **Configure QR proof request**
-   - Define circuit: `credentialAtomicQuerySig`
-   - Set allowed issuers
-   - Configure expiration
-
-### Verification
-- Issuer UI accessible at `http://localhost:3001`
-- Credentials can be issued to test wallets
+```
+User connects wallet
+       ↓
+Contract: isEligible(address) → check voter allowlist
+       ↓
+If eligible → full Rob's Rules flow (propose, second, amend, vote, finalize)
+If not eligible → "Register Now" button → calls addVoter(address)
+```
 
 ---
 
-## Phase 2: Smart Contract Updates
+## Contract: ZKVotingRobRulesWithCredentials
 
-### Tasks
+**Deployed (Sepolia):** `0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`
 
-1. **Update GovVerifier with real configuration**
-   - Set `ISSUER_DID` 
-   - Set `SCHEMA_HASH`
-   - Set `CIRCUIT_ID`
+### Voter Eligibility (ENS-gated, no Polygon ID)
 
-2. **Update ZKVotingRobRulesWithCredentials**
-   - Verify proof against correct schema
-   - Handle proof validation callbacks
+| Function | Access | Description |
+|---|---|---|
+| `addVoter(address _voter)` | Chair or Owner | Grant voting rights |
+| `removeVoter(address _voter)` | Chair or Owner | Revoke voting rights |
+| `addVoters(address[] _voters)` | Chair or Owner | Batch add |
+| `isEligible(address _user)` | Anyone (view) | Check voter status |
+| `setEnsResolver(address _resolver)` | Chair or Owner | Future ENS integration |
 
-3. **Write integration tests**
+### Rob's Rules Parliamentary Flow
 
-### Verification
-- Contracts deploy successfully to Sepolia
-- `submitZKPResponse()` triggers `setAllowedUser()`
+1. **Create** → Chair creates proposal (eligible voter required)
+2. **Second** → Chair seconds to move to Seconded state
+3. **Amend** → Any eligible member can propose amendments
+4. **Open Voting** → Chair opens voting period (max 7 days)
+5. **Vote** → Members vote Yes/No/Abstain
+6. **Finalize** → Anyone can finalize after voting ends → Passed/Failed
 
----
+### ZK Architecture Preserved (future)
 
-## Phase 3: Frontend Integration
-
-### Tasks
-
-1. **Integrate Polygon ID SDK**
-   - Install `@0xpolygonid/js-sdk`
-   - Configure issuer URL and schema
-
-2. **Build QR code flow**
-   - Generate proof request QR on `verify.html`
-   - Handle proof response submission
-
-3. **Add credential status indicator**
-   - Show "Verified" badge after successful proof
-
-### Verification
-- User can scan QR with Polygon ID wallet
-- After verification, user can vote on `rob-rules.html`
+- `nullifierHash` in `voteOnMotion` — placeholder for ZK vote privacy
+- `ensResolver` field — future ENS-based eligibility without allowlist
+- Post-quantum signature scheme: ML-DSA (lattice-based) planned
 
 ---
 
-## Phase 4: Deployment
+## Frontend Pages
 
-### Tasks
+| Page | Purpose |
+|---|---|
+| `index.html` | PWA offline-capable voting shell |
+| `rob-rules.html` | Full Rob's Rules parliamentary UI |
+| `verify.html` | (legacy, unused without Polygon ID) |
+| `manifest.json` | PWA manifest |
+| `sw.js` | Service worker for offline caching |
 
-1. **Deploy to Sepolia**
-   - Deploy GovVerifier
-   - Deploy ZKVotingRobRulesWithCredentials
-   - Update frontend addresses
+### Voter Flow (rob-rules.html)
 
-2. **Set up production issuer**
-   - Configure domain
-   - SSL certificate
-   - Monitoring
-
-### Verification
-- Live at `zk-voting-system.vercel.app`
-- Real users can verify and vote
+1. Connect wallet → shows address
+2. `checkVoterEligibility()` polls contract → shows registered status
+3. If not registered → "Register Now" button enabled
+4. Click "Register" → `contract.addVoter(walletAddress)` → eligible
+5. Full voting UI unlocked (create, second, amend, vote)
 
 ---
 
-## Out of Scope
+## Out of Scope (for now)
 
+- Polygon ID / ZK credential verification
+- On-chain ZK proof validation
 - Multi-chain support
 - Mobile app
-- Post-quantum cryptography
 - Mainnet deployment
 
 ---
 
-## Dependencies
+## In Scope
 
-- Docker + Docker Compose
-- Sepolia testnet ETH
-- Polygon ID wallet app (for testing)
-- Alchemy/Infura API key
+- ENS domain resolution for voter eligibility (future)
+- ZK vote privacy layer (post-quantum, future)
+- Offline-capable PWA
+- Real-time SSE updates (future)
 
 ---
 
 ## Success Criteria
 
-1. Issuer node running and accessible
-2. Credentials issuable to wallets
-3. Proof verification working on-chain
-4. User flow: connect wallet → verify credentials → vote on proposal
-5. Full end-to-end tested on Sepolia
+1. Voter can connect wallet → see eligibility → self-register
+2. Chair can add/remove voters from allowlist
+3. Full Rob's Rules parliamentary flow works on-chain
+4. PWA works offline with service worker
+5. ZK vote privacy architecture documented for future implementation
+
+---
+
+## Grant Reference
+
+Zero Knowledge DID Blockchain Voting System — $2,500 grant
+Client: Fort Worth DAO
+Key constraints: post-quantum ready, not reliant on 3rd party / internet, offline backup
