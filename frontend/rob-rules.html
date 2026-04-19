@@ -509,7 +509,7 @@
               <span class="proposal-id">#${i}</span>
               <span class="proposal-state ${stateClass}">${STATES[p[2]] || 'Unknown'}</span>
             </div>
-            <div class="proposal-desc">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</div>
+            <div class="proposal-desc">${p[0].substring(0, 100)}${p[0].length > 100 ? '...' : ''}</div>
             <div class="proposal-meta">
               ${new Date(p[3] * 1000).toLocaleDateString()} • 
               Yes: ${p[7]} • No: ${p[8]} • Abstain: ${p[9]}
@@ -548,9 +548,9 @@
         const p = await contract.getProposal(id);
         
         document.getElementById('detailTitle').textContent = `Proposal #${id}`;
-        document.getElementById('detailDesc').textContent = p.description;
+        document.getElementById('detailDesc').textContent = p[0];
         document.getElementById('detailCreated').textContent = new Date(p[3] * 1000).toLocaleString();
-        document.getElementById('detailChair').textContent = p.chair;
+        document.getElementById('detailChair').textContent = p[1];
         document.getElementById('yesCount').textContent = p[7];
         document.getElementById('noCount').textContent = p[8];
         document.getElementById('abstainCount').textContent = p[9];
@@ -637,21 +637,21 @@
             const item = document.createElement('div');
             item.className = 'amendment-item';
             
-            const statusClass = a.approved ? 'approved' : 'pending';
-            const statusText = a.approved ? '✓ Approved' : '⏳ Pending Approval';
+            const statusClass = a[2] ? 'approved' : 'pending';
+            const statusText = a[2] ? '✓ Approved' : '⏳ Pending Approval';
             
             item.innerHTML = `
               <div class="amendment-header">
-                <span class="amendment-proposer">Amendment #${i} by ${a.proposer.slice(0,6)}...</span>
+                <span class="amendment-proposer">Amendment #${i} by ${a[1].slice(0,6)}...</span>
                 <span class="amendment-status ${statusClass}">${statusText}</span>
               </div>
-              <div style="color: #e2e8f0; margin: 0.5rem 0;">${a.description}</div>
-              ${isChair && !a.approved && state === 1 ? `
+              <div style="color: #e2e8f0; margin: 0.5rem 0;">${a[0]}</div>
+              ${isChair && !a[2] && state === 1 ? `
                 <button class="btn btn-primary" onclick="approveAmendment(${proposalId}, ${i})">Approve Amendment</button>
               ` : ''}
-              ${a.approved ? `
+              ${a[2] ? `
                 <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #64748b;">
-                  Yes: ${a.yesVotes} | No: ${a.noVotes} | Abstain: ${a.abstainVotes}
+                  Yes: ${a[3]} | No: ${a[4]} | Abstain: ${a[5]}
                 </div>
               ` : ''}
             `;
