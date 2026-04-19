@@ -7,11 +7,11 @@ Priority legend: P0 critical, P1 important, P2 useful
 
 ## P0 — Ship It (Must done before May 1st demo)
 
+- [x] **TX hash display** — show transaction hashes for all write actions
+- [x] **README update** — reflect current ENS-gated Sepolia reality
 - [ ] **3-voter end-to-end test** — local, full Rob's Rules flow: create → second → amend → open voting → vote → finalize
 - [ ] **Demo rehearsal** — local, run full flow from clean state, fix failures
-- [ ] **TX hash display** — show transaction hashes for all write actions (credibility for audience)
 - [ ] **Wrong-network prompt** — auto-detect + switch to Sepolia
-- [ ] **README update** — reflect current ENS-gated Sepolia reality
 - [ ] **Vercel deploy** — only after all local testing passes
 
 ---
@@ -19,12 +19,13 @@ Priority legend: P0 critical, P1 important, P2 useful
 ## P1 — Demo Hardening (post-local-test)
 
 - [ ] Empty state / no-permission states for proposal list
+- [ ] Chair voter management UI — add/remove voters from dashboard (partially done, addVoter wired — remove not yet)
 
 ---
 
 ## P2 — Nice-to-Haves (after May 1st)
 
-- [ ] SSE real-time vote count updates (future)
+- [ ] SSE real-time vote count updates
 - [ ] ENS domain-gated eligibility (future — reserved slot in contract)
 - [ ] ZK vote privacy layer (future — zk-SNARKs + ML-DSA, documented in whitepaper)
 - [ ] Mobile app (native wrapper for PWA)
@@ -42,3 +43,6 @@ Priority legend: P0 critical, P1 important, P2 useful
 - [x] Member rights: call for division, reconsider, reopen voting
 - [x] PWA service worker + manifest
 - [x] Docs: WHITEPAPER.md, DEVELOPMENT_PAPER.md, SPEC.md, README.md
+- [x] TX hash display + Etherscan links on all write actions
+- [x] Chair voter management UI (add voters from dashboard)
+- [x] README rewritten — clean, accurate, no stale references
