@@ -708,18 +708,20 @@
       setTimeout(() => toast.classList.remove('show'), 5000);
     }
     
-    // Listen for new proposals
-    contract.on("ProposalCreated", async () => {
-      await loadProposals();
-    });
-    contract.on("MotionVoted", async () => {
-      if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
-      await loadProposals();
-    });
-    contract.on("ProposalFinalized", async () => {
-      await loadProposalDetail(currentProposalId);
-      await loadProposals();
-    });
+    // Listen for new proposals (only after wallet is connected)
+    if (contract) {
+      contract.on("ProposalCreated", async () => {
+        await loadProposals();
+      });
+      contract.on("MotionVoted", async () => {
+        if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      });
+      contract.on("ProposalFinalized", async () => {
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      });
+    }
     
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', () => location.reload());
