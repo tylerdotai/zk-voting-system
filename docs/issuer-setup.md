@@ -64,7 +64,7 @@ Example identity creation payload:
 A real wallet-consumable credential offer flow is now generating successfully.
 
 Working values from current run:
-- Public issuer URL: `https://weak-tiger-12.loca.lt`
+- Public issuer URL: `https://constantly-rogers-ratios-exam.trycloudflare.com`
 - Issuer DID: `did:polygonid:polygon:amoy:2qSugB8VLKyAxEDwo8EMsqq9bwmToR2HT4XgBoVXxX`
 - Polygon-ID-ready schema URL: `https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json`
 - Imported schema id: `0aaf97ad-3136-4c2e-bba5-571f9bb94b4f`
