@@ -542,6 +542,8 @@
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
       "function finalizeProposal(uint256 _proposalId)",
       "function addVoter(address _voter)",
+      "function removeVoter(address _voter)",
+      "function removeVoter(address _voter)",
       "function callForDivision(uint256 _proposalId)",
       "function reconsider(uint256 _proposalId)",
       "function reopenVoting(uint256 _proposalId)"
@@ -565,8 +567,22 @@
         
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
-          showToast('Switch to Sepolia testnet', true);
-          return;
+          // Try to auto-switch to Sepolia
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xaa36a7' }], // Sepolia chainId
+            });
+            // Re-check network after switch
+            const newNetwork = await provider.getNetwork();
+            if (newNetwork.chainId.toString() !== '11155111') {
+              showToast('Please switch to Sepolia testnet manually', true);
+              return;
+            }
+          } catch (switchErr) {
+            showToast('Please switch to Sepolia testnet', true);
+            return;
+          }
         }
         
         document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
@@ -635,7 +651,7 @@
       list.innerHTML = '';
       for (let i = count - 1; i >= 0; i--) {
         const p = await contract.getProposal(i);
-        const state = parseInt(p[2]);
+        const state = parseInt(p[3]);
         const card = document.createElement('div');
         card.className = 'proposal-card' + (currentProposalId === i ? ' selected' : '');
         card.onclick = () => selectProposal(i);
@@ -663,7 +679,7 @@
     
     async function loadProposalDetail(id) {
       const p = await contract.getProposal(id);
-      const state = parseInt(p[2]);
+      const state = parseInt(p[3]);
       const isChair = (await contract.chair()).toLowerCase() === userAddress.toLowerCase();
       const isEligible = await contract.isEligible(userAddress);
       const hasVoted = await contract.hasVoted(id, userAddress);

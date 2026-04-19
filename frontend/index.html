@@ -419,8 +419,20 @@
         
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
-          showToast('Switch to Sepolia testnet', true);
-          return;
+          try {
+            await window.ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0xaa36a7' }],
+            });
+            const newNetwork = await provider.getNetwork();
+            if (newNetwork.chainId.toString() !== '11155111') {
+              showToast('Please switch to Sepolia testnet manually', true);
+              return;
+            }
+          } catch (switchErr) {
+            showToast('Please switch to Sepolia testnet', true);
+            return;
+          }
         }
         
         document.getElementById('walletAddress').style.display = 'inline';
@@ -466,7 +478,7 @@
       list.innerHTML = '';
       for (let i = count - 1; i >= 0; i--) {
         const p = await contract.getProposal(i);
-        const state = parseInt(p[2]);
+        const state = parseInt(p[3]);
         const card = document.createElement('div');
         const isVoting = state === 2;
         card.className = 'proposal-card' + (isVoting ? ' voting-open' : '') + (state >= 3 ? ' closed' : '');
@@ -490,7 +502,7 @@
     async function selectProposal(id) {
       selectedProposalId = id;
       const p = await contract.getProposal(id);
-      const state = parseInt(p[2]);
+      const state = parseInt(p[3]);
       
       document.getElementById('voteSection').classList.remove('hidden');
       document.getElementById('selectedProposalTitle').textContent = `Proposal #${id}`;
@@ -505,7 +517,7 @@
       document.getElementById('voteNoCount').textContent = p[8];
       document.getElementById('voteAbstainCount').textContent = p[9];
       
-      const state = parseInt(p[2]);
+      const state = parseInt(p[3]);
       const statusEl = document.getElementById('voteStatus');
       const controls = document.getElementById('votingControls');
       const btns = controls.querySelectorAll('.vote-btn');
