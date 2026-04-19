@@ -353,6 +353,7 @@
       "function voteOnAmendment(uint256 _proposalId, uint256 _amendmentId, uint256 _choice)",
       "function finalizeProposal(uint256 _proposalId)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+      "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
       "function proposals(uint256 _proposalId) view returns (string memory description, address chair, uint256 state, uint256 createdAt, uint256 secondedAt, uint256 votingStartsAt, uint256 votingEndsAt, uint256 yesVotes, uint256 noVotes, uint256 abstainVotes, uint256 amendmentCount)",
       "function isEligible(address) view returns (bool)",
@@ -492,28 +493,28 @@
         list.innerHTML = '';
         
         for (let i = count - 1; i >= 0; i--) {
-          const p = await contract.proposals(i);
+          const p = await contract.getProposal(i);
           const card = document.createElement('div');
           card.className = 'proposal-card';
           card.onclick = () => showProposalDetail(i);
           
-          const stateClass = STATE_CLASSES[p.state] || 'state-created';
-          const total = parseInt(p.yesVotes) + parseInt(p.noVotes) + parseInt(p.abstainVotes);
-          const yesPct = total > 0 ? (parseInt(p.yesVotes) / total * 100) : 33;
-          const noPct = total > 0 ? (parseInt(p.noVotes) / total * 100) : 33;
-          const abstainPct = total > 0 ? (parseInt(p.abstainVotes) / total * 100) : 34;
+          const stateClass = STATE_CLASSES[p[2]] || 'state-created';
+          const total = parseInt(p[7]) + parseInt(p[8]) + parseInt(p[9]);
+          const yesPct = total > 0 ? (parseInt(p[7]) / total * 100) : 33;
+          const noPct = total > 0 ? (parseInt(p[8]) / total * 100) : 33;
+          const abstainPct = total > 0 ? (parseInt(p[9]) / total * 100) : 34;
           
           card.innerHTML = `
             <div class="proposal-header">
               <span class="proposal-id">#${i}</span>
-              <span class="proposal-state ${stateClass}">${STATES[p.state] || 'Unknown'}</span>
+              <span class="proposal-state ${stateClass}">${STATES[p[2]] || 'Unknown'}</span>
             </div>
             <div class="proposal-desc">${p.description.substring(0, 100)}${p.description.length > 100 ? '...' : ''}</div>
             <div class="proposal-meta">
-              ${new Date(p.createdAt * 1000).toLocaleDateString()} • 
-              Yes: ${p.yesVotes} • No: ${p.noVotes} • Abstain: ${p.abstainVotes}
+              ${new Date(p[3] * 1000).toLocaleDateString()} • 
+              Yes: ${p[7]} • No: ${p[8]} • Abstain: ${p[9]}
             </div>
-            ${p.state >= 2 ? `
+            ${p[2] >= 2 ? `
             <div class="votes-bar" style="margin-top: 0.5rem;">
               <div class="votes-yes" style="width: ${yesPct}%"></div>
               <div class="votes-no" style="width: ${noPct}%"></div>
@@ -544,30 +545,30 @@
       if (!contract) return;
       
       try {
-        const p = await contract.proposals(id);
+        const p = await contract.getProposal(id);
         
         document.getElementById('detailTitle').textContent = `Proposal #${id}`;
         document.getElementById('detailDesc').textContent = p.description;
-        document.getElementById('detailCreated').textContent = new Date(p.createdAt * 1000).toLocaleString();
+        document.getElementById('detailCreated').textContent = new Date(p[3] * 1000).toLocaleString();
         document.getElementById('detailChair').textContent = p.chair;
-        document.getElementById('yesCount').textContent = p.yesVotes;
-        document.getElementById('noCount').textContent = p.noVotes;
-        document.getElementById('abstainCount').textContent = p.abstainVotes;
+        document.getElementById('yesCount').textContent = p[7];
+        document.getElementById('noCount').textContent = p[8];
+        document.getElementById('abstainCount').textContent = p[9];
         
         // Update vote bar
-        const total = parseInt(p.yesVotes) + parseInt(p.noVotes) + parseInt(p.abstainVotes);
+        const total = parseInt(p[7]) + parseInt(p[8]) + parseInt(p[9]);
         if (total > 0) {
-          document.getElementById('votesBarYes').style.width = (parseInt(p.yesVotes) / total * 100) + '%';
-          document.getElementById('votesBarNo').style.width = (parseInt(p.noVotes) / total * 100) + '%';
-          document.getElementById('votesBarAbstain').style.width = (parseInt(p.abstainVotes) / total * 100) + '%';
+          document.getElementById('votesBarYes').style.width = (parseInt(p[7]) / total * 100) + '%';
+          document.getElementById('votesBarNo').style.width = (parseInt(p[8]) / total * 100) + '%';
+          document.getElementById('votesBarAbstain').style.width = (parseInt(p[9]) / total * 100) + '%';
         }
         
         // Show final status if passed/failed
         const finalStatus = document.getElementById('finalStatus');
-        if (p.state === 3) {
+        if (p[2] === 3) {
           finalStatus.textContent = '✅ MOTION PASSED';
           finalStatus.style.color = '#22c55e';
-        } else if (p.state === 4) {
+        } else if (p[2] === 4) {
           finalStatus.textContent = '❌ MOTION FAILED';
           finalStatus.style.color = '#ef4444';
         } else {
@@ -580,20 +581,20 @@
         document.getElementById('chairControls').style.display = isChair ? 'block' : 'none';
         
         // Update chair action buttons
-        document.getElementById('btnSecond').style.display = p.state === 0 ? 'inline-block' : 'none';
-        document.getElementById('btnOpenVoting').style.display = p.state === 1 ? 'inline-block' : 'none';
-        document.getElementById('btnSetVotingDuration').style.display = p.state === 1 ? 'inline-block' : 'none';
+        document.getElementById('btnSecond').style.display = p[2] === 0 ? 'inline-block' : 'none';
+        document.getElementById('btnOpenVoting').style.display = p[2] === 1 ? 'inline-block' : 'none';
+        document.getElementById('btnSetVotingDuration').style.display = p[2] === 1 ? 'inline-block' : 'none';
         
         // Amendment section visibility
-        document.getElementById('amendmentSection').style.display = p.state >= 1 && p.state <= 2 ? 'block' : 'none';
-        document.getElementById('amendmentForm').classList.toggle('hidden', p.state !== 1);
+        document.getElementById('amendmentSection').style.display = p[2] >= 1 && p[2] <= 2 ? 'block' : 'none';
+        document.getElementById('amendmentForm').classList.toggle('hidden', p[2] !== 1);
         
         // Show amendments
-        await loadAmendments(id, p.state);
+        await loadAmendments(id, p[2]);
         
         // Voting section
         const votingSection = document.getElementById('votingSection');
-        if (p.state === 2) {
+        if (p[2] === 2) {
           votingSection.style.display = 'block';
           const hasVoted = await contract.hasVoted(id, userAddress);
           const voteStatus = document.getElementById('voteStatus');
@@ -617,8 +618,8 @@
       if (!contract) return;
       
       try {
-        const p = await contract.proposals(proposalId);
-        const count = parseInt(p.amendmentCount);
+        const p = await contract.getProposal(proposalId);
+        const count = parseInt(p[10].toString());
         const list = document.getElementById('amendmentList');
         
         if (count === 0) {
