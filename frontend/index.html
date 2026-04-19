@@ -10,33 +10,36 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     :root {
-      --fw-orange: #ff6b00;
-      --fw-dark: #1a1a1a;
-      --fw-gray: #6b7280;
-      --fw-light: #f9fafb;
-      --fw-border: #e5e7eb;
+      --bg-primary: #030816;
+      --bg-card: #0c1b3d;
+      --accent-blue: #2563eb;
+      --accent-light: #5BA2F1;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --fw-border: #1D335F;
       --state-created: #9ca3af;
       --state-seconded: #f59e0b;
-      --state-voting: #22c55e;
+      --state-voting: #4ADE80;
       --state-passed: #10b981;
       --state-failed: #ef4444;
     }
     
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--fw-light);
-      color: var(--fw-dark);
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
     }
     
     /* Header */
     .header {
-      background: var(--fw-dark);
+      background: var(--bg-card);
       color: #fff;
       padding: 1.5rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid var(--fw-border);
     }
     .header h1 {
       font-size: 1.5rem;
@@ -45,10 +48,11 @@
     }
     .header .network {
       font-size: 0.75rem;
-      color: var(--fw-gray);
-      background: rgba(255,255,255,0.1);
+      color: var(--accent-light);
+      background: rgba(37, 99, 235, 0.2);
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
+      border: 1px solid var(--accent-blue);
     }
     
     /* Main */
@@ -60,7 +64,7 @@
     
     /* Wallet + Voter Status Bar */
     .status-bar {
-      background: #fff;
+      background: var(--bg-card);
       border: 1px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.25rem 1.5rem;
@@ -69,13 +73,8 @@
       align-items: center;
       margin-bottom: 1.5rem;
     }
-    .wallet-section {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
     .connect-btn {
-      background: var(--fw-orange);
+      background: var(--accent-blue);
       color: #fff;
       border: none;
       padding: 0.75rem 1.5rem;
@@ -90,7 +89,7 @@
     .wallet-addr {
       font-family: monospace;
       font-size: 0.9rem;
-      color: var(--fw-gray);
+      color: var(--accent-light);
     }
     
     .voter-badge {
@@ -101,21 +100,21 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
-    .voter-badge.eligible { background: rgba(34, 197, 94, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
+    .voter-badge.eligible { background: rgba(74, 222, 128, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
     .voter-badge.not-eligible { background: rgba(239, 68, 68, 0.1); color: var(--state-failed); border: 2px solid var(--state-failed); }
     
     /* Proposal Cards */
     .proposals-title {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 1rem;
     }
     
     .proposal-card {
-      background: #fff;
+      background: var(--bg-card);
       border: 2px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.5rem;
@@ -123,8 +122,8 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .proposal-card:hover { border-color: var(--fw-orange); box-shadow: 0 4px 12px rgba(255,107,0,0.1); }
-    .proposal-card.selected { border-color: var(--fw-orange); border-width: 3px; }
+    .proposal-card:hover { border-color: var(--accent-blue); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2); }
+    .proposal-card.selected { border-color: var(--accent-blue); border-width: 3px; }
     .proposal-card.voting-open { border-left: 6px solid var(--state-voting); }
     .proposal-card.closed { opacity: 0.7; }
     
@@ -137,7 +136,7 @@
     .proposal-id {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
     }
     .state-badge {
@@ -158,7 +157,7 @@
     .proposal-desc {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--fw-dark);
+      color: var(--text-primary);
       margin-bottom: 1rem;
       line-height: 1.3;
     }
@@ -167,19 +166,19 @@
       display: flex;
       gap: 2.5rem;
       font-size: 1.1rem;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
     }
     .proposal-votes strong {
       font-weight: 800;
       font-size: 1.5rem;
-      color: var(--fw-dark);
+      color: var(--text-primary);
     }
     .proposal-votes span { display: flex; align-items: baseline; gap: 0.5rem; }
     
     /* Vote Section */
     .vote-section {
-      background: #fff;
-      border: 2px solid var(--fw-orange);
+      background: var(--bg-card);
+      border: 2px solid var(--accent-blue);
       border-radius: 12px;
       padding: 2rem;
       margin: 1.5rem 0;
@@ -198,7 +197,8 @@
       margin-bottom: 1.5rem;
     }
     .vote-cell {
-      background: var(--fw-light);
+      background: var(--bg-primary);
+      border: 1px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.5rem;
       text-align: center;
@@ -211,14 +211,14 @@
     .vote-cell .label {
       font-size: 1rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       margin-top: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     .vote-cell.yes .count { color: var(--state-passed); }
     .vote-cell.no .count { color: var(--state-failed); }
-    .vote-cell.abstain .count { color: var(--state-created); }
+    .vote-cell.abstain .count { color: var(--accent-light); }
     
     /* Vote Buttons — BIG AND READABLE */
     .vote-buttons {
@@ -239,41 +239,41 @@
       transition: all 0.15s;
     }
     .vote-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .vote-btn.yes { background: var(--state-passed); color: #fff; }
-    .vote-btn.yes:hover:not(:disabled) { background: #0ea572; transform: translateY(-2px); }
+    .vote-btn.yes { background: var(--state-voting); color: #030816; }
+    .vote-btn.yes:hover:not(:disabled) { background: #22c55e; transform: translateY(-2px); }
     .vote-btn.no { background: var(--state-failed); color: #fff; }
     .vote-btn.no:hover:not(:disabled) { background: #dc2626; transform: translateY(-2px); }
-    .vote-btn.abstain { background: var(--state-created); color: #fff; }
-    .vote-btn.abstain:hover:not(:disabled) { background: #6b7280; transform: translateY(-2px); }
+    .vote-btn.abstain { background: var(--accent-blue); color: #fff; }
+    .vote-btn.abstain:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-2px); }
     
     .vote-status {
       text-align: center;
       font-size: 1rem;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       margin-top: 1rem;
       padding-top: 1rem;
       border-top: 1px solid var(--fw-border);
     }
     
     .close-btn {
-      background: none;
+      background: var(--bg-primary);
       border: 1px solid var(--fw-border);
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       padding: 0.75rem 1.5rem;
       border-radius: 8px;
       cursor: pointer;
       font-size: 0.9rem;
       margin-top: 1rem;
     }
-    .close-btn:hover { border-color: var(--fw-dark); color: var(--fw-dark); }
+    .close-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
     
     /* Empty State */
     .empty-state {
       text-align: center;
       padding: 4rem 2rem;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
     }
-    .empty-state h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .empty-state h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
     .empty-state p { font-size: 1.1rem; }
     
     /* Toast */
@@ -282,7 +282,7 @@
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--fw-dark);
+      background: var(--accent-blue);
       color: #fff;
       padding: 0.75rem 2rem;
       border-radius: 8px;

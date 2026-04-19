@@ -10,33 +10,36 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     :root {
-      --fw-orange: #ff6b00;
-      --fw-dark: #1a1a1a;
-      --fw-gray: #6b7280;
-      --fw-light: #f9fafb;
-      --fw-border: #e5e7eb;
+      --bg-primary: #030816;
+      --bg-card: #0c1b3d;
+      --accent-blue: #2563eb;
+      --accent-light: #5BA2F1;
+      --text-primary: #ffffff;
+      --text-secondary: #94a3b8;
+      --fw-border: #1D335F;
       --state-created: #9ca3af;
       --state-seconded: #f59e0b;
-      --state-voting: #22c55e;
+      --state-voting: #4ADE80;
       --state-passed: #10b981;
       --state-failed: #ef4444;
     }
     
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--fw-light);
-      color: var(--fw-dark);
+      background: var(--bg-primary);
+      color: var(--text-primary);
       min-height: 100vh;
     }
     
     /* Header */
     .header {
-      background: var(--fw-dark);
+      background: var(--bg-card);
       color: #fff;
       padding: 1.5rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid var(--fw-border);
     }
     .header h1 {
       font-size: 1.5rem;
@@ -45,10 +48,11 @@
     }
     .header .network {
       font-size: 0.75rem;
-      color: var(--fw-gray);
-      background: rgba(255,255,255,0.1);
+      color: var(--accent-light);
+      background: rgba(37, 99, 235, 0.2);
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
+      border: 1px solid var(--accent-blue);
     }
     
     /* Main Layout */
@@ -63,7 +67,7 @@
     
     /* Contract Info Bar */
     .contract-bar {
-      background: #fff;
+      background: var(--bg-card);
       border: 1px solid var(--fw-border);
       border-radius: 12px;
       padding: 1rem 1.5rem;
@@ -73,21 +77,21 @@
       margin-bottom: 1.5rem;
       font-size: 0.85rem;
     }
-    .contract-bar span { color: var(--fw-gray); }
-    .contract-bar strong { color: var(--fw-dark); font-family: monospace; font-size: 0.8rem; }
+    .contract-bar span { color: var(--text-secondary); }
+    .contract-bar strong { color: var(--accent-light); font-family: monospace; font-size: 0.8rem; }
     
     /* Proposal List */
     .proposals-section h2 {
       font-size: 1.1rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 1rem;
     }
     
     .proposal-card {
-      background: #fff;
+      background: var(--bg-card);
       border: 2px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.5rem;
@@ -95,8 +99,8 @@
       cursor: pointer;
       transition: all 0.15s;
     }
-    .proposal-card:hover { border-color: var(--fw-orange); box-shadow: 0 4px 12px rgba(255,107,0,0.1); }
-    .proposal-card.selected { border-color: var(--fw-orange); border-width: 3px; }
+    .proposal-card:hover { border-color: var(--accent-blue); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2); }
+    .proposal-card.selected { border-color: var(--accent-blue); border-width: 3px; }
     
     .proposal-header {
       display: flex;
@@ -107,7 +111,7 @@
     .proposal-id {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
     }
     .state-badge {
@@ -128,7 +132,7 @@
     .proposal-desc {
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--fw-dark);
+      color: var(--text-primary);
       margin-bottom: 1rem;
     }
     
@@ -136,10 +140,10 @@
       display: flex;
       gap: 2rem;
       font-size: 1rem;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
     }
     .proposal-stats strong {
-      color: var(--fw-dark);
+      color: var(--text-primary);
       font-weight: 700;
       font-size: 1.25rem;
     }
@@ -156,16 +160,16 @@
       text-align: center;
       font-size: 0.85rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       padding: 0.75rem 0;
       border-top: 4px solid var(--fw-border);
     }
-    .progress-step.active { color: var(--fw-orange); border-color: var(--fw-orange); }
+    .progress-step.active { color: var(--accent-light); border-color: var(--accent-light); }
     .progress-step.done { color: var(--state-passed); border-color: var(--state-passed); }
     
     /* Detail Panel */
     .detail-panel {
-      background: #fff;
+      background: var(--bg-card);
       border: 1px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.5rem;
@@ -179,7 +183,7 @@
     }
     .detail-meta {
       font-size: 0.85rem;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       margin-bottom: 1.5rem;
     }
     
@@ -191,7 +195,8 @@
       margin: 1.5rem 0;
     }
     .vote-cell {
-      background: var(--fw-light);
+      background: var(--bg-primary);
+      border: 1px solid var(--fw-border);
       border-radius: 12px;
       padding: 1.5rem;
       text-align: center;
@@ -200,19 +205,19 @@
       font-size: 3rem;
       font-weight: 800;
       line-height: 1;
-      color: var(--fw-dark);
+      color: var(--text-primary);
     }
     .vote-cell .label {
       font-size: 0.9rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       margin-top: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     .vote-cell.yes .count { color: var(--state-passed); }
     .vote-cell.no .count { color: var(--state-failed); }
-    .vote-cell.abstain .count { color: var(--state-created); }
+    .vote-cell.abstain .count { color: var(--accent-light); }
     
     /* Chair Actions — BIG BUTTONS */
     .chair-actions {
@@ -226,7 +231,7 @@
     .chair-actions h4 {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 0.5rem;
@@ -246,20 +251,21 @@
     }
     .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .action-btn.primary {
-      background: var(--fw-orange);
+      background: var(--accent-blue);
       color: #fff;
     }
-    .action-btn.primary:hover:not(:disabled) { background: #e55d00; transform: translateY(-1px); }
+    .action-btn.primary:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
     .action-btn.secondary {
-      background: var(--fw-dark);
-      color: #fff;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      border: 2px solid var(--accent-blue);
     }
-    .action-btn.secondary:hover:not(:disabled) { background: #333; }
+    .action-btn.secondary:hover:not(:disabled) { background: rgba(37,99,235,0.1); }
     .action-btn.success {
-      background: var(--state-passed);
-      color: #fff;
+      background: var(--state-voting);
+      color: #030816;
     }
-    .action-btn.success:hover:not(:disabled) { background: #0ea572; }
+    .action-btn.success:hover:not(:disabled) { background: #22c55e; }
     
     /* Voter Status */
     .voter-status {
@@ -270,7 +276,7 @@
       text-align: center;
       margin-bottom: 1rem;
     }
-    .voter-status.eligible { background: rgba(34, 197, 94, 0.1); color: var(--state-passed); border: 2px solid var(--state-passed); }
+    .voter-status.eligible { background: rgba(74, 222, 128, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
     .voter-status.not-eligible { background: rgba(239, 68, 68, 0.1); color: var(--state-failed); border: 2px solid var(--state-failed); }
     
     /* Input Form */
@@ -286,8 +292,11 @@
       border-radius: 10px;
       font-size: 1rem;
       font-family: inherit;
+      background: var(--bg-card);
+      color: var(--text-primary);
     }
-    .create-form input:focus { outline: none; border-color: var(--fw-orange); }
+    .create-form input:focus { outline: none; border-color: var(--accent-blue); }
+    .create-form input::placeholder { color: var(--text-secondary); }
     .create-form button { padding: 1rem 2rem; }
     
     /* Amendments */
@@ -299,13 +308,14 @@
     .amendments-section h4 {
       font-size: 0.8rem;
       font-weight: 600;
-      color: var(--fw-gray);
+      color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       margin-bottom: 1rem;
     }
     .amendment-item {
-      background: var(--fw-light);
+      background: var(--bg-primary);
+      border: 1px solid var(--fw-border);
       border-radius: 8px;
       padding: 1rem;
       margin-bottom: 0.5rem;
@@ -313,7 +323,7 @@
       justify-content: space-between;
       align-items: center;
     }
-    .amendment-item .desc { font-size: 1rem; font-weight: 500; }
+    .amendment-item .desc { font-size: 1rem; font-weight: 500; color: var(--text-primary); }
     .amendment-item .status { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
     .amendment-item .status.approved { color: var(--state-passed); }
     .amendment-item .status.pending { color: var(--state-seconded); }
@@ -324,7 +334,7 @@
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--fw-dark);
+      background: var(--accent-blue);
       color: #fff;
       padding: 0.75rem 2rem;
       border-radius: 8px;
