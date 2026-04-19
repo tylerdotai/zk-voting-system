@@ -565,10 +565,10 @@
         
         // Show final status if passed/failed
         const finalStatus = document.getElementById('finalStatus');
-        if (p[2] === 3) {
+        if (parseInt(p[2]) === 3) {
           finalStatus.textContent = '✅ MOTION PASSED';
           finalStatus.style.color = '#22c55e';
-        } else if (p[2] === 4) {
+        } else if (parseInt(p[2]) === 4) {
           finalStatus.textContent = '❌ MOTION FAILED';
           finalStatus.style.color = '#ef4444';
         } else {
@@ -581,9 +581,9 @@
         document.getElementById('chairControls').style.display = isChair ? 'block' : 'none';
         
         // Update chair action buttons
-        document.getElementById('btnSecond').style.display = p[2] === 0 ? 'inline-block' : 'none';
-        document.getElementById('btnOpenVoting').style.display = p[2] === 1 ? 'inline-block' : 'none';
-        document.getElementById('btnSetVotingDuration').style.display = p[2] === 1 ? 'inline-block' : 'none';
+        document.getElementById('btnSecond').style.display = parseInt(p[2]) === 0 ? 'inline-block' : 'none';
+        document.getElementById('btnOpenVoting').style.display = parseInt(p[2]) === 1 ? 'inline-block' : 'none';
+        document.getElementById('btnSetVotingDuration').style.display = parseInt(p[2]) === 1 ? 'inline-block' : 'none';
         
         // Amendment section visibility
         document.getElementById('amendmentSection').style.display = p[2] >= 1 && p[2] <= 2 ? 'block' : 'none';
@@ -594,7 +594,7 @@
         
         // Voting section
         const votingSection = document.getElementById('votingSection');
-        if (p[2] === 2) {
+        if (parseInt(p[2]) === 2) {
           votingSection.style.display = 'block';
           const hasVoted = await contract.hasVoted(id, userAddress);
           const voteStatus = document.getElementById('voteStatus');
