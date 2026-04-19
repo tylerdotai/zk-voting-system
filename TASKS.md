@@ -11,15 +11,15 @@ Priority legend: P0 critical, P1 important, P2 useful
 - [x] **README update** — reflect current ENS-gated Sepolia reality
 - [ ] **3-voter end-to-end test** — local, full Rob's Rules flow: create → second → amend → open voting → vote → finalize
 - [ ] **Demo rehearsal** — local, run full flow from clean state, fix failures
-- [ ] **Wrong-network prompt** — auto-detect + switch to Sepolia
+- [x] **Wrong-network prompt** — auto-detect + switch to Sepolia
 - [ ] **Vercel deploy** — only after all local testing passes
 
 ---
 
 ## P1 — Demo Hardening (post-local-test)
 
-- [ ] Empty state / no-permission states for proposal list
-- [ ] Chair voter management UI — add/remove voters from dashboard (partially done, addVoter wired — remove not yet)
+- [x] Empty state / no-permission states for proposal list
+- [x] Chair voter management UI — addVoter + removeVoter wired in dashboard
 
 ---
 
