@@ -7,18 +7,17 @@ Priority legend: P0 critical, P1 important, P2 useful
 
 ## P0 — Ship It (Must done before May 1st demo)
 
-- [ ] **Vercel deploy** — get public URL for 60-person Fort Worth DAO demo
-- [ ] **3-voter end-to-end test** — add 2 test voters, complete full Rob's Rules flow: create → second → amend → open voting → vote → finalize
-- [ ] **Demo rehearsal** — run full flow from clean state, fix failures
+- [ ] **3-voter end-to-end test** — local, full Rob's Rules flow: create → second → amend → open voting → vote → finalize
+- [ ] **Demo rehearsal** — local, run full flow from clean state, fix failures
+- [ ] **TX hash display** — show transaction hashes for all write actions (credibility for audience)
+- [ ] **Wrong-network prompt** — auto-detect + switch to Sepolia
 - [ ] **README update** — reflect current ENS-gated Sepolia reality
+- [ ] **Vercel deploy** — only after all local testing passes
 
 ---
 
-## P1 — Demo Hardening
+## P1 — Demo Hardening (post-local-test)
 
-- [ ] Add transaction hash display (credibility for audience)
-- [ ] Add loading / pending tx / success / error states to both HTML pages
-- [ ] Wrong network detection + switch to Sepolia prompt
 - [ ] Empty state / no-permission states for proposal list
 
 ---
