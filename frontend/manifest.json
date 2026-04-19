@@ -1,0 +1,22 @@
+{
+  "name": "ZK DID Voting",
+  "short_name": "ZK Voting",
+  "description": "Polygon ID credential-gated voting on Sepolia",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#4ade80",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "network_timeout_seconds": 10
+}
