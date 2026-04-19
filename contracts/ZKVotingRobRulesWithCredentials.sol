@@ -2,35 +2,41 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./GovVerifier.sol";
 
 /**
  * @title ZKVotingRobRulesWithCredentials
- * @dev Rob's Rules Parliamentary Voting with Polygon ID Credential Verification
+ * @dev Rob's Rules Parliamentary Voting with ENS-based voter eligibility
+ * 
+ * Identity & Eligibility Architecture (Phase 2 Pivot):
+ * - Voter eligibility: ENS domain resolution or wallet allowlist managed by chair
+ * - No Polygon ID / ZK credential dependency
+ * - ZK vote privacy layer: preserved for future post-quantum implementation
  * 
  * Flow:
- * 1. User proves credential via Polygon ID → GovVerifier.submitZKPResponse()
- * 2. GovVerifier._afterProofSubmit() → ZKVotingRobRulesWithCredentials.verifyCredential(user)
- * 3. All parliamentary actions require allowedUsers[user] == true
+ * 1. Chair adds eligible voter via addVoter(address) or via ENS-based claim
+ * 2. Eligible voter can create proposals, second, amend, and vote
+ * 3. ZK vote privacy layer (post-quantum) can be layered in later without
+ *    restructuring the parliamentary flow
  */
 contract ZKVotingRobRulesWithCredentials is Ownable {
     
-    // Address of the GovVerifier contract
-    GovVerifier public govVerifier;
+    // ENS Resolver contract (for future ENS-gated eligibility)
+    address public ensResolver;
     
-    // Track users who have verified their credentials (via GovVerifier)
+    // Voter eligibility registry — chair-managed allowlist
+    // Future: can be extended to ENS-based claim verification
     mapping(address => bool) public allowedUsers;
     
-    // Chair role
+    // Chair role — governs proposals, amendments, and voter registry
     address public chair;
     uint256 public choiceCount;
     uint256 public proposalCount;
     
-    // Proposal states
+    // Proposal states (Rob's Rules parliamentary process)
     enum ProposalState { Created, Seconded, Voting, Passed, Failed }
     enum VoteChoice { Yes, No, Abstain }
     
-    // Structs
+    // Amendment struct
     struct Amendment {
         string description;
         address proposer;
@@ -41,6 +47,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         uint256 abstainVotes;
     }
     
+    // Proposal struct
     struct Proposal {
         string description;
         address chair;
@@ -63,8 +70,8 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     
     // Events
     event ChairUpdated(address indexed oldChair, address indexed newChair);
-    event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
-    event CredentialVerified(address indexed user);
+    event VoterAdded(address indexed voter);
+    event VoterRemoved(address indexed voter);
     event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair);
     event ProposalSeconded(uint256 indexed proposalId);
     event AmendmentSubmitted(uint256 indexed proposalId, uint256 indexed amendmentId, address indexed proposer);
@@ -77,68 +84,93 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         require(msg.sender == chair, "Only chair can perform this action");
         _;
     }
-
-    modifier onlyGovVerifier() {
-        require(msg.sender == address(govVerifier), "Only GovVerifier can perform this action");
+    
+    modifier isEligibleVoter() {
+        require(allowedUsers[msg.sender], "Voter not registered");
         _;
     }
     
-    modifier requiresCredential() {
-        require(allowedUsers[msg.sender], "Credential not verified");
-        _;
-    }
-    
-    // Constructor — allows address(0) for verifier to break circular deploy dependency.
-    // Use setVerifier() after deployment to bind the real GovVerifier address.
-    constructor(address _govVerifier, address _chair, uint256 _choiceCount) {
+    // Constructor
+    constructor(address _chair, uint256 _choiceCount) {
         require(_chair != address(0), "Chair cannot be zero address");
         require(_choiceCount >= 2, "Must have at least 2 choices");
         
         _transferOwnership(msg.sender);
-        if (_govVerifier != address(0)) {
-            govVerifier = GovVerifier(_govVerifier);
-        }
         chair = _chair;
         choiceCount = _choiceCount;
     }
-
-    /// @dev Post-deploy setter to bind the real GovVerifier after both contracts exist.
-    ///      Resolves the circular-dependency problem where both contracts need each other's address.
-    function setVerifier(address _newVerifier) external onlyOwner {
-        require(_newVerifier != address(0), "Verifier cannot be zero address");
-        address oldVerifier = address(govVerifier);
-        govVerifier = GovVerifier(_newVerifier);
-        emit VerifierUpdated(oldVerifier, _newVerifier);
+    
+    // ============================================================
+    // Voter Eligibility Management (Chair-only)
+    // ============================================================
+    
+    modifier onlyChairOrOwner() {
+        require(msg.sender == chair || msg.sender == owner(), "Only chair or owner can perform this action");
+        _;
     }
     
-    // Credential Management
-    function setAllowedUser(address _user) external onlyGovVerifier {
-        // Called by GovVerifier after ZKP proof is verified
-        allowedUsers[_user] = true;
-        emit CredentialVerified(_user);
-    }
-
-    // Test/demo bypass — allows owner to simulate GovVerifier verification
-    // without going through actual ZKP proof flow. Remove before production.
-    function testSetAllowedUser(address _user) external onlyOwner {
-        allowedUsers[_user] = true;
-        emit CredentialVerified(_user);
+    /**
+     * @dev Add a voter to the eligibility allowlist. Callable by chair or owner.
+     * @param _voter Address to grant voting rights
+     */
+    function addVoter(address _voter) external onlyChairOrOwner {
+        require(_voter != address(0), "Voter cannot be zero address");
+        allowedUsers[_voter] = true;
+        emit VoterAdded(_voter);
     }
     
-    function isCredentialVerified(address _user) public view returns (bool) {
+    /**
+     * @dev Remove a voter from the eligibility allowlist. Callable by chair or owner.
+     * @param _voter Address to revoke voting rights
+     */
+    function removeVoter(address _voter) external onlyChairOrOwner {
+        allowedUsers[_voter] = false;
+        emit VoterRemoved(_voter);
+    }
+    
+    /**
+     * @dev Batch add voters. Callable by chair or owner.
+     * @param _voters Array of addresses to add
+     */
+    function addVoters(address[] calldata _voters) external onlyChairOrOwner {
+        for (uint256 i = 0; i < _voters.length; i++) {
+            require(_voters[i] != address(0), "Voter cannot be zero address");
+            allowedUsers[_voters[i]] = true;
+            emit VoterAdded(_voters[i]);
+        }
+    }
+    
+    /**
+     * @dev Check if an address is an eligible voter
+     */
+    function isEligible(address _user) public view returns (bool) {
         return allowedUsers[_user];
     }
     
+    // ============================================================
     // Chair Management
-    function setChair(address _newChair) external onlyOwner {
+    // ============================================================
+    
+    function setChair(address _newChair) external onlyChairOrOwner {
         require(_newChair != address(0), "Chair cannot be zero address");
         address oldChair = chair;
         chair = _newChair;
         emit ChairUpdated(oldChair, _newChair);
     }
     
-    // Proposal Lifecycle
-    function createProposal(string calldata _description) external onlyChair requiresCredential returns (uint256) {
+    // ============================================================
+    // ENS Resolver (for future ENS-gated eligibility)
+    // ============================================================
+    
+    function setEnsResolver(address _resolver) external onlyChairOrOwner {
+        ensResolver = _resolver;
+    }
+    
+    // ============================================================
+    // Rob's Rules Parliamentary Process
+    // ============================================================
+    
+    function createProposal(string calldata _description) external onlyChair isEligibleVoter returns (uint256) {
         require(bytes(_description).length > 0, "Description cannot be empty");
         
         uint256 proposalId = proposalCount++;
@@ -152,7 +184,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         return proposalId;
     }
     
-    function secondProposal(uint256 _proposalId) external onlyChair requiresCredential {
+    function secondProposal(uint256 _proposalId) external onlyChair isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Created, "Proposal must be in Created state");
         
@@ -162,7 +194,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         emit ProposalSeconded(_proposalId);
     }
     
-    function submitAmendment(uint256 _proposalId, string calldata _description) external requiresCredential returns (uint256) {
+    function submitAmendment(uint256 _proposalId, string calldata _description) external isEligibleVoter returns (uint256) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Seconded, "Proposal must be in Seconded state");
         require(bytes(_description).length > 0, "Amendment description cannot be empty");
@@ -190,7 +222,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         emit AmendmentApproved(_proposalId, _amendmentId);
     }
     
-    function openVoting(uint256 _proposalId, uint256 _duration) external onlyChair requiresCredential {
+    function openVoting(uint256 _proposalId, uint256 _duration) external onlyChair isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Seconded, "Proposal must be in Seconded state");
         require(_duration > 0 && _duration <= 7 days, "Invalid voting duration");
@@ -201,7 +233,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     // Voting
-    function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata) external requiresCredential {
+    function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata) external isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
         
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");

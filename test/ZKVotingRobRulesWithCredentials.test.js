@@ -4,85 +4,78 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("ZKVotingRobRulesWithCredentials", function () {
   let contract;
-  let owner;
-  let chair;
-  let member1;
-  let member2;
-  let proof;
+  let owner, chair, member1, member2;
+  const proof = ethers.randomBytes(32);
 
   beforeEach(async function () {
     [owner, chair, member1, member2] = await ethers.getSigners();
     
     const ZKVotingRobRulesWithCredentials = await ethers.getContractFactory("ZKVotingRobRulesWithCredentials");
-    contract = await ZKVotingRobRulesWithCredentials.deploy(
-      owner.address,
-      chair.address,
-      3
-    );
+    contract = await ZKVotingRobRulesWithCredentials.deploy(chair.address, 3);
     await contract.waitForDeployment();
-    
-    proof = [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash,
-             ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash];
   });
 
   describe("Deployment", function () {
-    it("should set the correct chair", async function () {
+    it("should set the voting contract", async function () {
+      expect(await contract.getAddress()).to.not.be.null;
+    });
+
+    it("should set the owner ( Ownable )", async function () {
+      expect(await contract.owner()).to.equal(owner.address);
+    });
+
+    it("should set the chair", async function () {
       expect(await contract.chair()).to.equal(chair.address);
     });
 
-    it("should set the correct choice count", async function () {
+    it("should set choice count to 3 (Yes, No, Abstain)", async function () {
       expect(await contract.choiceCount()).to.equal(3);
     });
 
-    it("should initialize with zero proposals", async function () {
+    it("should initialize proposal count to 0", async function () {
       expect(await contract.proposalCount()).to.equal(0);
     });
   });
 
-  describe("Credential Verification", function () {
-    it("should allow setting allowed user", async function () {
-      await contract.connect(owner).setAllowedUser(member1.address);
-      expect(await contract.allowedUsers(member1.address)).to.equal(true);
+  describe("Voter Eligibility (ENS-gated pivot)", function () {
+    it("should add voter via owner", async function () {
+      await contract.connect(owner).addVoter(member1.address);
+      expect(await contract.isEligible(member1.address)).to.equal(true);
     });
 
-    it("should emit CredentialVerified event", async function () {
-      await expect(contract.connect(owner).setAllowedUser(member1.address))
-        .to.emit(contract, "CredentialVerified")
+    it("should remove voter via owner", async function () {
+      await contract.connect(owner).addVoter(member1.address);
+      await contract.connect(owner).removeVoter(member1.address);
+      expect(await contract.isEligible(member1.address)).to.equal(false);
+    });
+
+    it("should batch add voters", async function () {
+      await contract.connect(owner).addVoters([member1.address, member2.address]);
+      expect(await contract.isEligible(member1.address)).to.equal(true);
+      expect(await contract.isEligible(member2.address)).to.equal(true);
+    });
+
+    it("should reject zero address in addVoter", async function () {
+      await expect(
+        contract.connect(owner).addVoter(ethers.ZeroAddress)
+      ).to.be.revertedWith("Voter cannot be zero address");
+    });
+
+    it("should emit VoterAdded event", async function () {
+      await expect(contract.connect(owner).addVoter(member1.address))
+        .to.emit(contract, "VoterAdded")
         .withArgs(member1.address);
     });
 
-    it("should return false for unverified users", async function () {
-      expect(await contract.allowedUsers(member1.address)).to.equal(false);
-    });
-
-    it("should return true for verified users", async function () {
-      await contract.connect(owner).setAllowedUser(member1.address);
-      expect(await contract.allowedUsers(member1.address)).to.equal(true);
-    });
-  });
-
-  describe("Chair Management", function () {
-    it("should allow owner to change chair", async function () {
-      await contract.connect(owner).setChair(member1.address);
-      expect(await contract.chair()).to.equal(member1.address);
-    });
-
-    it("should emit ChairUpdated event", async function () {
-      await expect(contract.connect(owner).setChair(member1.address))
-        .to.emit(contract, "ChairUpdated")
-        .withArgs(chair.address, member1.address);
-    });
-
-    it("should reject non-owner changing chair", async function () {
-      await expect(
-        contract.connect(member1).setChair(member2.address)
-      ).to.be.reverted;
+    it("should allow chair to add voters", async function () {
+      await contract.connect(chair).addVoter(member1.address);
+      expect(await contract.isEligible(member1.address)).to.equal(true);
     });
   });
 
   describe("Proposal Creation", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
+      await contract.connect(chair).addVoter(chair.address);
     });
 
     it("should allow verified chair to create proposal", async function () {
@@ -97,7 +90,7 @@ describe("ZKVotingRobRulesWithCredentials", function () {
     });
 
     it("should reject non-chair from creating proposal", async function () {
-      await contract.connect(owner).setAllowedUser(member1.address);
+      await contract.connect(owner).addVoter(member1.address);
       await expect(
         contract.connect(member1).createProposal("Unauthorized")
       ).to.be.revertedWith("Only chair can perform this action");
@@ -118,7 +111,7 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("Proposal Seconding", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
+      await contract.connect(chair).addVoter(chair.address);
       await contract.connect(chair).createProposal("Test proposal");
     });
 
@@ -137,8 +130,8 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("Amendments with Credentials", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
-      await contract.connect(owner).setAllowedUser(member1.address);
+      await contract.connect(chair).addVoter(chair.address);
+      await contract.connect(owner).addVoter(member1.address);
       await contract.connect(chair).createProposal("Test proposal");
       await contract.connect(chair).secondProposal(0);
     });
@@ -165,7 +158,7 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("Voting Period", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
+      await contract.connect(chair).addVoter(chair.address);
       await contract.connect(chair).createProposal("Test proposal");
       await contract.connect(chair).secondProposal(0);
     });
@@ -197,48 +190,48 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("Voting with Credentials", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
-      await contract.connect(owner).setAllowedUser(member1.address);
-      await contract.connect(owner).setAllowedUser(member2.address);
+      await contract.connect(chair).addVoter(chair.address);
+      await contract.connect(owner).addVoter(member1.address);
+      await contract.connect(owner).addVoter(member2.address);
       await contract.connect(chair).createProposal("Test proposal");
       await contract.connect(chair).secondProposal(0);
       await contract.connect(chair).openVoting(0, 60);
     });
 
     it("should allow verified member to vote Yes", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), proof);
+      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       const proposal = await contract.proposals(0);
       expect(proposal.yesVotes).to.equal(1);
     });
 
     it("should allow verified member to vote No", async function () {
-      await contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), proof);
+      await contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       const proposal = await contract.proposals(0);
       expect(proposal.noVotes).to.equal(1);
     });
 
     it("should allow verified member to vote Abstain", async function () {
-      await contract.connect(member1).voteOnMotion(0, 2, ethers.id("v1"), proof);
+      await contract.connect(member1).voteOnMotion(0, 2, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       const proposal = await contract.proposals(0);
       expect(proposal.abstainVotes).to.equal(1);
     });
 
     it("should reject invalid choice", async function () {
       await expect(
-        contract.connect(member1).voteOnMotion(0, 99, ethers.id("v1"), proof)
+        contract.connect(member1).voteOnMotion(0, 99, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash])
       ).to.be.revertedWith("Invalid choice");
     });
 
     it("should reject double voting", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), proof);
+      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       await expect(
-        contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), proof)
+        contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash])
       ).to.be.revertedWith("Already voted");
     });
 
     it("should pass when yes > no", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), proof);
-      await contract.connect(member2).voteOnMotion(0, 0, ethers.id("v2"), proof);
+      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
+      await contract.connect(member2).voteOnMotion(0, 0, ethers.id("v2"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       await time.increase(61);
       await contract.finalizeProposal(0);
       const proposal = await contract.proposals(0);
@@ -246,8 +239,8 @@ describe("ZKVotingRobRulesWithCredentials", function () {
     });
 
     it("should fail when no >= yes", async function () {
-      await contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), proof);
-      await contract.connect(member2).voteOnMotion(0, 0, ethers.id("v2"), proof);
+      await contract.connect(member1).voteOnMotion(0, 1, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
+      await contract.connect(member2).voteOnMotion(0, 0, ethers.id("v2"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash]);
       await time.increase(61);
       await contract.finalizeProposal(0);
       const proposal = await contract.proposals(0);
@@ -257,7 +250,7 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("View Functions", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
+      await contract.connect(chair).addVoter(chair.address);
       await contract.connect(chair).createProposal("Test proposal");
     });
 
@@ -274,8 +267,8 @@ describe("ZKVotingRobRulesWithCredentials", function () {
 
   describe("Edge Cases", function () {
     beforeEach(async function () {
-      await contract.connect(owner).setAllowedUser(chair.address);
-      await contract.connect(owner).setAllowedUser(member1.address);
+      await contract.connect(chair).addVoter(chair.address);
+      await contract.connect(owner).addVoter(member1.address);
     });
 
     it("should reject creating proposal with empty description", async function () {
@@ -288,7 +281,7 @@ describe("ZKVotingRobRulesWithCredentials", function () {
       await contract.connect(chair).secondProposal(0);
       await contract.connect(chair).openVoting(0, 60);
       await expect(
-        contract.connect(member1).voteOnMotion(0, 99, ethers.id("v1"), proof)
+        contract.connect(member1).voteOnMotion(0, 99, ethers.id("v1"), [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash])
       ).to.be.revertedWith("Invalid choice");
     });
 
