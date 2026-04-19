@@ -262,6 +262,7 @@
         <button class="btn btn-warning" id="btnSecond" onclick="secondProposal()">Second Motion</button>
         <button class="btn btn-primary" id="btnOpenVoting" onclick="openVoting()">Open Voting (3 days)</button>
         <button class="btn btn-secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting (custom)</button>
+        <button class="btn btn-success" id="btnFinalize" onclick="finalizeProposal()">✅ Finalize Proposal</button>
       </div>
       
       <!-- Amendment Section -->
@@ -735,24 +736,22 @@
       }
     }
     
-    async function submitAmendment() {
-      const text = document.getElementById('amendmentText').value.trim();
-      if (!text) {
-        showToast('Please enter amendment text', true);
-        return;
-      }
-      
+    async function finalizeProposal() {
+      if (!contract || currentProposalId === null) return;
       try {
-        const tx = await contract.submitAmendment(currentProposalId, text);
+        showToast('Finalizing proposal...', false);
+        const tx = await contract.finalizeProposal(currentProposalId);
         await tx.wait();
-        document.getElementById('amendmentText').value = '';
-        showToast('Amendment submitted!');
+        showToast('Proposal finalized!', false);
         await loadProposalDetail(currentProposalId);
+        refreshProposals();
       } catch (err) {
         console.error(err);
-        showToast('Error: ' + err.message, true);
+        showToast('Error: ' + (err.reason || err.message), true);
       }
     }
+    
+    async function submitAmendment() {
     
     async function approveAmendment(proposalId, amendmentId) {
       try {
