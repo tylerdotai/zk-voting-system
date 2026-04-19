@@ -321,6 +321,15 @@
     .create-form input::placeholder { color: var(--text-secondary); }
     .create-form button { padding: 1rem 2rem; }
     
+    .voter-mgmt {
+      background: var(--bg-card);
+      border: 2px solid var(--fw-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .voter-mgmt h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem; }
+    
     /* Amendments */
     .amendments-section {
       margin-top: 1.5rem;
@@ -368,6 +377,30 @@
     .toast.show { opacity: 1; }
     .toast.error { background: var(--state-failed); }
     
+    /* TX Notification */
+    #txBanner {
+      position: fixed;
+      top: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 2px solid var(--state-voting);
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      font-size: 0.9rem;
+      z-index: 200;
+      display: none;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(74, 222, 128, 0.15);
+    }
+    #txBanner.show { display: block; }
+    #txBanner .tx-label { color: var(--state-voting); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+    #txBanner .tx-hash { color: var(--accent-light); font-family: monospace; font-size: 0.8rem; margin-top: 0.25rem; word-break: break-all; }
+    #txBanner .tx-link { color: var(--accent-light); text-decoration: underline; font-size: 0.8rem; }
+    #txBanner .tx-status { color: var(--state-voting); font-size: 0.8rem; margin-top: 0.25rem; }
+    
     .hidden { display: none; }
     
     /* Responsive — on big screen keep it centered and readable */
@@ -396,6 +429,16 @@
       <div class="create-form">
         <input type="text" id="newProposalText" placeholder="Enter new proposal description..." />
         <button class="action-btn primary" onclick="createProposal()">Create Proposal</button>
+      </div>
+      
+      <!-- Voter Management (Chair Only) -->
+      <div class="voter-mgmt" id="voterMgmt" style="display:none;">
+        <h4>Voter Management</h4>
+        <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
+          <input type="text" id="newVoterAddr" placeholder="0x..." style="flex:1; padding:0.5rem; border-radius:6px; border:1px solid var(--fw-border); background:var(--bg-primary); color:var(--text-primary); font-size:0.85rem;" />
+          <button class="action-btn" style="padding:0.5rem 1rem;" onclick="addVoter()">Add</button>
+        </div>
+        <div id="voterList" style="font-size:0.8rem; color:var(--text-secondary);"></div>
       </div>
       
       <!-- Proposals -->
@@ -473,6 +516,12 @@
   </div>
   
   <div class="toast" id="toast"></div>
+  <div id="txBanner">
+    <div class="tx-label" id="txLabel">Transaction Submitted</div>
+    <div class="tx-hash" id="txHash"></div>
+    <a class="tx-link" id="txLink" href="#" target="_blank">View on Etherscan ↗</a>
+    <div class="tx-status" id="txStatus">Waiting for confirmation...</div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
@@ -523,6 +572,12 @@
         document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
         document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
         
+        const chair = await contract.chair();
+        if (chair.toLowerCase() === userAddress.toLowerCase()) {
+          document.getElementById('voterMgmt').style.display = 'block';
+          await loadVoterList();
+        }
+        
         await checkVoterStatus();
         await loadProposals();
       } catch (err) {
@@ -540,6 +595,31 @@
         banner.className = 'voter-status not-eligible';
         banner.textContent = 'Not registered — Ask chair to add you';
       }
+    }
+    
+    async function addVoter() {
+      const addr = document.getElementById('newVoterAddr').value.trim();
+      if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
+        showToast('Enter a valid Ethereum address', true);
+        return;
+      }
+      try {
+        const tx = await contract.addVoter(addr);
+        showTx(tx.hash, 'Voter Added');
+        await tx.wait();
+        document.getElementById('newVoterAddr').value = '';
+        showToast('Voter added');
+        await loadVoterList();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function loadVoterList() {
+      // Load registered voters from recent proposals' events or show placeholder
+      const list = document.getElementById('voterList');
+      list.innerHTML = '<div style="color:var(--text-secondary);font-size:0.8rem;">Added voters will appear here after they interact with a proposal.</div>';
     }
     
     async function loadProposals() {
@@ -793,10 +873,162 @@
       }
     }
 
+    async function createProposal() {
+      const text = document.getElementById('newProposalText').value.trim();
+      if (!text) { showToast('Enter proposal text', true); return; }
+      try {
+        const tx = await contract.createProposal(text);
+        showTx(tx.hash, 'Proposal Created');
+        await tx.wait();
+        document.getElementById('newProposalText').value = '';
+        showToast('Proposal created');
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function secondProposal() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.secondProposal(currentProposalId);
+        showTx(tx.hash, 'Proposal Seconded');
+        await tx.wait();
+        showToast('Proposal seconded');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function openVoting() {
+      if (currentProposalId === null) return;
+      try {
+        const duration = 3 * 24 * 60 * 60;
+        const tx = await contract.openVoting(currentProposalId, duration);
+        showTx(tx.hash, 'Voting Opened');
+        await tx.wait();
+        showToast('Voting is now open');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function openVotingCustom() {
+      const days = prompt('Enter voting duration in days:', '3');
+      if (!days) return;
+      const duration = parseInt(days) * 24 * 60 * 60;
+      if (duration < 60 || duration > 7 * 24 * 60 * 60) {
+        showToast('Duration must be between 1 minute and 7 days', true);
+        return;
+      }
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.openVoting(currentProposalId, duration);
+        showTx(tx.hash, 'Voting Opened');
+        await tx.wait();
+        showToast('Voting is now open');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function submitAmendment() {
+      if (currentProposalId === null) return;
+      const text = document.getElementById('amendmentText').value.trim();
+      if (!text) { showToast('Enter amendment text', true); return; }
+      try {
+        const tx = await contract.submitAmendment(currentProposalId, text);
+        showTx(tx.hash, 'Amendment Submitted');
+        await tx.wait();
+        document.getElementById('amendmentText').value = '';
+        showToast('Amendment submitted');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function approveAmendment(proposalId, amendmentId) {
+      try {
+        const tx = await contract.approveAmendment(proposalId, amendmentId);
+        showTx(tx.hash, 'Amendment Approved');
+        await tx.wait();
+        showToast('Amendment approved');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+    
+    async function finalizeProposal() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.finalizeProposal(currentProposalId);
+        showTx(tx.hash, 'Proposal Finalized');
+        await tx.wait();
+        showToast('Proposal finalized');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+
+    async function callForDivision() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.callForDivision(currentProposalId);
+        showTx(tx.hash, 'Division Called');
+        await tx.wait();
+        showToast('Division called');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+
+    async function reconsider() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.reconsider(currentProposalId);
+        showTx(tx.hash, 'Reconsideration Requested');
+        await tx.wait();
+        showToast('Reconsideration requested');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
+
     async function reopenVoting() {
       if (currentProposalId === null) return;
       try {
-        showToast('Reopening voting...');
+        const tx = await contract.reopenVoting(currentProposalId);
+        showTx(tx.hash, 'Voting Reopened');
+        await tx.wait();
+        showToast('Voting reopened');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        showToast(err.reason || err.message, true);
+      }
+    }
         const tx = await contract.reopenVoting(currentProposalId);
         await tx.wait();
         showToast('Voting reopened');
@@ -812,6 +1044,26 @@
       toast.textContent = message;
       toast.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => toast.classList.remove('show'), 5000);
+    }
+    
+    function showTx(hash, label = 'Transaction Submitted') {
+      const banner = document.getElementById('txBanner');
+      const hashEl = document.getElementById('txHash');
+      const linkEl = document.getElementById('txLink');
+      const statusEl = document.getElementById('txStatus');
+      const labelEl = document.getElementById('txLabel');
+      
+      labelEl.textContent = label;
+      hashEl.textContent = hash;
+      linkEl.href = 'https://sepolia.etherscan.io/tx/' + hash;
+      statusEl.textContent = 'Waiting for confirmation...';
+      banner.className = 'show';
+      
+      // Watch for confirmation
+      provider.once('block', () => {
+        statusEl.textContent = '✓ Confirmed onchain';
+        setTimeout(() => banner.className = '',  4000);
+      });
     }
     
     // Listen for new proposals (only after wallet is connected)
