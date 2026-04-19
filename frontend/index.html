@@ -363,7 +363,7 @@
     const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
     const CONTRACT_ABI = [
       "function proposalCount() view returns (uint256)",
-      "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+      "function getProposal(uint256 _proposalId) view returns (string, address, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool)",
       "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",

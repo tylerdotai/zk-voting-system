@@ -266,6 +266,28 @@
       color: #030816;
     }
     .action-btn.success:hover:not(:disabled) { background: #22c55e; }
+    .action-btn.warning {
+      background: var(--state-seconded);
+      color: #030816;
+    }
+    .action-btn.warning:hover:not(:disabled) { background: #d97706; }
+    
+    .member-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--fw-border);
+    }
+    .member-actions h4 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
     
     /* Voter Status */
     .voter-status {
@@ -424,10 +446,20 @@
       <!-- Chair Actions -->
       <div class="chair-actions" id="chairActions">
         <h4>Chair Actions</h4>
-        <button class="action-btn primary" id="btnSecond" onclick="secondProposal()" disabled>Second Motion</button>
-        <button class="action-btn primary" id="btnOpenVoting" onclick="openVoting()" disabled>Open Voting — 3 Days</button>
-        <button class="action-btn secondary" id="btnSetVotingDuration" onclick="openVotingCustom()" disabled>Open Voting — Custom</button>
-        <button class="action-btn success" id="btnFinalize" onclick="finalizeProposal()" disabled>Finalize Proposal</button>
+        <button class="action-btn primary" id="btnSecond" onclick="secondProposal()">Second Motion</button>
+        <button class="action-btn primary" id="btnOpenVoting" onclick="openVoting()">Open Voting — 3 Days</button>
+        <button class="action-btn secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting — Custom</button>
+        <button class="action-btn success" id="btnFinalize" onclick="finalizeProposal()">Finalize Proposal</button>
+        <div id="reopenActions" style="margin-top:0.75rem; display: none;">
+          <button class="action-btn warning" id="btnReopenVoting" onclick="reopenVoting()">Reopen Voting (Reconsideration Requested)</button>
+        </div>
+      </div>
+
+      <!-- Member Actions -->
+      <div class="member-actions" id="memberActions">
+        <h4>Member Actions</h4>
+        <button class="action-btn secondary" id="btnCallDivision" onclick="callForDivision()">Call for Division</button>
+        <button class="action-btn secondary" id="btnReconsider" onclick="reconsider()">Request Reconsideration</button>
       </div>
       
       <!-- Amendments -->
@@ -447,10 +479,11 @@
     const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
     const ROB_RULES_ABI = [
       "function proposalCount() view returns (uint256)",
-      "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+      "function getProposal(uint256 _proposalId) view returns (string, address, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool)",
       "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
       "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
+      "function hasCalledForDivision(uint256 _proposalId, address _voter) view returns (bool)",
       "function chair() view returns (address)",
       "function createProposal(string calldata _description) returns (uint256)",
       "function secondProposal(uint256 _proposalId)",
@@ -459,7 +492,10 @@
       "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
       "function finalizeProposal(uint256 _proposalId)",
-      "function addVoter(address _voter)"
+      "function addVoter(address _voter)",
+      "function callForDivision(uint256 _proposalId)",
+      "function reconsider(uint256 _proposalId)",
+      "function reopenVoting(uint256 _proposalId)"
     ];
     
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
@@ -549,12 +585,15 @@
       const p = await contract.getProposal(id);
       const state = parseInt(p[2]);
       const isChair = (await contract.chair()).toLowerCase() === userAddress.toLowerCase();
-      
+      const isEligible = await contract.isEligible(userAddress);
+      const hasVoted = await contract.hasVoted(id, userAddress);
+      const hasCalledDivision = await contract.hasCalledForDivision(id, userAddress);
+
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
-      document.getElementById('detailMeta').textContent = `Chair: ${p[1].slice(0,10)}... | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
-      document.getElementById('yesCount').textContent = p[7];
-      document.getElementById('noCount').textContent = p[8];
-      document.getElementById('abstainCount').textContent = p[9];
+      document.getElementById('detailMeta').textContent = `Proposer: ${p[1].slice(0,8)}... | Chair: ${p[2].slice(0,8)}... | Created: ${new Date(parseInt(p[4])*1000).toLocaleDateString()}`;
+      document.getElementById('yesCount').textContent = p[9];
+      document.getElementById('noCount').textContent = p[10];
+      document.getElementById('abstainCount').textContent = p[11];
       
       // Update progress bar
       document.querySelectorAll('.progress-step').forEach((el, idx) => {
@@ -563,18 +602,37 @@
         else if (idx === state) el.classList.add('active');
       });
       
-      // Enable/disable buttons based on state + isChair
+      // Enable/disable chair buttons
       const btnSecond = document.getElementById('btnSecond');
       const btnOpenVoting = document.getElementById('btnOpenVoting');
       const btnSetVotingDuration = document.getElementById('btnSetVotingDuration');
       const btnFinalize = document.getElementById('btnFinalize');
       const btnSubmitAmendment = document.getElementById('btnSubmitAmendment');
       
-      btnSecond.disabled = !isChair || state !== 0;
+      btnSecond.disabled = state !== 0; // Any member can second in Created state
       btnOpenVoting.disabled = !isChair || state !== 1;
       btnSetVotingDuration.disabled = !isChair || state !== 1;
       btnFinalize.disabled = state !== 2;
-      btnSubmitAmendment.disabled = state < 2;
+      btnSubmitAmendment.disabled = state < 1; // Must be seconded before amendments
+      
+      // Enable/disable member buttons
+      const btnCallDivision = document.getElementById('btnCallDivision');
+      const btnReconsider = document.getElementById('btnReconsider');
+      const btnReopenVoting = document.getElementById('btnReopenVoting');
+      const reopenActions = document.getElementById('reopenActions');
+      
+      btnCallDivision.disabled = state !== 2 || hasCalledDivision;
+      btnReconsider.disabled = state !== 2 || !hasVoted || p[15]; // must have voted and not already requested
+      
+      // Show reopen button only if reconsideration requested and caller is chair
+      if (p[15] && isChair) {
+        reopenActions.style.display = 'block';
+      } else {
+        reopenActions.style.display = 'none';
+      }
+      
+      // Division call count display
+      const divisionInfo = p[14] > 0 ? ` | ${p[14]} calls for division` : '';
       
       // Load amendments
       await loadAmendments(id, state, isChair);
@@ -704,6 +762,44 @@
         const tx = await contract.finalizeProposal(currentProposalId);
         await tx.wait();
         showToast('Proposal finalized');
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        showToast(err.reason || err.message, true);
+      }
+    }
+
+    async function callForDivision() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.callForDivision(currentProposalId);
+        await tx.wait();
+        showToast('Division called');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        showToast(err.reason || err.message, true);
+      }
+    }
+
+    async function reconsider() {
+      if (currentProposalId === null) return;
+      try {
+        const tx = await contract.reconsider(currentProposalId);
+        await tx.wait();
+        showToast('Reconsideration requested');
+        await loadProposalDetail(currentProposalId);
+      } catch (err) {
+        showToast(err.reason || err.message, true);
+      }
+    }
+
+    async function reopenVoting() {
+      if (currentProposalId === null) return;
+      try {
+        showToast('Reopening voting...');
+        const tx = await contract.reopenVoting(currentProposalId);
+        await tx.wait();
+        showToast('Voting reopened');
         await loadProposalDetail(currentProposalId);
         await loadProposals();
       } catch (err) {
