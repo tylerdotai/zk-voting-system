@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="theme-color" content="#1a1a2e">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/manifest.json">
   <title>ZK DID Voting - Offline Capable</title>
@@ -732,6 +733,15 @@
     // Load offline votes on start
     renderOfflineVotes();
     updateResults();
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js")
+          .then(reg => console.log("SW registered:", reg.scope))
+          .catch(err => console.warn("SW failed:", err));
+      });
+    }
   </script>
 </body>
 </html>

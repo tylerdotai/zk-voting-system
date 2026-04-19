@@ -3,6 +3,7 @@
 <head>
   <link rel="manifest" href="/manifest.json">
   <meta charset="UTF-8">
+  <meta name="theme-color" content="#1a1a2e">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ZK Voting - Rob's Rules Parliamentary Process</title>
   <style>
@@ -773,6 +774,15 @@
     setInterval(() => {
       if (contract) refreshProposals();
     }, 10000);
+  </script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js")
+          .then(reg => console.log("SW registered:", reg.scope))
+          .catch(err => console.warn("SW failed:", err));
+      });
+    }
   </script>
 </body>
 </html>
