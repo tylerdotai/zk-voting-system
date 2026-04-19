@@ -233,14 +233,7 @@
       <div>Role: <span id="userRole">Member</span></div>
     </div>
     
-    <div id="verifyCredentialsBanner" class="section" style="display: none; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3);">
-      <div style="text-align: center;">
-        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔐</div>
-        <div style="color: #fbbf24; font-weight: 600;">Credentials Required</div>
-        <div style="color: #94a3b8; font-size: 0.9rem; margin: 0.5rem 0;">You need to verify your credentials before participating in voting.</div>
-        <a href="verify.html" style="background: #7f56d9; color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; display: inline-block;">🔐 Verify Credentials</a>
-      </div>
-    </div>
+    <div class="status-banner" id="voterStatusBanner" style="display: none;"></div>
     
     <!-- Main List View -->
     <div class="section" id="listView">
@@ -338,7 +331,7 @@
     // For local Hardhat demo - update as needed
     const LOCAL_RPC_URL = 'http://100.79.252.47:8545';
     // Contract configuration - DEPLOY THIS CONTRACT AND UPDATE ADDRESS
-    const CONTRACT_ADDRESS = '0x81E1F7CF5E92EaE9C3533813C3BeBab0b2fF6580';
+    const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
     const ROB_RULES_ABI = [
       "event ChairUpdated(address indexed oldChair, address indexed newChair)",
       "event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair)",
@@ -362,7 +355,7 @@
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
       "function proposals(uint256 _proposalId) view returns (string memory description, address chair, uint256 state, uint256 createdAt, uint256 secondedAt, uint256 votingStartsAt, uint256 votingEndsAt, uint256 yesVotes, uint256 noVotes, uint256 abstainVotes, uint256 amendmentCount)",
-      "function allowedUsers(address) view returns (bool)",
+      "function isEligible(address) view returns (bool)",
       "event CredentialVerified(address indexed user)"
     ];
     
@@ -404,7 +397,7 @@
         document.getElementById('disconnectBtn').style.display = 'inline-block';
         
         await checkChairRole();
-        await checkCredentialVerification();
+        await checkVoterEligibility();
         await refreshProposals();
         
         showToast('Wallet connected!');
@@ -437,21 +430,50 @@
       }
     }
     
-    async function checkCredentialVerification() {
-      if (!contract) return;
+    async function checkVoterEligibility() {
+      if (!contract || !userAddress) return;
       try {
-        const isVerified = await contract.allowedUsers(userAddress);
-        const verifySection = document.getElementById('verifyCredentialsBanner');
-        if (!isVerified) {
-          verifySection.style.display = 'block';
-          // Disable all voting-related buttons
+        const isEligible = await contract.isEligible(userAddress);
+        const voterBanner = document.getElementById('voterStatusBanner');
+        
+        if (!isEligible) {
+          if (voterBanner) {
+            voterBanner.style.display = 'block';
+            voterBanner.innerHTML = '❌ You are not registered to vote. <button class="action-btn" onclick="registerAsVoter()">Register Now</button>';
+            voterBanner.style.background = 'rgba(248, 113, 113, 0.2)';
+            voterBanner.style.borderColor = '#f87171';
+          }
+          // Disable all voting buttons
           document.getElementById('btnSecond')?.removeAttribute('onclick');
           document.getElementById('btnOpenVoting')?.removeAttribute('onclick');
         } else {
-          verifySection.style.display = 'none';
+          if (voterBanner) {
+            voterBanner.style.display = 'block';
+            voterBanner.innerHTML = '✅ You are an eligible voter';
+            voterBanner.style.background = 'rgba(74, 222, 128, 0.2)';
+            voterBanner.style.borderColor = '#4ade80';
+          }
         }
       } catch (e) {
-        console.error('Error checking credential verification:', e);
+        console.error('Error checking voter eligibility:', e);
+      }
+    }
+    
+    async function registerAsVoter() {
+      if (!contract || !signer) {
+        showToast('Connect your wallet first', true);
+        return;
+      }
+      try {
+        showToast('Registering as voter...', false);
+        const tx = await contract.addVoter(userAddress);
+        showToast('Transaction submitted...', false);
+        await tx.wait();
+        showToast('Registered as voter!', false);
+        checkVoterEligibility();
+      } catch (e) {
+        console.error('Error registering:', e);
+        showToast('Registration failed: ' + (e.reason || e.message), true);
       }
     }
     
