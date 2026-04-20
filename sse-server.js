@@ -10,7 +10,8 @@ const { ethers } = require('ethers');
 
 const PORT = process.env.PORT || 3004;
 const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
-const ALCHEMY_HTTP = 'https://eth-sepolia.g.alchemy.com/v2/sC-QFWsXNmQSRD5xmfSu3';
+const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'aOOAloL3fkKN1ecrK31ZO';
+const ALCHEMY_HTTP = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
 const provider = new ethers.JsonRpcProvider(ALCHEMY_HTTP);
 
