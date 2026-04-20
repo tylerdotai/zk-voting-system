@@ -599,7 +599,7 @@
     const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
     const ROB_RULES_ABI = [
       "function proposalCount() view returns (uint256)",
-      "function getProposal(uint256 _proposalId) view returns (string, address, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool)",
+      "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
       "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
       "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
@@ -736,7 +736,7 @@
       list.innerHTML = '';
       for (let i = count - 1; i >= 0; i--) {
         const p = await contract.getProposal(i);
-        const state = parseInt(p[3]);
+        const state = parseInt(p[2]);
         const card = document.createElement('div');
         card.className = 'proposal-card' + (currentProposalId === i ? ' selected' : '');
         card.onclick = () => selectProposal(i);
@@ -747,9 +747,9 @@
           </div>
           <div class="proposal-desc">${p[0]}</div>
           <div class="proposal-stats">
-            <span>Yes: <strong>${p[7]}</strong></span>
-            <span>No: <strong>${p[8]}</strong></span>
-            <span>Abstain: <strong>${p[9]}</strong></span>
+            <span>Yes: <strong>${p[7].toString()}</strong></span>
+            <span>No: <strong>${p[8].toString()}</strong></span>
+            <span>Abstain: <strong>${p[9].toString()}</strong></span>
           </div>
         `;
         list.appendChild(card);
@@ -764,64 +764,61 @@
     
     async function loadProposalDetail(id) {
       const p = await contract.getProposal(id);
-      const state = parseInt(p[3]);
+      const state = parseInt(p[2]);
       const isChair = (await contract.chair()).toLowerCase() === userAddress.toLowerCase();
       const isEligible = await contract.isEligible(userAddress);
       const hasVoted = await contract.hasVoted(id, userAddress);
       const hasCalledDivision = await contract.hasCalledForDivision(id, userAddress);
 
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
-      document.getElementById('detailMeta').textContent = `Proposer: ${p[1].slice(0,8)}... | Chair: ${p[2].slice(0,8)}... | Created: ${new Date(parseInt(p[4])*1000).toLocaleDateString()}`;
-      document.getElementById('yesCount').textContent = p[9];
-      document.getElementById('noCount').textContent = p[10];
-      document.getElementById('abstainCount').textContent = p[11];
-      
+      document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? p[1].slice(0,8) + '...' : 'N/A'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
+      document.getElementById('yesCount').textContent = p[7].toString();
+      document.getElementById('noCount').textContent = p[8].toString();
+      document.getElementById('abstainCount').textContent = p[9].toString();
+
       // Update progress bar
       document.querySelectorAll('.progress-step').forEach((el, idx) => {
         el.classList.remove('active', 'done');
         if (idx < state) el.classList.add('done');
         else if (idx === state) el.classList.add('active');
       });
-      
+
       // Enable/disable chair buttons
       const btnSecond = document.getElementById('btnSecond');
       const btnOpenVoting = document.getElementById('btnOpenVoting');
       const btnSetVotingDuration = document.getElementById('btnSetVotingDuration');
       const btnFinalize = document.getElementById('btnFinalize');
       const btnSubmitAmendment = document.getElementById('btnSubmitAmendment');
-      
-      btnSecond.disabled = state !== 0; // Any member can second in Created state
+
+      btnSecond.disabled = state !== 0;
       btnOpenVoting.disabled = !isChair || state !== 1;
       btnSetVotingDuration.disabled = !isChair || state !== 1;
       btnFinalize.disabled = state !== 2;
-      btnSubmitAmendment.disabled = state < 1; // Must be seconded before amendments
-      
+      btnSubmitAmendment.disabled = state < 1;
+
       // Enable/disable member buttons
       const btnCallDivision = document.getElementById('btnCallDivision');
       const btnReconsider = document.getElementById('btnReconsider');
       const btnReopenVoting = document.getElementById('btnReopenVoting');
       const reopenActions = document.getElementById('reopenActions');
-      
+
       btnCallDivision.disabled = state !== 2 || hasCalledDivision;
-      btnReconsider.disabled = state !== 2 || !hasVoted || p[15]; // must have voted and not already requested
-      
-      // Show reopen button only if reconsideration requested and caller is chair
-      if (p[15] && isChair) {
+      btnReconsider.disabled = state !== 2 || !hasVoted;
+
+      // Show reopen button only if in Passed/Failed state and caller is chair
+      if ((state === 3 || state === 4) && isChair) {
         reopenActions.style.display = 'block';
       } else {
         reopenActions.style.display = 'none';
       }
-      
-      // Division call count display
-      const divisionInfo = p[14] > 0 ? ` | ${p[14]} calls for division` : '';
-      
+
       // Load amendments
       await loadAmendments(id, state, isChair);
     }
     
     async function loadAmendments(proposalId, state, isChair) {
       const p = await contract.getProposal(proposalId);
-      const count = parseInt(p[10].toString());
+      const count = parseInt(p[10].toString()); // amendmentCount
       const list = document.getElementById('amendmentList');
       
       if (count === 0) {
