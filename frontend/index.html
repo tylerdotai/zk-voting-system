@@ -449,7 +449,7 @@
         });
 
         // SSE — live updates for all browsers (no MetaMask needed)
-        const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
+        const SSE_BASE = import.meta.env.VITE_SSE_BASE || `${window.location.protocol}//${window.location.hostname}:3004`;
         let sseConn = null;
         function connectSSE() {
           if (!sseConn || sseConn.readyState === WebSocket.CLOSED) {
@@ -509,9 +509,9 @@
           </div>
           <div class="proposal-desc">${p[0]}</div>
           <div class="proposal-votes">
-            <span>Yes <strong>${p[7]}</strong></span>
-            <span>No <strong>${p[8]}</strong></span>
-            <span>Abstain <strong>${p[9]}</strong></span>
+            <span>Yes <strong>${p[7].toString()}</strong></span>
+            <span>No <strong>${p[8].toString()}</strong></span>
+            <span>Abstain <strong>${p[9].toString()}</strong></span>
           </div>
         `;
         list.appendChild(card);
@@ -532,9 +532,9 @@
     async function refreshSelectedProposal() {
       if (selectedProposalId === null || !contract) return;
       const p = await contract.getProposal(selectedProposalId);
-      document.getElementById('voteYesCount').textContent = p[7];
-      document.getElementById('voteNoCount').textContent = p[8];
-      document.getElementById('voteAbstainCount').textContent = p[9];
+      document.getElementById('voteYesCount').textContent = p[7].toString();
+      document.getElementById('voteNoCount').textContent = p[8].toString();
+      document.getElementById('voteAbstainCount').textContent = p[9].toString();
       
       const state = parseInt(p[3]);
       const statusEl = document.getElementById('voteStatus');
