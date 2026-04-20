@@ -447,6 +447,25 @@
           if (selectedProposalId !== null) await refreshSelectedProposal();
           await loadProposals();
         });
+
+        // SSE — live updates for all browsers (no MetaMask needed)
+        const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
+        let sseConn = null;
+        function connectSSE() {
+          if (!sseConn || sseConn.readyState === WebSocket.CLOSED) {
+            sseConn = new EventSource(`${SSE_BASE}/events`);
+            sseConn.onmessage = async (e) => {
+              const { event, data } = JSON.parse(e.data);
+              if (event === 'connected' || event === 'ws_disconnected') return;
+              if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
+                if (selectedProposalId !== null) await refreshSelectedProposal();
+                await loadProposals();
+              }
+            };
+            sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
+          }
+        }
+        connectSSE();
       } catch (err) {
         showToast('Error: ' + (err.reason || err.message), true);
       }

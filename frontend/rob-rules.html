@@ -1102,6 +1102,25 @@
     }
     
     connectWallet();
+
+    // SSE — live vote count updates for all browsers (no MetaMask needed for chair)
+    const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
+    let sseConn = null;
+    function connectSSE() {
+      if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
+        sseConn = new EventSource(`${SSE_BASE}/events`);
+        sseConn.onmessage = async (e) => {
+          const { event, data } = JSON.parse(e.data);
+          if (event === 'connected' || event === 'ws_disconnected') return;
+          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized', 'VoterAdded', 'VotingReopened'].includes(event)) {
+            await loadProposals();
+            if (currentProposalId !== null) await loadProposalDetails(currentProposalId);
+          }
+        };
+        sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
+      }
+    }
+    connectSSE();
   </script>
   <script>
     if ("serviceWorker" in navigator) {
