@@ -9,7 +9,7 @@ const http = require('http');
 const { ethers } = require('ethers');
 
 const PORT = process.env.PORT || 3004;
-const CONTRACT_ADDRESS = '0xb3254AB74e5103F7374eEcDb57078eB10388CaC3';
+const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
 const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY || 'aOOAloL3fkKN1ecrK31ZO';
 const ALCHEMY_HTTP = `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`;
 
