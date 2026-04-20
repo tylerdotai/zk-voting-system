@@ -289,11 +289,6 @@
       color: #030816;
     }
     .action-btn.success:hover:not(:disabled) { background: #22c55e; }
-    .action-btn.warning {
-      background: var(--state-seconded);
-      color: #030816;
-    }
-    .action-btn.warning:hover:not(:disabled) { background: #d97706; }
     
     .member-actions {
       display: flex;
@@ -311,47 +306,6 @@
       letter-spacing: 0.05em;
       margin-bottom: 0.5rem;
     }
-    
-    /* Voter Status */
-    .voter-status {
-      padding: 1rem;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 600;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .voter-status.eligible { background: rgba(74, 222, 128, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
-    .voter-status.not-eligible { background: rgba(239, 68, 68, 0.1); color: var(--state-failed); border: 2px solid var(--state-failed); }
-    
-    /* Input Form */
-    .create-form {
-      display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-    .create-form input {
-      flex: 1;
-      padding: 1rem;
-      border: 2px solid var(--fw-border);
-      border-radius: 10px;
-      font-size: 1rem;
-      font-family: inherit;
-      background: var(--bg-card);
-      color: var(--text-primary);
-    }
-    .create-form input:focus { outline: none; border-color: var(--accent-blue); }
-    .create-form input::placeholder { color: var(--text-secondary); }
-    .create-form button { padding: 1rem 2rem; }
-    
-    .voter-mgmt {
-      background: var(--bg-card);
-      border: 2px solid var(--fw-border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .voter-mgmt h4 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); margin-bottom: 0.75rem; }
     
     /* Amendments */
     .amendments-section {
@@ -467,7 +421,7 @@
       <div class="gate-icon">🔐</div>
       <h2>Chair Access Required</h2>
       <p>Connect your wallet to access the Chair Dashboard.</p>
-      <p class="gate-note">Only the chair address can manage proposals and voters.</p>
+      <p class="gate-note">Only the chair address can manage proposals.</p>
       <button id="gateConnectBtn" class="action-btn primary" onclick="connectWallet()">
         Connect Wallet
       </button>
@@ -500,16 +454,6 @@
       <div class="create-form">
         <input type="text" id="newProposalText" placeholder="Enter new proposal description..." />
         <button class="action-btn primary" onclick="createProposal()">Create Proposal</button>
-      </div>
-      
-      <!-- Voter Management (Chair Only) -->
-      <div class="voter-mgmt" id="voterMgmt" style="display:none;">
-        <h4>Voter Management</h4>
-        <div style="display:flex; gap:0.5rem; margin-bottom:0.75rem;">
-          <input type="text" id="newVoterAddr" placeholder="0x..." style="flex:1; padding:0.5rem; border-radius:6px; border:1px solid var(--fw-border); background:var(--bg-primary); color:var(--text-primary); font-size:0.85rem;" />
-          <button class="action-btn" style="padding:0.5rem 1rem;" onclick="addVoter()">Add</button>
-        </div>
-        <div id="voterList" style="font-size:0.8rem; color:var(--text-secondary);"></div>
       </div>
       
       <!-- Proposals -->
@@ -552,11 +496,6 @@
         </div>
       </div>
       
-      <!-- Voter Status -->
-      <div class="voter-status eligible" id="voterStatusBanner">
-        You are an eligible voter
-      </div>
-      
       <!-- Chair Actions -->
       <div class="chair-actions" id="chairActions">
         <h4>Chair Actions</h4>
@@ -564,16 +503,12 @@
         <button class="action-btn primary" id="btnOpenVoting" onclick="openVoting()">Open Voting — 3 Days</button>
         <button class="action-btn secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting — Custom</button>
         <button class="action-btn success" id="btnFinalize" onclick="finalizeProposal()">Finalize Proposal</button>
-        <div id="reopenActions" style="margin-top:0.75rem; display: none;">
-          <button class="action-btn warning" id="btnReopenVoting" onclick="reopenVoting()">Reopen Voting (Reconsideration Requested)</button>
-        </div>
       </div>
 
       <!-- Member Actions -->
       <div class="member-actions" id="memberActions">
         <h4>Member Actions</h4>
         <button class="action-btn secondary" id="btnCallDivision" onclick="callForDivision()">Call for Division</button>
-        <button class="action-btn secondary" id="btnReconsider" onclick="reconsider()">Request Reconsideration</button>
       </div>
       
       <!-- Amendments -->
@@ -601,9 +536,7 @@
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
       "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
-      "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
-      "function hasCalledForDivision(uint256 _proposalId, address _voter) view returns (bool)",
       "function chair() view returns (address)",
       "function createProposal(string calldata _description) returns (uint256)",
       "function secondProposal(uint256 _proposalId)",
@@ -612,11 +545,7 @@
       "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
       "function finalizeProposal(uint256 _proposalId)",
-      "function addVoter(address _voter)",
-      "function removeVoter(address _voter)",
-      "function callForDivision(uint256 _proposalId)",
-      "function reconsider(uint256 _proposalId)",
-      "function reopenVoting(uint256 _proposalId)"
+      "function callForDivision(uint256 _proposalId)"
     ];
     
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
@@ -637,13 +566,11 @@
         
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
-          // Try to auto-switch to Sepolia
           try {
             await window.ethereum.request({
               method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0xaa36a7' }], // Sepolia chainId
+              params: [{ chainId: '0xaa36a7' }],
             });
-            // Re-check network after switch
             const newNetwork = await provider.getNetwork();
             if (newNetwork.chainId.toString() !== '11155111') {
               showToast('Please switch to Sepolia testnet manually', true);
@@ -660,7 +587,6 @@
         
         const chair = await contract.chair();
 
-        // GATE: Only the chair can access this dashboard
         if (chair.toLowerCase() !== userAddress.toLowerCase()) {
           document.getElementById('gateError').textContent =
             'Connected wallet is not the chair. Chair address: ' + chair;
@@ -668,58 +594,13 @@
           return;
         }
 
-        // Chair verified — hide gate and load content
         document.getElementById('walletGate').classList.add('hidden');
-        document.getElementById('voterMgmt').style.display = 'block';
-        await loadVoterList();
-
-        document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
-        document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
-
-        await checkVoterStatus();
         await loadProposals();
       } catch (err) {
         const gateErr = document.getElementById('gateError');
         gateErr.textContent = 'Error: ' + (err.reason || err.message);
         gateErr.classList.remove('hidden');
       }
-    }
-    
-    async function checkVoterStatus() {
-      const eligible = await contract.isEligible(userAddress);
-      const banner = document.getElementById('voterStatusBanner');
-      if (eligible) {
-        banner.className = 'voter-status eligible';
-        banner.textContent = 'You are an eligible voter';
-      } else {
-        banner.className = 'voter-status not-eligible';
-        banner.textContent = 'Not registered — Ask chair to add you';
-      }
-    }
-    
-    async function addVoter() {
-      const addr = document.getElementById('newVoterAddr').value.trim();
-      if (!addr || !addr.startsWith('0x') || addr.length !== 42) {
-        showToast('Enter a valid Ethereum address', true);
-        return;
-      }
-      try {
-        const tx = await contract.addVoter(addr);
-        showTx(tx.hash, 'Voter Added');
-        await tx.wait();
-        document.getElementById('newVoterAddr').value = '';
-        showToast('Voter added');
-        await loadVoterList();
-      } catch (err) {
-        document.getElementById('txBanner').className = '';
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function loadVoterList() {
-      // Load registered voters from recent proposals' events or show placeholder
-      const list = document.getElementById('voterList');
-      list.innerHTML = '<div style="color:var(--text-secondary);font-size:0.8rem;">Added voters will appear here after they interact with a proposal.</div>';
     }
     
     async function loadProposals() {
@@ -739,18 +620,29 @@
         const card = document.createElement('div');
         card.className = 'proposal-card' + (currentProposalId === i ? ' selected' : '');
         card.onclick = () => selectProposal(i);
-        card.innerHTML = `
-          <div class="proposal-header">
-            <span class="proposal-id">Proposal #${i}</span>
-            <span class="state-badge state-${state}">${STATES[state]}</span>
-          </div>
-          <div class="proposal-desc">${p[0]}</div>
-          <div class="proposal-stats">
-            <span>Yes: <strong>${p[7].toString()}</strong></span>
-            <span>No: <strong>${p[8].toString()}</strong></span>
-            <span>Abstain: <strong>${p[9].toString()}</strong></span>
-          </div>
-        `;
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'proposal-header';
+        const idSpan = document.createElement('span');
+        idSpan.className = 'proposal-id';
+        idSpan.textContent = `Proposal #${i}`;
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = `state-badge state-${state}`;
+        badgeSpan.textContent = STATES[state];
+        headerDiv.appendChild(idSpan);
+        headerDiv.appendChild(badgeSpan);
+
+        const descDiv = document.createElement('div');
+        descDiv.className = 'proposal-desc';
+        descDiv.textContent = p[0];
+
+        const statsDiv = document.createElement('div');
+        statsDiv.className = 'proposal-stats';
+        statsDiv.innerHTML = `<span>Yes: <strong>${p[7].toString()}</strong></span><span>No: <strong>${p[8].toString()}</strong></span><span>Abstain: <strong>${p[9].toString()}</strong></span>`;
+
+        card.appendChild(headerDiv);
+        card.appendChild(descDiv);
+        card.appendChild(statsDiv);
         list.appendChild(card);
       }
     }
@@ -765,9 +657,7 @@
       const p = await contract.getProposal(id);
       const state = parseInt(p[2]);
       const isChair = (await contract.chair()).toLowerCase() === userAddress.toLowerCase();
-      const isEligible = await contract.isEligible(userAddress);
       const hasVoted = await contract.hasVoted(id, userAddress);
-      const hasCalledDivision = await contract.hasCalledForDivision(id, userAddress);
 
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
       document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? p[1].slice(0,8) + '...' : 'N/A'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
@@ -783,33 +673,15 @@
       });
 
       // Enable/disable chair buttons
-      const btnSecond = document.getElementById('btnSecond');
-      const btnOpenVoting = document.getElementById('btnOpenVoting');
-      const btnSetVotingDuration = document.getElementById('btnSetVotingDuration');
-      const btnFinalize = document.getElementById('btnFinalize');
-      const btnSubmitAmendment = document.getElementById('btnSubmitAmendment');
-
-      btnSecond.disabled = state !== 0;
-      btnOpenVoting.disabled = !isChair || state !== 1;
-      btnSetVotingDuration.disabled = !isChair || state !== 1;
-      btnFinalize.disabled = state !== 2;
-      btnSubmitAmendment.disabled = state < 1;
+      document.getElementById('btnSecond').disabled = state !== 0;
+      document.getElementById('btnOpenVoting').disabled = !isChair || state !== 1;
+      document.getElementById('btnSetVotingDuration').disabled = !isChair || state !== 1;
+      document.getElementById('btnFinalize').disabled = state !== 2;
+      document.getElementById('btnSubmitAmendment').disabled = state < 1;
 
       // Enable/disable member buttons
       const btnCallDivision = document.getElementById('btnCallDivision');
-      const btnReconsider = document.getElementById('btnReconsider');
-      const btnReopenVoting = document.getElementById('btnReopenVoting');
-      const reopenActions = document.getElementById('reopenActions');
-
-      btnCallDivision.disabled = state !== 2 || hasCalledDivision;
-      btnReconsider.disabled = state !== 2 || !hasVoted;
-
-      // Show reopen button only if in Passed/Failed state and caller is chair
-      if ((state === 3 || state === 4) && isChair) {
-        reopenActions.style.display = 'block';
-      } else {
-        reopenActions.style.display = 'none';
-      }
+      btnCallDivision.disabled = state !== 2;
 
       // Load amendments
       await loadAmendments(id, state, isChair);
@@ -817,7 +689,7 @@
     
     async function loadAmendments(proposalId, state, isChair) {
       const p = await contract.getProposal(proposalId);
-      const count = parseInt(p[10].toString()); // amendmentCount
+      const count = parseInt(p[10].toString());
       const list = document.getElementById('amendmentList');
       
       if (count === 0) {
@@ -830,146 +702,29 @@
         const a = await contract.getAmendment(proposalId, i);
         const item = document.createElement('div');
         item.className = 'amendment-item';
-        item.innerHTML = `
-          <span class="desc">${a[0]}</span>
-          <span class="status ${a[2] ? 'approved' : 'pending'}">${a[2] ? 'Approved' : 'Pending'}</span>
-        `;
+
+        const descSpan = document.createElement('span');
+        descSpan.className = 'desc';
+        descSpan.textContent = a[0];
+
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'status ' + (a[2] ? 'approved' : 'pending');
+        statusSpan.textContent = a[2] ? 'Approved' : 'Pending';
+
+        item.appendChild(descSpan);
+        item.appendChild(statusSpan);
+
         if (isChair && !a[2] && state === 1) {
-          item.innerHTML += `<button style="padding:0.5rem 1rem;font-size:0.8rem;cursor:pointer;" onclick="approveAmendment(${proposalId},${i})">Approve</button>`;
+          const approveBtn = document.createElement('button');
+          approveBtn.style.cssText = 'padding:0.5rem 1rem;font-size:0.8rem;cursor:pointer;';
+          approveBtn.textContent = 'Approve';
+          approveBtn.onclick = () => approveAmendment(proposalId, i);
+          item.appendChild(approveBtn);
         }
         list.appendChild(item);
       }
     }
     
-    async function createProposal() {
-      const text = document.getElementById('newProposalText').value.trim();
-      if (!text) { showToast('Enter proposal text', true); return; }
-      try {
-        const tx = await contract.createProposal(text);
-        await tx.wait();
-        document.getElementById('newProposalText').value = '';
-        showToast('Proposal created');
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function secondProposal() {
-      if (currentProposalId === null) return;
-      try {
-        showToast('Seconding...');
-        const tx = await contract.secondProposal(currentProposalId);
-        await tx.wait();
-        showToast('Proposal seconded');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function openVoting() {
-      if (currentProposalId === null) return;
-      try {
-        const duration = 3 * 24 * 60 * 60;
-        showToast('Opening voting for 3 days...');
-        const tx = await contract.openVoting(currentProposalId, duration);
-        await tx.wait();
-        showToast('Voting is now open');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function openVotingCustom() {
-      const days = prompt('Enter voting duration in days:', '3');
-      if (!days) return;
-      const duration = parseInt(days) * 24 * 60 * 60;
-      if (duration < 60 || duration > 7 * 24 * 60 * 60) {
-        showToast('Duration must be between 1 minute and 7 days', true);
-        return;
-      }
-      if (currentProposalId === null) return;
-      try {
-        showToast(`Opening voting for ${days} days...`);
-        const tx = await contract.openVoting(currentProposalId, duration);
-        await tx.wait();
-        showToast('Voting is now open');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function submitAmendment() {
-      if (currentProposalId === null) return;
-      const text = document.getElementById('amendmentText').value.trim();
-      if (!text) { showToast('Enter amendment text', true); return; }
-      try {
-        showToast('Submitting amendment...');
-        const tx = await contract.submitAmendment(currentProposalId, text);
-        await tx.wait();
-        document.getElementById('amendmentText').value = '';
-        showToast('Amendment submitted');
-        await loadProposalDetail(currentProposalId);
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function approveAmendment(proposalId, amendmentId) {
-      try {
-        const tx = await contract.approveAmendment(proposalId, amendmentId);
-        await tx.wait();
-        showToast('Amendment approved');
-        await loadProposalDetail(currentProposalId);
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
-    async function finalizeProposal() {
-      if (currentProposalId === null) return;
-      try {
-        showToast('Finalizing...');
-        const tx = await contract.finalizeProposal(currentProposalId);
-        await tx.wait();
-        showToast('Proposal finalized');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-
-    async function callForDivision() {
-      if (currentProposalId === null) return;
-      try {
-        const tx = await contract.callForDivision(currentProposalId);
-        await tx.wait();
-        showToast('Division called');
-        await loadProposalDetail(currentProposalId);
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-
-    async function reconsider() {
-      if (currentProposalId === null) return;
-      try {
-        const tx = await contract.reconsider(currentProposalId);
-        await tx.wait();
-        showToast('Reconsideration requested');
-        await loadProposalDetail(currentProposalId);
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-
     async function createProposal() {
       const text = document.getElementById('newProposalText').value.trim();
       if (!text) { showToast('Enter proposal text', true); return; }
@@ -1098,35 +853,6 @@
       }
     }
 
-    async function reconsider() {
-      if (currentProposalId === null) return;
-      try {
-        const tx = await contract.reconsider(currentProposalId);
-        showTx(tx.hash, 'Reconsideration Requested');
-        await tx.wait();
-        showToast('Reconsideration requested');
-        await loadProposalDetail(currentProposalId);
-      } catch (err) {
-        document.getElementById('txBanner').className = '';
-        showToast(err.reason || err.message, true);
-      }
-    }
-
-    async function reopenVoting() {
-      if (currentProposalId === null) return;
-      try {
-        const tx = await contract.reopenVoting(currentProposalId);
-        showTx(tx.hash, 'Voting Reopened');
-        await tx.wait();
-        showToast('Voting reopened');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        document.getElementById('txBanner').className = '';
-        showToast(err.reason || err.message, true);
-      }
-    }
-
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -1136,63 +862,39 @@
     
     function showTx(hash, label = 'Transaction Submitted') {
       const banner = document.getElementById('txBanner');
-      const hashEl = document.getElementById('txHash');
-      const linkEl = document.getElementById('txLink');
-      const statusEl = document.getElementById('txStatus');
-      const labelEl = document.getElementById('txLabel');
-      
-      labelEl.textContent = label;
-      hashEl.textContent = hash;
-      linkEl.href = 'https://sepolia.etherscan.io/tx/' + hash;
-      statusEl.textContent = 'Waiting for confirmation...';
+      document.getElementById('txLabel').textContent = label;
+      document.getElementById('txHash').textContent = hash;
+      document.getElementById('txLink').href = 'https://sepolia.etherscan.io/tx/' + hash;
+      document.getElementById('txStatus').textContent = 'Waiting for confirmation...';
       banner.className = 'show';
-      
-      // Watch for confirmation
       provider.once('block', () => {
-        statusEl.textContent = '✓ Confirmed onchain';
-        setTimeout(() => banner.className = '',  4000);
+        document.getElementById('txStatus').textContent = '✓ Confirmed onchain';
+        setTimeout(() => banner.className = '', 4000);
       });
     }
-    
-    // Listen for new proposals (only after wallet is connected)
-    if (contract) {
-      contract.on("ProposalCreated", async () => {
-        await loadProposals();
-      });
-      contract.on("MotionVoted", async () => {
-        if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      });
-      contract.on("ProposalFinalized", async () => {
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      });
-    }
-    
-    if (typeof window.ethereum !== 'undefined') {
-      window.ethereum.on('accountsChanged', () => location.reload());
-    }
-    
-    // Wallet connection is triggered by the gate UI — user must click Connect Wallet
 
-    // SSE — live vote count updates for all browsers (no MetaMask needed for chair)
+    // SSE — live vote count updates
     const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
     let sseConn = null;
     function connectSSE() {
       if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
         sseConn = new EventSource(`${SSE_BASE}/events`);
         sseConn.onmessage = async (e) => {
-          const { event, data } = JSON.parse(e.data);
+          const { event } = JSON.parse(e.data);
           if (event === 'connected' || event === 'ws_disconnected') return;
-          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized', 'VoterAdded', 'VotingReopened'].includes(event)) {
+          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
             await loadProposals();
-            if (currentProposalId !== null) await loadProposalDetails(currentProposalId);
+            if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
           }
         };
         sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
       }
     }
     connectSSE();
+    
+    if (typeof window.ethereum !== 'undefined') {
+      window.ethereum.on('accountsChanged', () => location.reload());
+    }
   </script>
   <script>
     if ("serviceWorker" in navigator) {

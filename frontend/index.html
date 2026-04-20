@@ -85,7 +85,7 @@
       padding: 2rem;
     }
     
-    /* Wallet + Voter Status Bar */
+    /* Status Bar */
     .status-bar {
       background: var(--bg-card);
       border: 1px solid var(--fw-border);
@@ -114,17 +114,6 @@
       font-size: 0.9rem;
       color: var(--accent-light);
     }
-    
-    .voter-badge {
-      padding: 0.6rem 1.5rem;
-      border-radius: 30px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .voter-badge.eligible { background: rgba(74, 222, 128, 0.1); color: var(--state-voting); border: 2px solid var(--state-voting); }
-    .voter-badge.not-eligible { background: rgba(239, 68, 68, 0.1); color: var(--state-failed); border: 2px solid var(--state-failed); }
     
     /* Proposal Cards */
     .proposals-title {
@@ -368,7 +357,6 @@
         <button class="connect-btn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
         <span class="wallet-addr" id="walletAddress" style="display:none;"></span>
       </div>
-      <div class="voter-badge not-eligible" id="voterStatusBanner" style="display:none;"></div>
     </div>
     
     <!-- Proposals -->
@@ -423,7 +411,6 @@
     const CONTRACT_ABI = [
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
-      "function isEligible(address _user) view returns (bool)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
       "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)"
@@ -469,7 +456,6 @@
         document.getElementById('connectBtn').textContent = 'Connected';
         document.getElementById('connectBtn').disabled = true;
         
-        await checkVoterStatus();
         await loadProposals();
         
         contract.on("MotionVoted", async () => {
@@ -481,7 +467,7 @@
         const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
         let sseConn = null;
         function connectSSE() {
-          if (!sseConn || sseConn.readyState === WebSocket.CLOSED) {
+          if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
             sseConn = new EventSource(`${SSE_BASE}/events`);
             sseConn.onmessage = async (e) => {
               const { event, data } = JSON.parse(e.data);
@@ -497,19 +483,6 @@
         connectSSE();
       } catch (err) {
         showToast('Error: ' + (err.reason || err.message), true);
-      }
-    }
-    
-    async function checkVoterStatus() {
-      const eligible = await contract.isEligible(userAddress);
-      const badge = document.getElementById('voterStatusBanner');
-      badge.style.display = 'block';
-      if (eligible) {
-        badge.className = 'voter-badge eligible';
-        badge.textContent = 'Eligible Voter';
-      } else {
-        badge.className = 'voter-badge not-eligible';
-        badge.textContent = 'Not Registered';
       }
     }
     
@@ -531,18 +504,37 @@
         const isVoting = state === 2;
         card.className = 'proposal-card' + (isVoting ? ' voting-open' : '') + (state >= 3 ? ' closed' : '');
         card.onclick = () => selectProposal(i);
-        card.innerHTML = `
-          <div class="proposal-header">
-            <span class="proposal-id">Proposal #${i}</span>
-            <span class="state-badge state-${state}">${STATES[state]}</span>
-          </div>
-          <div class="proposal-desc">${p[0]}</div>
-          <div class="proposal-votes">
-            <span>Yes <strong>${p[7].toString()}</strong></span>
-            <span>No <strong>${p[8].toString()}</strong></span>
-            <span>Abstain <strong>${p[9].toString()}</strong></span>
-          </div>
-        `;
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'proposal-header';
+        const idSpan = document.createElement('span');
+        idSpan.className = 'proposal-id';
+        idSpan.textContent = `Proposal #${i}`;
+        const badgeSpan = document.createElement('span');
+        badgeSpan.className = `state-badge state-${state}`;
+        badgeSpan.textContent = STATES[state];
+        headerDiv.appendChild(idSpan);
+        headerDiv.appendChild(badgeSpan);
+
+        const descDiv = document.createElement('div');
+        descDiv.className = 'proposal-desc';
+        descDiv.textContent = p[0];
+
+        const votesDiv = document.createElement('div');
+        votesDiv.className = 'proposal-votes';
+        const yesSpan = document.createElement('span');
+        yesSpan.innerHTML = `Yes <strong>${p[7].toString()}</strong>`;
+        const noSpan = document.createElement('span');
+        noSpan.innerHTML = `No <strong>${p[8].toString()}</strong>`;
+        const abstainSpan = document.createElement('span');
+        abstainSpan.innerHTML = `Abstain <strong>${p[9].toString()}</strong>`;
+        votesDiv.appendChild(yesSpan);
+        votesDiv.appendChild(noSpan);
+        votesDiv.appendChild(abstainSpan);
+
+        card.appendChild(headerDiv);
+        card.appendChild(descDiv);
+        card.appendChild(votesDiv);
         list.appendChild(card);
       }
     }
@@ -550,7 +542,7 @@
     async function selectProposal(id) {
       selectedProposalId = id;
       const p = await contract.getProposal(id);
-      const state = parseInt(p[3]);
+      const state = parseInt(p[2]);
       
       document.getElementById('voteSection').classList.remove('hidden');
       document.getElementById('selectedProposalTitle').textContent = `Proposal #${id}`;
@@ -568,7 +560,6 @@
       const state = parseInt(p[2]);
       const statusEl = document.getElementById('voteStatus');
       const controls = document.getElementById('votingControls');
-      const btns = controls.querySelectorAll('.vote-btn');
       
       if (state === 2) {
         const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
@@ -581,7 +572,7 @@
         }
       } else if (state === 0 || state === 1) {
         statusEl.textContent = 'Voting has not started for this proposal.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--fw-gray);">The chair will open voting soon.</div>';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--text-secondary);">The chair will open voting soon.</div>';
       } else if (state === 3) {
         statusEl.textContent = 'This proposal has passed.';
         controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-passed);font-weight:700;">Proposal Passed</div>';
