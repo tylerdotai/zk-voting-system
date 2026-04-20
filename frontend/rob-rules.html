@@ -1130,16 +1130,7 @@
         showToast(err.reason || err.message, true);
       }
     }
-        const tx = await contract.reopenVoting(currentProposalId);
-        await tx.wait();
-        showToast('Voting reopened');
-        await loadProposalDetail(currentProposalId);
-        await loadProposals();
-      } catch (err) {
-        showToast(err.reason || err.message, true);
-      }
-    }
-    
+
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
