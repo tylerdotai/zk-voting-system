@@ -1,0 +1,41 @@
+{
+  "@context": [
+    {
+      "@version": 1.1,
+      "@protected": true,
+      "id": "@id",
+      "type": "@type",
+      "FortWorthDAOMembershipCredential": {
+        "@id": "https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/fort-worth-dao-member.json-ld#FortWorthDAOMembershipCredential",
+        "@context": {
+          "@version": 1.1,
+          "@protected": true,
+          "id": "@id",
+          "type": "@type",
+          "vocab": "https://raw.githubusercontent.com/tylerdotai/zk-voting-system/phase2/identity-foundation/schemas/polygonid/vocab#",
+          "xsd": "http://www.w3.org/2001/XMLSchema#",
+          "membershipId": {
+            "@id": "vocab:membershipId",
+            "@type": "xsd:string"
+          },
+          "membershipStatus": {
+            "@id": "vocab:membershipStatus",
+            "@type": "xsd:string"
+          },
+          "jurisdiction": {
+            "@id": "vocab:jurisdiction",
+            "@type": "xsd:string"
+          },
+          "memberSince": {
+            "@id": "vocab:memberSince",
+            "@type": "xsd:integer"
+          },
+          "votingEligible": {
+            "@id": "vocab:votingEligible",
+            "@type": "xsd:boolean"
+          }
+        }
+      }
+    }
+  ]
+}

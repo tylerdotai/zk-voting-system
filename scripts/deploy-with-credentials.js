@@ -1,72 +1,95 @@
 const hre = require("hardhat");
+const fs = require("fs");
+const path = require("path");
+
+function ensureDir(dirPath) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
 
 async function main() {
-  console.log("Deploying Credential-Gated Voting Contracts...\n");
+  console.log("Deploying ENS-Gated Rob's Rules Voting Contracts...\n");
   
   const [deployer] = await hre.ethers.getSigners();
   console.log("Deployer:", deployer.address);
   
-  // Deploy ZKVotingRobRulesWithCredentials first
+  // Deploy ZKVotingRobRulesWithCredentials
   console.log("\n1. Deploying ZKVotingRobRulesWithCredentials...");
   const ZKVotingRobRulesWithCredentials = await hre.ethers.getContractFactory("ZKVotingRobRulesWithCredentials");
   const votingContract = await ZKVotingRobRulesWithCredentials.deploy(
-    deployer.address, // govVerifier (placeholder - will be updated)
-    deployer.address, // initial chair
-    3 // choiceCount (Yes, No, Abstain)
+    deployer.address,  // initial chair
+    3                  // choiceCount (Yes, No, Abstain)
   );
   await votingContract.waitForDeployment();
   const votingAddress = await votingContract.getAddress();
   console.log(`   ZKVotingRobRulesWithCredentials: ${votingAddress}`);
   
-  // Deploy GovVerifier with the voting contract address
-  console.log("\n2. Deploying GovVerifier...");
-  const GovVerifier = await hre.ethers.getContractFactory("GovVerifier");
-  const govVerifier = await GovVerifier.deploy(votingAddress);
-  await govVerifier.waitForDeployment();
-  const govVerifierAddress = await govVerifier.getAddress();
-  console.log(`   GovVerifier: ${govVerifierAddress}`);
+  // Add deployer as first eligible voter
+  console.log("\n2. Adding deployer as first eligible voter...");
+  const addVoterTx = await votingContract.addVoter(deployer.address);
+  await addVoterTx.wait();
+  console.log(`   Voter added: ${deployer.address}`);
   
-  // Note: In this architecture, GovVerifier calls votingContract.setAllowedUser(user)
-  // after ZKP proof is verified. No need to update voting contract with GovVerifier address.
+  // Verify deployer is eligible
+  const isEligible = await votingContract.isEligible(deployer.address);
+  console.log(`   Deployer eligible: ${isEligible}`);
   
   // Save deployment info
-  const fs = require("fs");
-  const deploymentInfo = `
-# Credential-Gated Voting Deployment
-# Deployed at: ${new Date().toISOString()}
-# Network: ${hre.network.name}
-# Deployer: ${deployer.address}
+  const deploymentsDir = path.join(process.cwd(), "deployments");
+  ensureDir(deploymentsDir);
 
-ZKVOTING_WITH_CREDS_ADDRESS=${votingAddress}
-GOV_VERIFIER_ADDRESS=${govVerifierAddress}
-VOTING_CHAIR=${deployer.address}
+  const frontendConfig = {
+    network: hre.network.name,
+    chainId: hre.network.config.chainId || null,
+    votingAddress,
+    chair: deployer.address,
+    generatedAt: new Date().toISOString(),
+    notes: [
+      "ENS-gated voting — chair manages voter allowlist via addVoter/removeVoter.",
+      "No ENS Allowlist / ZK credential dependency.",
+      "ZK vote privacy layer can be layered in later (post-quantum ready)."
+    ]
+  };
 
-# For frontend
-NEXT_PUBLIC_VOTING_ADDRESS=${votingAddress}
-NEXT_PUBLIC_GOV_VERIFIER_ADDRESS=${govVerifierAddress}
+  const deploymentInfo = {
+    generatedAt: frontendConfig.generatedAt,
+    network: hre.network.name,
+    deployer: deployer.address,
+    contracts: {
+      voting: {
+        name: "ZKVotingRobRulesWithCredentials",
+        address: votingAddress,
+      },
+    },
+    frontend: frontendConfig,
+    notes: [
+      "ENS-gated Rob's Rules voting — no ZK credential dependency.",
+      "Chair manages voter registry via addVoter/removeVoter/addVoters.",
+      "ZKVotingRobRulesWithCredentials (Ownable) — owner can add/remove voters and update chair."
+    ]
+  };
 
-# Flow:
-# 1. User connects wallet
-# 2. Frontend generates QR with proof request (Polygon ID)
-# 3. User scans QR → Polygon ID app generates ZK proof
-# 4. Proof submitted to GovVerifier.submitZKPResponse()
-# 5. GovVerifier._afterProofSubmit() → votingContract.setAllowedUser(user)
-# 6. User now allowed → can create proposals / vote
-`;
-  fs.writeFileSync("contracts.json", deploymentInfo);
+  fs.writeFileSync(path.join(deploymentsDir, `${hre.network.name}-credentials.json`), JSON.stringify(deploymentInfo, null, 2));
+  fs.writeFileSync(path.join(deploymentsDir, `${hre.network.name}-frontend.json`), JSON.stringify(frontendConfig, null, 2));
+  fs.writeFileSync("contracts.json", JSON.stringify(deploymentInfo, null, 2));
   
   console.log("\n" + "=".repeat(60));
   console.log("DEPLOYMENT COMPLETE");
   console.log("=".repeat(60));
   console.log(`\nZKVotingRobRulesWithCredentials: ${votingAddress}`);
-  console.log(`GovVerifier:                       ${govVerifierAddress}`);
   console.log(`Chair (you):                        ${deployer.address}`);
-  console.log(`\nDeployment info saved to contracts.json`);
+  console.log(`Voting Rights:                     deployer = eligible voter`);
+  console.log("\nKey functions:");
+  console.log("- addVoter(address)     → grant voting rights (owner)");
+  console.log("- removeVoter(address)  → revoke voting rights (owner)");
+  console.log("- addVoters(address[])  → batch grant (owner)");
+  console.log("- isEligible(address)   → check voter status");
+  console.log("\nAll Rob's Rules actions (createProposal, second, amend, vote)");
+  console.log("require isEligibleVoter — no ENS Allowlist needed.");
+  
   console.log("\nNext steps:");
-  console.log("1. Set up Polygon ID issuer node");
-  console.log("2. Configure credential schema");
-  console.log("3. Build frontend QR code flow");
-  console.log("4. Update frontend with contract addresses");
+  console.log("1. Update frontend to use wallet connection + addVoter flow");
+  console.log("2. Update SPEC.md and README with new architecture");
+  console.log("3. Add ENS resolution for voter eligibility (optional future)");
 }
 
 main()

@@ -1,342 +1,208 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/tylerdotai/Best-README-Template/pull/73 -->
+<!-- START — Standard README for zk-voting-system -->
 <a id="readme-top"></a>
 
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
-[![Build][build-shield]][build-url]
-
-<!-- PROJECT LOGO -->
-<br />
 <div align="center">
-  <a href="https://github.com/tylerdotai/zk-voting-system">
-    <img src="logo.png" alt="Logo" width="80" height="80">
-  </a>
 
-  <h3 align="center">ZK DID Voting System</h3>
+# ZK Voting System
 
-  <p align="center">
-    Zero-Knowledge Decentralized Identity Blockchain Voting System for Fort Worth DAO
-    <br />
-    <a href="https://dao.fwtx.city/bounties/019a9ccd-485b-79d9-8441-d267fea1ad2b"><strong>View Bounty »</strong></a>
-    <br />
-    <br />
-    <a href="https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e">View ZKVoting on Etherscan</a>
-    ·
-    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/tylerdotai/zk-voting-system/issues">Request Feature</a>
-  </p>
+**ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia.**
+
+Built for the Fort Worth DAO. Fully onchain — votes are immutable and publicly verifiable.
+
+[![Build Status][build-shield]][build-url]
+[![License: MIT][license-shield]][license-url]
+[![Sepolia][network-shield]][network-url]
+
 </div>
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#about-the-project">About The Project</a></li>
-    <li><a href="#features">Features</a></li>
-    <li><a href="#contracts">Smart Contracts</a></li>
-    <li><a href="#frontend">Frontend</a></li>
-    <li><a href="#getting-started">Getting Started</a></li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#deployment">Deployment</a></li>
-    <li><a href="#polygon-id">Polygon ID Integration</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+---
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## Live Demo
 
-ZK DID Voting System is a blockchain-based voting application built for the [Fort Worth DAO](https://dao.fwtx.city/) HackFW hackathon. It implements a secure, privacy-preserving voting system using Zero-Knowledge Proofs and Decentralized Identities.
+**Contract:** [`0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`][etherscan] on Sepolia
 
-### Problem Solved
-- Combat voter fraud with cryptographic voter registration
-- Enable warp-speed ballots and referendums
-- Provide offline-capable voting with blockchain sync
-- Scale Rob's Rules parliamentary process for DAOs
-- Gate voting access with DID credentials (Polygon ID)
+| Page | Purpose | File |
+|------|---------|------|
+| Chair Dashboard | Create proposals, open/close voting, manage voters | `frontend/rob-rules.html` |
+| Voter Portal | View proposals, cast votes, call for division | `frontend/index.html` |
+| Registration | Check voter eligibility status | `frontend/verify.html` |
 
-### Live Contracts (Sepolia Testnet)
-| Contract | Address |
-|----------|---------|
-| ZKVoting | [0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e](https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e) |
-| ZKVotingWithCredentials | Contact for deployment |
-| ZKVotingRobRulesWithCredentials | Contact for deployment |
+> The chair address (`0x6A8C...`) holds admin rights on the live contract. Connect MetaMask to Sepolia to interact.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+---
 
-<!-- FEATURES -->
-## Features
+## What It Does
 
-### ZKVoting — Simple Blockchain Voting
-- ✅ **Blockchain Voting** — Votes recorded on Ethereum Sepolia testnet
-- ✅ **Offline Backup** — Vote offline, sync when back online
-- ✅ **Real-time Updates** — Live vote tallying from blockchain
-- ✅ **Wallet Integration** — MetaMask wallet connection
-- ✅ **Export/Import** — Backup votes as JSON files
-- ✅ **100% Test Coverage** — Comprehensive smart contract tests
-
-### ZKVotingRobRules — Rob's Rules Parliamentary Voting
-- ✅ **Full Parliamentary Flow** — Created → Seconded → Amendments → Voting → Passed/Failed
-- ✅ **Chair Role Management** — Designated chair creates and manages proposals
-- ✅ **Amendment System** — Members submit, chair approves amendments
-- ✅ **Timed Voting Periods** — Configurable voting duration
-- ✅ **Immutable Record** — All actions recorded on-chain
-
-### Polygon ID Integration — Credential-Gated Voting
-- ✅ **DID Verification** — Verify identity without revealing it
-- ✅ **ZK Proofs** — Zero-knowledge proofs for privacy
-- ✅ **Credential Schema** — Define what attributes are required to vote
-- ✅ **Issuer Integration** — Issue credentials to eligible voters
-- ✅ **Demo Mode** — Test without setting up issuer node
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTRACTS -->
-## Smart Contracts
-
-| Contract | Purpose | Credentials |
-|----------|---------|-------------|
-| `ZKVoting.sol` | Simple yes/no/abstain voting | No |
-| `ZKVotingRobRules.sol` | Rob's Rules parliamentary voting | No |
-| `ZKVotingWithCredentials.sol` | Simple voting + credential gate | ✅ |
-| `ZKVotingRobRulesWithCredentials.sol` | Rob's Rules + credential gate | ✅ |
-| `GovVerifier.sol` | Polygon ID ZK proof verifier | - |
-| `ZKPVerifier.sol` | Base verifier (from ETHGlobal) | - |
-
-### ZKVotingRobRules.sol — Proposal Lifecycle
+ZK Voting System implements full **Robert's Rules of Order** parliamentary procedure onchain:
 
 ```
-1. Chair creates proposal (Created)
-2. Chair seconds proposal (Seconded)
-3. Members submit amendments
-4. Chair approves amendments
-5. Chair opens voting period
-6. Members vote on motion (Yes/No/Abstain)
-7. After voting ends → Finalized (Passed/Failed)
+Created → Seconded → Amendments → Voting → Passed / Failed
 ```
 
-### Credential-Gated Flow (Polygon ID)
-
-```
-User → Polygon ID App → ZK Proof → GovVerifier → Voting Contract (allowedUsers[])
-                                        ↓
-                        setAllowedUser(wallet) called
-                                        ↓
-                        User can now create proposals / vote
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- FRONTEND -->
-## Frontend
-
-| File | Purpose |
-|------|---------|
-| `frontend/index.html` | Main landing page |
-| `frontend/rob-rules.html` | Rob's Rules parliamentary voting UI |
-| `frontend/verify.html` | Polygon ID credential verification |
-
-### Demo Mode
-
-For testing without setting up Polygon ID issuer:
-- Go to `verify.html`
-- Click **"Demo Verify"**
-- This directly calls `setAllowedUser()` on the contract
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- MetaMask browser extension
-- Docker (for Polygon ID issuer, optional)
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone https://github.com/tylerdotai/zk-voting-system.git
-cd zk-voting-system
-```
-
-2. Install dependencies
-```bash
-npm install
-```
-
-3. Compile contracts
-```bash
-npx hardhat compile
-```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- USAGE -->
-## Usage
-
-### Quick Start (Local Hardhat)
-
-1. Start local Hardhat node:
-```bash
-npx hardhat node
-```
-
-2. In another terminal, deploy credential-gated contracts:
-```bash
-npx hardhat run scripts/deploy-with-credentials.js --network hardhat
-```
-
-3. Start local frontend:
-```bash
-cd frontend
-python3 -m http.server 8080
-```
-
-4. Open in browser:
-   - Voting: `http://localhost:8080/rob-rules.html`
-   - Verification: `http://localhost:8080/verify.html`
-
-5. Connect MetaMask to Hardhat local network:
-   - Network name: `Hardhat Local`
-   - RPC URL: `http://localhost:8545`
-   - Chain ID: `31337`
-
-### Demo Flow
-
-1. Go to `verify.html` → Connect wallet → Click **"Demo Verify"**
-2. Go to `rob-rules.html` → Full access to create proposals and vote
-
-### Full Polygon ID Flow
-
-1. Set up Polygon ID issuer node (see Polygon ID Integration section)
-2. Configure credential schema
-3. Replace demo verification with real QR code flow
-4. Users scan QR → Polygon ID verifies → `setAllowedUser()` called
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- DEPLOYMENT -->
-## Deployment
-
-### Deploy to Sepolia
-
-```bash
-export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY"
-export PRIVATE_KEY="YOUR-PRIVATE-KEY"
-
-# Deploy basic contracts
-npx hardhat run scripts/deploy.js --network sepolia
-npx hardhat run scripts/deploy-rob-rules.js --network sepolia
-
-# Deploy credential-gated contracts
-npx hardhat run scripts/deploy-with-credentials.js --network sepolia
-```
-
-### Update Frontend
-
-After deployment, update `CONTRACT_ADDRESS` in the HTML files:
-- `frontend/rob-rules.html`
-- `frontend/verify.html`
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- POLYGON ID -->
-## Polygon ID Integration
+- **Any eligible voter** can create proposals, second motions, submit amendments, and vote
+- **Chair** manages the voter allowlist, opens/closes voting, and approves amendments
+- **Members** can call for a division (recorded count) or request reconsideration
+- All state changes are permanent and publicly verifiable on Ethereum
 
 ### Architecture
 
 ```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Frontend      │────▶│   GovVerifier   │────▶│ Voting Contract │
-│  (verify.html)  │ QR  │  (ZK Verifier)  │     │ (allowedUsers)  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+Wallet connects → isEligible(address) check → Rob's Rules parliamentary flow → onchain state
 ```
 
-### Setup (Production)
+**Stack:** Solidity · Hardhat · Ethers.js v5 · Vanilla HTML/CSS/JS · PWA
 
-1. **Set up Polygon ID issuer node**
-   ```bash
-   git clone https://github.com/Abhishek-2416/PolygonId-IssuerNode
-   cd PolygonId-IssuerNode
-   cp .env-api.sample .env-api
-   cp .env-issuer.sample .env-issuer
-   # Configure ISSUER_ETHEREUM_URL and ISSUER_SERVER_URL
-   make up
-   make run
-   ```
+---
 
-2. **Create credential schema**
-   - Access issuer UI at `http://localhost:3001`
-   - Define what attributes users must prove
+## Smart Contract
 
-3. **Configure frontend**
-   - Update `ISSUER_DID` in `verify.html`
-   - Update `SCHEMA_URL` and `SCHEMA_TYPE`
+| | |
+|---|---|
+| **Network** | Ethereum Sepolia (testnet) |
+| **Address** | [`0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`][etherscan] |
+| **Standard** | Rob's Rules of Order (12th Edition) |
 
-4. **Deploy to production**
-   - Deploy contracts to mainnet
-   - Update contract addresses in frontend
+---
 
-### Reference Implementation
+## Quick Start
 
-Based on [ETHGlobal ZK Vote](https://ethglobal.com/showcase/zk-vote-9ipgt) project.
+```bash
+# Clone and install
+git clone https://github.com/tylerdotai/zk-voting-system.git
+cd zk-voting-system
+npm install
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+# Compile contracts
+npx hardhat compile
 
-<!-- ROADMAP -->
-## Roadmap
+# Run tests (58 tests covering full Rob's Rules flow)
+npx hardhat test
+```
 
-- [x] ZKVoting contract with basic voting
-- [x] Rob's Rules parliamentary flow (ZKVotingRobRules)
-- [x] Polygon ID credential-gated contracts
-- [x] Credential verification UI (verify.html)
-- [ ] Real ZK proof verification integration
-- [ ] DID integration (Polygon ID issuer node)
-- [ ] Multi-chain support
-- [ ] Mobile app
-- [ ] Post-quantum cryptography
+### Local Frontend
 
-See the [open issues](https://github.com/tylerdotai/zk-voting-system/issues) for full details.
+```bash
+cd frontend
+python3 -m http.server 8080
+# Open http://localhost:8080/rob-rules.html (chair) or index.html (voter)
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Connect MetaMask to Live Contract
 
-<!-- LICENSE -->
+1. Install [MetaMask](https://metamask.io)
+2. Switch to **Sepolia testnet**
+3. Get Sepolia ETH at [alchemy.com/faucet](https://www.alchemy.com/faucet/ethereum/sepolia)
+4. Chair adds your address to the voter allowlist
+
+---
+
+## Features
+
+### Rob's Rules Parliamentary Flow
+
+| Stage | Action | Who |
+|-------|--------|-----|
+| Create | `createProposal(description)` | Any eligible voter |
+| Second | `secondProposal(proposalId)` | Any eligible voter (not proposer) |
+| Amend | `submitAmendment(proposalId, text)` | Any eligible voter |
+| Approve | `approveAmendment(proposalId, id)` | Chair only |
+| Open Voting | `openVoting(proposalId, duration)` | Chair only |
+| Call for Division | `callForDivision(proposalId)` | Any voter |
+| Vote | `voteOnMotion(proposalId, choice)` | Any eligible voter |
+| Request Reconsider | `reconsider(proposalId)` | Voter who cast a vote |
+| Reopen Voting | `reopenVoting(proposalId)` | Chair only |
+| Finalize | `finalizeProposal(proposalId)` | Anyone |
+
+### Voter Eligibility
+
+- Chair-managed allowlist via `addVoter(address)`
+- `isEligible(address)` — public view function
+- ENS domain resolution reserved for future self-service eligibility
+
+### PWA
+
+- Installable on mobile and desktop
+- Service worker caches static assets for offline viewing
+- Works offline — blockchain syncs when back online
+
+---
+
+## Project Structure
+
+```
+zk-voting-system/
+├── contracts/
+│   └── ZKVotingRobRulesWithCredentials.sol   # Main voting contract
+├── frontend/
+│   ├── index.html          # Voter portal
+│   ├── rob-rules.html      # Chair dashboard
+│   ├── verify.html         # Voter registration status
+│   ├── manifest.json       # PWA manifest
+│   └── sw.js               # Service worker
+├── scripts/
+│   └── deploy-with-credentials.js  # Hardhat deploy script
+├── test/
+│   └── ZKVotingRobRulesWithCredentials.test.js   # 58 passing tests
+├── docs/
+│   ├── demo-runbook.md     # 15-minute demo script
+│   └── test-accounts.md    # MetaMask multi-account setup
+├── SPEC.md
+├── WHITEPAPER.md
+└── README.md
+```
+
+---
+
+## Development
+
+```bash
+# Compile
+npx hardhat compile
+
+# Test
+npx hardhat test
+
+# Deploy to Sepolia
+export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY"
+export PRIVATE_KEY="your_deployer_private_key"
+npx hardhat run scripts/deploy-with-credentials.js --network sepolia
+```
+
+---
+
+## Demo Script
+
+The `docs/demo-runbook.md` has a complete 15-minute demo script for showing the system at a DAO meeting:
+
+1. Show contract on Etherscan (2 min)
+2. Chair creates proposal → Member seconds (3 min)
+3. Member submits amendment → Chair approves (3 min)
+4. Chair opens voting → Members vote → Call for Division (4 min)
+5. Reconsideration + Reopen → Finalize + Onchain proof (3 min)
+
+---
+
+## Grant Context
+
+Built for the **Fort Worth DAO HackFW hackathon** — $2,500 grant for a ZK DID voting system. Key constraints satisfied:
+
+- ✅ Post-quantum ready (documented, future layer)
+- ✅ No third-party dependency (allowlist-based)
+- ✅ Offline-capable (PWA service worker)
+- ✅ Real onchain governance (Ethereum Sepolia)
+
+---
+
 ## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+MIT — see [LICENSE](./LICENSE)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- CONTACT -->
-## Contact
-
-- **Author:** Tyler Delano
-- **Email:** tyler.delano@icloud.com
-- **DAO:** [Fort Worth DAO](https://dao.fwtx.city/)
-- **Project Link:** [https://github.com/tylerdotai/zk-voting-system](https://github.com/tylerdotai/zk-voting-system)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- MARKDOWN LINKS & IMAGES -->
-[contributors-shield]: https://img.shields.io/badge/contributors-1-blue?style=for-the-badge
-[contributors-url]: https://github.com/tylerdotai/zk-voting-system/graphs/contributors
-[forks-shield]: https://img.shields.io/badge/forks-0-blue?style=for-the-badge
-[forks-url]: https://github.com/tylerdotai/zk-voting-system/network/members
-[stars-shield]: https://img.shields.io/badge/stars-0-blue?style=for-the-badge
-[stars-url]: https://github.com/tylerdotai/zk-voting-system/stargazers
-[issues-shield]: https://img.shields.io/badge/issues-0-blue?style=for-the-badge
-[issues-url]: https://github.com/tylerdotai/zk-voting-system/issues
-[license-shield]: https://img.shields.io/badge/license-MIT-blue?style=for-the-badge
-[license-url]: https://github.com/tylerdotai/zk-voting-system/src/branch/main/LICENSE
-[build-shield]: https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge
+[build-shield]: https://img.shields.io/github/actions/workflow/status/tylerdotai/zk-voting-system/test.yml?branch=main&label=build
 [build-url]: https://github.com/tylerdotai/zk-voting-system/actions
+[license-shield]: https://img.shields.io/badge/license-MIT-blue.svg
+[license-url]: https://github.com/tylerdotai/zk-voting-system/blob/main/LICENSE
+[network-shield]: https://img.shields.io/badge/network-Sepolia-3C3C3D?logo=ethereum
+[network-url]: https://sepolia.etherscan.io
+[etherscan]: https://sepolia.etherscan.io/address/0xb3254AB74e5103F7374eEcDb57078eB10388CaC3
