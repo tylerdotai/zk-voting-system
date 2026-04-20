@@ -773,19 +773,19 @@
     }
     
     async function openVotingCustom() {
-      const days = prompt('Enter voting duration in days:', '3');
-      if (!days) return;
-      const duration = parseInt(days) * 24 * 60 * 60;
-      if (duration < 60 || duration > 7 * 24 * 60 * 60) {
-        showToast('Duration must be between 1 minute and 7 days', true);
+      const secs = prompt('Enter voting duration in SECONDS (e.g. 60 for 1 minute, 300 for 5 minutes):', '60');
+      if (!secs) return;
+      const duration = parseInt(secs, 10);
+      if (isNaN(duration) || duration < 10 || duration > 7 * 24 * 60 * 60) {
+        showToast('Duration must be between 10 seconds and 7 days', true);
         return;
       }
       if (currentProposalId === null) return;
       try {
         const tx = await contract.openVoting(currentProposalId, duration);
-        showTx(tx.hash, 'Voting Opened');
+        showTx(tx.hash, 'Voting Opened for ' + secs + 's');
         await tx.wait();
-        showToast('Voting is now open');
+        showToast('Voting is now open for ' + secs + 's — wait for timer to expire before finalizing');
         await loadProposalDetail(currentProposalId);
         await loadProposals();
       } catch (err) {
