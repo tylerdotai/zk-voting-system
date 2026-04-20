@@ -11,14 +11,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Vercel
-        run: |
-          # Install Vercel CLI
-          npm install -g vercel
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
-      - name: Deploy to Vercel
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel (Production)
         run: |
-          vercel --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel --prod --yes \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --org-id=${{ secrets.VERCEL_ORG_ID }} \
+            --project-id=${{ secrets.VERCEL_PROJECT_ID }} \
+            --env VITE_SEPOLIA_RPC=https://eth-sepolia.g.alchemy.com/v2/sC-QFWsXNmQSRD5xmfSu3
+        working-directory: .
