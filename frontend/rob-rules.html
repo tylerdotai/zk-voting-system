@@ -425,6 +425,34 @@
     #txBanner .tx-status { color: var(--state-voting); font-size: 0.8rem; margin-top: 0.25rem; }
     
     .hidden { display: none; }
+
+    /* Chair Wallet Gate */
+    .wallet-gate {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.97);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+    .wallet-gate.hidden { display: none; }
+    .gate-content {
+      text-align: center;
+      max-width: 440px;
+      padding: 3rem 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--fw-border);
+      border-radius: 16px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+    }
+    .gate-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .gate-content h2 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.75rem; }
+    .gate-content p { color: var(--fw-gray); font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .gate-note { font-size: 0.8rem !important; color: var(--fw-gray) !important; margin-top: 0.5rem !important; }
+    .gate-connect-btn { margin-top: 1.5rem; padding: 0.75rem 2rem; font-size: 1rem; }
+    .gate-error { color: #ef4444; margin-top: 1rem; font-size: 0.9rem; }
     
     /* Responsive — on big screen keep it centered and readable */
     @media (min-width: 1200px) {
@@ -433,6 +461,20 @@
   </style>
 </head>
 <body>
+  <!-- Chair Access Gate -->
+  <div id="walletGate" class="wallet-gate">
+    <div class="gate-content">
+      <div class="gate-icon">🔐</div>
+      <h2>Chair Access Required</h2>
+      <p>Connect your wallet to access the Chair Dashboard.</p>
+      <p class="gate-note">Only the chair address can manage proposals and voters.</p>
+      <button id="gateConnectBtn" class="action-btn primary" onclick="connectWallet()">
+        Connect Wallet
+      </button>
+      <p id="gateError" class="gate-error hidden"></p>
+    </div>
+  </div>
+
   <div class="header">
     <div class="header-top">
       <h1>Rob's Rules Voting — Chair Dashboard</h1>
@@ -618,15 +660,29 @@
         document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
         
         const chair = await contract.chair();
-        if (chair.toLowerCase() === userAddress.toLowerCase()) {
-          document.getElementById('voterMgmt').style.display = 'block';
-          await loadVoterList();
+
+        // GATE: Only the chair can access this dashboard
+        if (chair.toLowerCase() !== userAddress.toLowerCase()) {
+          document.getElementById('gateError').textContent =
+            'Connected wallet is not the chair. Chair address: ' + chair;
+          document.getElementById('gateError').classList.remove('hidden');
+          return;
         }
-        
+
+        // Chair verified — hide gate and load content
+        document.getElementById('walletGate').classList.add('hidden');
+        document.getElementById('voterMgmt').style.display = 'block';
+        await loadVoterList();
+
+        document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
+        document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
+
         await checkVoterStatus();
         await loadProposals();
       } catch (err) {
-        showToast('Error: ' + (err.reason || err.message), true);
+        const gateErr = document.getElementById('gateError');
+        gateErr.textContent = 'Error: ' + (err.reason || err.message);
+        gateErr.classList.remove('hidden');
       }
     }
     
@@ -1130,7 +1186,7 @@
       window.ethereum.on('accountsChanged', () => location.reload());
     }
     
-    connectWallet();
+    // Wallet connection is triggered by the gate UI — user must click Connect Wallet
 
     // SSE — live vote count updates for all browsers (no MetaMask needed for chair)
     const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
