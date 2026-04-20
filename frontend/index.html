@@ -478,7 +478,7 @@
         });
 
         // SSE — live updates for all browsers (no MetaMask needed)
-        const SSE_BASE = import.meta.env.VITE_SSE_BASE || `${window.location.protocol}//${window.location.hostname}:3004`;
+        const SSE_BASE = `${window.location.protocol}//${window.location.hostname}:3004`;
         let sseConn = null;
         function connectSSE() {
           if (!sseConn || sseConn.readyState === WebSocket.CLOSED) {
