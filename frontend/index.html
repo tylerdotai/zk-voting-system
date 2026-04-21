@@ -553,6 +553,46 @@
     #verifierStatus.pending { color: #F5A623; }
 
 
+    @media (max-width: 600px) {
+      html, body { overflow-x: hidden; }
+      .main {
+        padding: 1rem;
+        padding-bottom: 8rem; /* space for verifier bar */
+      }
+      .status-bar {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+      }
+      .voter-count-bar {
+        padding: 0.6rem 0.75rem;
+      }
+      .voter-count-label { font-size: 0.65rem; }
+      .voter-count-numbers { font-size: 0.75rem; }
+      .proposals-title {
+        font-size: 0.7rem;
+        margin-bottom: 0.5rem;
+      }
+      .proposal-card {
+        padding: 1rem;
+      }
+      .proposal-id { font-size: 0.6rem; }
+      .proposal-desc {
+        font-size: 0.9rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .proposal-stats {
+        gap: 0.75rem;
+        font-size: 0.75rem;
+      }
+      .state-badge { font-size: 0.55rem; padding: 0.2rem 0.5rem; }
+      .connect-btn { padding: 0.6rem 1rem; font-size: 0.8rem; }
+      .verifier-bar .verifier-item { padding: 6px 8px; }
+      .verifier-bar .verifier-label { font-size: 0.5rem; }
+      .verifier-bar .verifier-value { font-size: 0.65rem; }
+    }
     @media (min-width: 900px) {
       .proposal-desc { font-size: 1.35rem; }
     }
@@ -835,7 +875,9 @@
           document.getElementById('registrationModal').classList.remove('hidden');
           return; // halt flow until registered
         }
-        // Show welcome back badge
+        // Show welcome back badge (remove any existing first)
+        const existingWb = document.querySelector('.welcome-back');
+        if (existingWb) existingWb.remove();
         const wbDiv = document.createElement('div');
         wbDiv.className = 'welcome-back';
         wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + existing.name + '</div><div class="wb-role">' + existing.role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
@@ -1253,6 +1295,8 @@
       const role = document.querySelector('input[name="voterRole"]:checked').value;
       setVoterData(userAddress, { name, role });
       document.getElementById('registrationModal').classList.add('hidden');
+      const existingWb2 = document.querySelector('.welcome-back');
+      if (existingWb2) existingWb2.remove();
       const wbDiv = document.createElement('div');
       wbDiv.className = 'welcome-back';
       wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + name + '</div><div class="wb-role">' + role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
