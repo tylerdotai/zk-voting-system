@@ -93,4 +93,4 @@ template Vote() {
     commit.commitment === commitment;
 }
 
-component main = Vote();
+component main {public [proposal_id, nullifier_hash, commitment]} = Vote();

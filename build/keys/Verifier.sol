@@ -18,7 +18,7 @@
     along with snarkJS. If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.19;
 
 contract Groth16Verifier {
     // Scalar field size
@@ -37,14 +37,23 @@ contract Groth16Verifier {
     uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint256 constant gammay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint256 constant deltax1 = 7304420494311147583238050918797924194954311733899306764489455625365010695796;
-    uint256 constant deltax2 = 1784767090950936413629495741814503024630724960539785423432745707962621969084;
-    uint256 constant deltay1 = 1990097715886547126403911086639269997518832150623089459018544291200384622028;
-    uint256 constant deltay2 = 4359253631691452267250250510006783175903644011682587957565765410737234103965;
+    uint256 constant deltax1 = 1603007983600794598579242113398030115317219322983807701477891959658807049775;
+    uint256 constant deltax2 = 6352257945328486356129528168547907735040019103293227042640186170423028992901;
+    uint256 constant deltay1 = 21624279065645543020123890372733326693580238497792224185328490502410837962670;
+    uint256 constant deltay2 = 19119679510017601254277042262988870396480682690186072664329752180135943255817;
 
     
     uint256 constant IC0x = 7181666628053618627774490311736059178840794786948559251674291094698832806965;
     uint256 constant IC0y = 7655659092647034175618008266311867030792830426551247098991136650546762794272;
+    
+    uint256 constant IC1x = 20835861738287925887379306355697965158552441134348074971410617664719805947973;
+    uint256 constant IC1y = 18824426217986954954470651188501781507780561014427419122634526954864458427864;
+    
+    uint256 constant IC2x = 17211424329684604360584581540781182069546182097860903050522832886836112618673;
+    uint256 constant IC2y = 13966265420279164192321504154932748148087102658802291270844111020289563338231;
+    
+    uint256 constant IC3x = 17572642147532780720150536852761589040065240655681003750149168264939705610367;
+    uint256 constant IC3y = 16769152223802020034759250569648340756444864335651317771449112988771706992124;
     
  
     // Memory data
@@ -53,7 +62,7 @@ contract Groth16Verifier {
 
     uint16 constant pLastMem = 896;
 
-    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[0] calldata _pubSignals) public view returns (bool) {
+    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[3] calldata _pubSignals) public view returns (bool) {
         assembly {
             function checkField(v) {
                 if iszero(lt(v, r)) {
@@ -96,6 +105,12 @@ contract Groth16Verifier {
                 mstore(add(_pVk, 32), IC0y)
 
                 // Compute the linear combination vk_x
+                
+                g1_mulAccC(_pVk, IC1x, IC1y, calldataload(add(pubSignals, 0)))
+                
+                g1_mulAccC(_pVk, IC2x, IC2y, calldataload(add(pubSignals, 32)))
+                
+                g1_mulAccC(_pVk, IC3x, IC3y, calldataload(add(pubSignals, 64)))
                 
 
                 // -A
@@ -149,6 +164,12 @@ contract Groth16Verifier {
             mstore(0x40, add(pMem, pLastMem))
 
             // Validate that all evaluations ∈ F
+            
+            checkField(calldataload(add(_pubSignals, 0)))
+            
+            checkField(calldataload(add(_pubSignals, 32)))
+            
+            checkField(calldataload(add(_pubSignals, 64)))
             
 
             // Validate all evaluations
