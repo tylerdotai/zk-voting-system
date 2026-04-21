@@ -4,3 +4,13 @@ artifacts/
 cache/
 .env
 .vercel
+
+# ZK circuit build artifacts (safe to regenerate)
+build/ptau/
+build/keys/0000.zkey
+build/keys/0001.zkey
+build/keys/verification_key.json
+circuits/vote/vote.r1cs
+circuits/vote/vote.sym
+circuits/vote/vote_constraints.json
+
