@@ -113,27 +113,6 @@
     .header .faucet-link:hover { color: var(--amber); }
     .header .faucet-link.hidden { display: none; }
 
-    /* Chair floating badge */
-    .chair-badge {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--amber);
-      color: #1C1C1E;
-      padding: 0.6rem 1rem;
-      border-radius: var(--radius-btn);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-decoration: none;
-      box-shadow: var(--shadow);
-      z-index: 50;
-      transition: all 0.15s;
-      letter-spacing: 0.03em;
-    }
-    .chair-badge:hover { background: #f0b030; transform: translateY(-1px); }
-
-
     /* Proposal meta */
     .proposal-meta {
       font-size: 0.7rem;
@@ -680,7 +659,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
-  <a class="chair-badge" href="rob-rules.html">👑 Chair Dashboard</a>
+
   <div id="txBanner">
     <div class="tx-label" id="txLabel">Your vote is onchain</div>
     <div class="tx-hash" id="txHash"></div>
