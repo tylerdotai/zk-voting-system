@@ -2,205 +2,379 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#1C1C1E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rob's Rules Voting — Voter Portal</title>
   <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg-primary: #030816;
-      --bg-card: #0c1b3d;
-      --accent-blue: #2563eb;
-      --accent-light: #5BA2F1;
-      --text-primary: #ffffff;
-      --text-secondary: #94a3b8;
-      --fw-border: #1D335F;
-      --state-created: #9ca3af;
-      --state-seconded: #f59e0b;
-      --state-voting: #4ADE80;
-      --state-passed: #10b981;
-      --state-failed: #ef4444;
+      --bg: #1C1C1E;
+      --card: #252528;
+      --card-hover: #2a2a2e;
+      --amber: #F5A623;
+      --amber-dim: rgba(245, 166, 35, 0.15);
+      --amber-glow: 0 0 12px rgba(245, 166, 35, 0.4);
+      --green: #22C55E;
+      --red: #EF4444;
+      --slate: #64748B;
+      --slate-dim: rgba(100, 116, 139, 0.2);
+      --slate-glow: 0 0 10px rgba(100, 116, 139, 0.35);
+      --text: #FFFFFF;
+      --text-muted: #E5E5E5;
+      --text-dim: #9CA3AF;
+      --border: rgba(255,255,255,0.07);
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+      --radius-card: 8px;
+      --radius-btn: 6px;
+      --radius-badge: 4px;
     }
-    
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
+      line-height: 1.5;
     }
-    
+
+    h1, h2, h3, h4, .state-badge, .proposal-id, .label, .connect-btn, .vote-btn, .action-btn {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* Header */
     .header {
-      background: var(--bg-card);
-      color: #fff;
-      padding: 1.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      border-bottom: 1px solid var(--fw-border);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
     }
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      color: var(--text);
     }
     .header-nav {
       display: flex;
       gap: 0.5rem;
     }
     .header-nav a {
-      font-size: 0.8rem;
-      color: var(--accent-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--amber);
       text-decoration: none;
       padding: 0.3rem 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--accent-blue);
-      background: rgba(37, 99, 235, 0.15);
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--amber);
+      background: var(--amber-dim);
       transition: all 0.2s;
+      letter-spacing: 0.03em;
     }
     .header-nav a:hover {
-      background: rgba(37, 99, 235, 0.35);
-      color: #fff;
+      background: var(--amber);
+      color: #1C1C1E;
     }
     .header .network {
-      font-size: 0.75rem;
-      color: var(--accent-light);
-      background: rgba(37, 99, 235, 0.2);
-      padding: 0.25rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      background: var(--amber-dim);
+      padding: 0.2rem 0.75rem;
       border-radius: 20px;
-      border: 1px solid var(--accent-blue);
+      border: 1px solid rgba(245,166,35,0.3);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
-    
+    .header .contract-link {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--slate);
+      text-decoration: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+    .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
+    .header .wallet-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .wallet-badge.disconnected { color: var(--slate); }
+    .header .faucet-link {
+      font-size: 0.65rem;
+      color: var(--slate);
+      text-decoration: none;
+      margin-left: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .faucet-link:hover { color: var(--amber); }
+    .header .faucet-link.hidden { display: none; }
+
+    /* Chair floating badge */
+    .chair-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--amber);
+      color: #1C1C1E;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-btn);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      z-index: 50;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+    .chair-badge:hover { background: #f0b030; transform: translateY(-1px); }
+
+
+    /* Proposal meta */
+    .proposal-meta {
+      font-size: 0.7rem;
+      color: var(--slate);
+      margin-bottom: 0.4rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* Main */
     .main {
       max-width: 900px;
       margin: 0 auto;
       padding: 2rem;
     }
-    
+
     /* Status Bar */
     .status-bar {
-      background: var(--bg-card);
-      border: 1px solid var(--fw-border);
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
       padding: 1.25rem 1.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
     }
     .connect-btn {
-      background: var(--accent-blue);
-      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--amber);
+      color: #1C1C1E;
       border: none;
-      padding: 0.75rem 1.5rem;
-      font-size: 1rem;
+      padding: 0.65rem 1.5rem;
+      font-size: 0.85rem;
       font-weight: 700;
-      border-radius: 8px;
+      border-radius: var(--radius-btn);
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .connect-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .wallet-addr {
-      font-family: monospace;
-      font-size: 0.9rem;
-      color: var(--accent-light);
-    }
-    
-    /* Proposal Cards */
-    .proposals-title {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 1rem;
-    }
-    
-    .proposal-card {
-      background: var(--bg-card);
-      border: 2px solid var(--fw-border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
-      cursor: pointer;
       transition: all 0.15s;
     }
-    .proposal-card:hover { border-color: var(--accent-blue); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2); }
-    .proposal-card.selected { border-color: var(--accent-blue); border-width: 3px; }
-    .proposal-card.voting-open { border-left: 6px solid var(--state-voting); }
-    .proposal-card.closed { opacity: 0.7; }
-    
+    .connect-btn:hover:not(:disabled) {
+      background: #f0b030;
+      transform: translateY(-1px);
+    }
+    .connect-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .wallet-addr {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--amber);
+    }
+
+    /* Voter Count Bar */
+    .voter-count-bar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 0.9rem 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .voter-count-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+    .voter-count-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .voter-count-fill {
+      height: 100%;
+      background: var(--amber);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+    .voter-count-numbers {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--amber);
+      white-space: nowrap;
+    }
+
+    /* Proposals */
+    .proposals-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .proposal-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: var(--shadow);
+      border-left: 3px solid transparent;
+    }
+    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); }
+    .proposal-card.selected { border-color: var(--amber); }
+    /* State borders */
+    .proposal-card.state-0 { border-left-color: transparent; }
+    .proposal-card.state-1 { border-left-color: var(--slate); }
+    .proposal-card.state-2 { border-left-color: var(--amber); }
+    .proposal-card.state-3,
+    .proposal-card.state-4 { opacity: 0.7; border-left-color: transparent; }
+
     .proposal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
     }
     .proposal-id {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
     .state-badge {
-      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.35rem 1rem;
-      border-radius: 20px;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-badge);
       color: #fff;
     }
-    .state-0 { background: var(--state-created); }
-    .state-1 { background: var(--state-seconded); }
-    .state-2 { background: var(--state-voting); }
-    .state-3 { background: var(--state-passed); }
-    .state-4 { background: var(--state-failed); }
-    
-    .proposal-desc {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-      margin-bottom: 1rem;
-      line-height: 1.3;
+    .state-badge.state-0 { background: var(--slate); color: #fff; }
+    .state-badge.state-1 {
+      background: var(--slate);
+      color: #fff;
+      box-shadow: var(--slate-glow);
     }
-    
+    .state-badge.state-2 {
+      background: var(--amber);
+      color: #1C1C1E;
+      animation: pulse-amber 2s infinite;
+    }
+    .state-badge.state-3 { background: var(--green); color: #1C1C1E; }
+    .state-badge.state-4 { background: var(--red); color: #fff; }
+
+    @keyframes pulse-amber {
+      0%, 100% { box-shadow: 0 0 6px rgba(245,166,35,0.4); }
+      50% { box-shadow: 0 0 16px rgba(245,166,35,0.7); }
+    }
+
+    .proposal-desc {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .proposal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
     .proposal-votes {
       display: flex;
-      gap: 2.5rem;
-      font-size: 1.1rem;
-      color: var(--text-secondary);
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
     }
     .proposal-votes strong {
-      font-weight: 800;
-      font-size: 1.5rem;
-      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text-muted);
     }
-    .proposal-votes span { display: flex; align-items: baseline; gap: 0.5rem; }
-    
+    .proposal-votes span { display: flex; align-items: baseline; gap: 0.4rem; }
+
+    .countdown {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--amber);
+      background: var(--amber-dim);
+      padding: 0.2rem 0.6rem;
+      border-radius: var(--radius-badge);
+      border: 1px solid rgba(245,166,35,0.2);
+    }
+    .countdown.urgent { color: var(--red); background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.3); }
+
     /* Vote Section */
     .vote-section {
-      background: var(--bg-card);
-      border: 2px solid var(--accent-blue);
-      border-radius: 12px;
-      padding: 2rem;
+      background: var(--card);
+      border: 2px solid var(--amber);
+      border-radius: var(--radius-card);
+      padding: 1.75rem;
       margin: 1.5rem 0;
+      box-shadow: 0 4px 20px rgba(245,166,35,0.1);
     }
     .vote-section h3 {
-      font-size: 1.75rem;
+      font-size: 1.25rem;
       font-weight: 700;
       margin-bottom: 1.5rem;
+      color: var(--text);
     }
-    
+
     /* Large Vote Counts */
     .vote-display {
       display: grid;
@@ -209,133 +383,217 @@
       margin-bottom: 1.5rem;
     }
     .vote-cell {
-      background: var(--bg-primary);
-      border: 1px solid var(--fw-border);
-      border-radius: 12px;
-      padding: 1.5rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.25rem;
       text-align: center;
     }
     .vote-cell .count {
-      font-size: 4rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3.5rem;
       font-weight: 800;
       line-height: 1;
+      color: var(--text);
     }
     .vote-cell .label {
-      font-size: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--text-dim);
       margin-top: 0.5rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
     }
-    .vote-cell.yes .count { color: var(--state-passed); }
-    .vote-cell.no .count { color: var(--state-failed); }
-    .vote-cell.abstain .count { color: var(--accent-light); }
-    
-    /* Vote Buttons — BIG AND READABLE */
+    .vote-cell.yes .count { color: var(--green); }
+    .vote-cell.no .count { color: var(--red); }
+    .vote-cell.abstain .count { color: var(--slate); }
+
+    /* Vote Buttons */
     .vote-buttons {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-bottom: 1rem;
+      gap: 0.75rem;
     }
     .vote-btn {
-      padding: 1.5rem;
-      font-size: 1.25rem;
-      font-weight: 800;
+      padding: 1.1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-btn);
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
     }
-    .vote-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .vote-btn.yes { background: var(--state-voting); color: #030816; }
-    .vote-btn.yes:hover:not(:disabled) { background: #22c55e; transform: translateY(-2px); }
-    .vote-btn.no { background: var(--state-failed); color: #fff; }
+    .vote-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+    .vote-btn.yes { background: var(--green); color: #1C1C1E; }
+    .vote-btn.yes:hover:not(:disabled) { background: #1db954; transform: translateY(-2px); }
+    .vote-btn.no { background: var(--red); color: #fff; }
     .vote-btn.no:hover:not(:disabled) { background: #dc2626; transform: translateY(-2px); }
-    .vote-btn.abstain { background: var(--accent-blue); color: #fff; }
-    .vote-btn.abstain:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-2px); }
-    
+    .vote-btn.abstain { background: var(--slate); color: #fff; }
+    .vote-btn.abstain:hover:not(:disabled) { background: #4a5d6e; transform: translateY(-2px); }
+
+    .vote-btn .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #1C1C1E;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .vote-btn.loading .spinner { display: block; }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     .vote-status {
       text-align: center;
-      font-size: 1rem;
-      color: var(--text-secondary);
+      font-size: 0.9rem;
+      color: var(--text-dim);
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid var(--fw-border);
+      border-top: 1px solid var(--border);
+      font-family: 'IBM Plex Mono', monospace;
     }
-    
+
     .close-btn {
-      background: var(--bg-primary);
-      border: 1px solid var(--fw-border);
-      color: var(--text-secondary);
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0.6rem 1.25rem;
+      border-radius: var(--radius-btn);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
       margin-top: 1rem;
+      transition: all 0.15s;
     }
-    .close-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
-    
+    .close-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+    /* Onchain Banner */
+    #txBanner {
+      position: fixed;
+      top: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      border: 2px solid var(--amber);
+      border-radius: var(--radius-card);
+      padding: 0.75rem 1.5rem;
+      font-size: 0.85rem;
+      z-index: 200;
+      display: none;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 4px 24px rgba(245,166,35,0.15);
+    }
+    #txBanner.show { display: block; }
+    #txBanner .tx-label {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--amber);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+    }
+    #txBanner .tx-hash {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+      word-break: break-all;
+    }
+    #txBanner .tx-link {
+      color: var(--amber);
+      text-decoration: underline;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    #txBanner .tx-status {
+      color: var(--green);
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* Empty State */
     .empty-state {
       text-align: center;
       padding: 4rem 2rem;
-      color: var(--text-secondary);
+      color: var(--text-dim);
     }
-    .empty-state h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary); }
-    .empty-state p { font-size: 1.1rem; }
-    
+    .empty-state h3 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+    .empty-state p { font-size: 0.95rem; }
+
     /* Toast */
     .toast {
       position: fixed;
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--accent-blue);
-      color: #fff;
+      background: var(--card);
+      border: 1px solid var(--amber);
+      color: var(--text);
       padding: 0.75rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.9rem;
       opacity: 0;
       transition: opacity 0.3s;
       z-index: 100;
+      font-family: 'IBM Plex Mono', monospace;
+      box-shadow: var(--shadow);
     }
     .toast.show { opacity: 1; }
-    .toast.error { background: var(--state-failed); }
-    
-    /* TX Notification */
-    #txBanner {
-      position: fixed;
-      top: 5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--bg-card);
-      border: 2px solid var(--state-voting);
-      border-radius: 12px;
-      padding: 0.75rem 1.5rem;
-      font-size: 0.9rem;
-      z-index: 200;
-      display: none;
-      text-align: center;
-      max-width: 600px;
-      width: 90%;
-      box-shadow: 0 4px 24px rgba(74, 222, 128, 0.15);
+    .toast.error {
+      border-color: var(--red);
+      color: var(--red);
     }
-    #txBanner.show { display: block; }
-    #txBanner .tx-label { color: var(--state-voting); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-    #txBanner .tx-hash { color: var(--accent-light); font-family: monospace; font-size: 0.8rem; margin-top: 0.25rem; word-break: break-all; }
-    #txBanner .tx-link { color: var(--accent-light); text-decoration: underline; font-size: 0.8rem; }
-    #txBanner .tx-status { color: var(--state-voting); font-size: 0.8rem; margin-top: 0.25rem; }
-    
-    .hidden { display: none; }
-    
+
+    .hidden { display: none !important; }
+
     @media (min-width: 900px) {
-      .proposal-desc { font-size: 1.75rem; }
-      .vote-cell .count { font-size: 5rem; }
+      .proposal-desc { font-size: 1.35rem; }
+      .vote-cell .count { font-size: 4.5rem; }
     }
+
+    /* Registration Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.hidden { display: none; }
+    .modal-card { background: #252528; border: 1px solid #F5A623; border-radius: 12px; padding: 32px; max-width: 420px; width: 100%; }
+    .modal-card h2 { font-family: 'JetBrains Mono', monospace; color: #F5A623; margin-bottom: 8px; font-size: 1.5rem; }
+    .modal-subtitle { color: #64748B; font-size: 0.875rem; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; color: #E5E5E5; font-size: 0.875rem; margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+    .form-group input[type="text"] { width: 100%; padding: 10px 14px; border: 1px solid #333; border-radius: 6px; background: #1C1C1E; color: #fff; font-size: 1rem; box-sizing: border-box; }
+    .form-group input[type="text"]:focus { outline: none; border-color: #F5A623; }
+    .role-options { display: flex; gap: 16px; flex-wrap: wrap; }
+    .role-label { display: flex; align-items: center; gap: 6px; color: #E5E5E5; cursor: pointer; font-size: 0.875rem; }
+    .role-label input[type="radio"] { accent-color: #F5A623; width: 16px; height: 16px; }
+    .form-actions { margin-top: 24px; }
+    .btn-primary { width: 100%; padding: 12px; background: #F5A623; color: #1C1C1E; border: none; border-radius: 6px; font-weight: 600; font-size: 1rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+    .btn-primary:hover { background: #ffb84d; }
+    .welcome-back { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #252528; border: 1px solid #333; border-radius: 8px; margin-bottom: 16px; }
+    .welcome-back .wb-info { flex: 1; }
+    .welcome-back .wb-name { color: #F5A623; font-weight: 600; font-size: 1rem; }
+    .welcome-back .wb-role { color: #64748B; font-size: 0.875rem; margin-top: 2px; }
+    .welcome-back .edit-btn { background: none; border: 1px solid #333; color: #64748B; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .welcome-back .edit-btn:hover { border-color: #F5A623; color: #F5A623; }
   </style>
 </head>
 <body>
@@ -348,26 +606,38 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
+    <a class="contract-link" id="contractLink" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
+    <a class="faucet-link hidden" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener">Get Sepolia ETH ↗</a>
   </div>
-  
+
   <div class="main">
     <!-- Status Bar -->
     <div class="status-bar">
-      <div class="wallet-section">
+      <div>
         <button class="connect-btn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
         <span class="wallet-addr" id="walletAddress" style="display:none;"></span>
       </div>
     </div>
-    
+
+    <!-- Voter Count Bar -->
+    <div class="voter-count-bar" id="voterCountBar" style="display:none;">
+      <span class="voter-count-label">Voter Turnout</span>
+      <div class="voter-count-track">
+        <div class="voter-count-fill" id="voterCountFill"></div>
+      </div>
+      <span class="voter-count-numbers" id="voterCountNumbers">0/0 voted</span>
+    </div>
+
     <!-- Proposals -->
     <div class="proposals-title">Active Proposals</div>
     <div id="proposalsList">
       <div class="empty-state">
         <h3>No Proposals Yet</h3>
-        <p>The chair will create proposals for voting.</p>
+        <p>Connect your wallet to view proposals.</p>
       </div>
     </div>
-    
+
     <!-- Vote Section -->
     <div class="vote-section hidden" id="voteSection">
       <h3 id="selectedProposalTitle">Proposal #0</h3>
@@ -387,27 +657,36 @@
       </div>
       <div id="votingControls">
         <div class="vote-buttons">
-          <button class="vote-btn yes" onclick="castVote(0)">Yes</button>
-          <button class="vote-btn no" onclick="castVote(1)">No</button>
-          <button class="vote-btn abstain" onclick="castVote(2)">Abstain</button>
+          <button class="vote-btn yes" onclick="castVote(0)">
+            <span class="spinner"></span>Yes
+          </button>
+          <button class="vote-btn no" onclick="castVote(1)">
+            <span class="spinner"></span>No
+          </button>
+          <button class="vote-btn abstain" onclick="castVote(2)">
+            <span class="spinner"></span>Abstain
+          </button>
         </div>
       </div>
       <div class="vote-status" id="voteStatus"></div>
       <button class="close-btn" onclick="closeVoteSection()">Close</button>
     </div>
   </div>
-  
+
   <div class="toast" id="toast"></div>
+  <a class="chair-badge" href="rob-rules.html">👑 Chair Dashboard</a>
   <div id="txBanner">
-    <div class="tx-label" id="txLabel">Transaction Submitted</div>
+    <div class="tx-label" id="txLabel">Your vote is onchain</div>
     <div class="tx-hash" id="txHash"></div>
     <a class="tx-link" id="txLink" href="#" target="_blank">View on Etherscan ↗</a>
-    <div class="tx-status" id="txStatus">Waiting for confirmation...</div>
+    <div class="tx-status" id="txStatus"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
+    const SSE_BASE = 'https://bookmarks-around-breaks-cult.trycloudflare.com';
+
     const CONTRACT_ABI = [
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
@@ -415,12 +694,46 @@
       "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
       "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)"
     ];
-    
+
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
-    
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function shortenAddress(addr) {
+      if (!addr || typeof addr !== 'string' || addr.length < 10) return '—';
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
+    function getVoterData(addr) {
+      try {
+        const data = localStorage.getItem('zkvoter_' + addr);
+        return data ? JSON.parse(data) : null;
+      } catch { return null; }
+    }
+
+    function setVoterData(addr, data) {
+      localStorage.setItem('zkvoter_' + addr, JSON.stringify(data));
+    }
+
+    async function timeSinceBlock(blockNum) {
+      if (!blockNum || blockNum.toString() === '0') return '—';
+      try {
+        const currentBlock = await provider.getBlockNumber();
+        const elapsed = (currentBlock - parseInt(blockNum.toString())) * 12;
+        if (elapsed < 60) return 'just now';
+        const mins = Math.floor(elapsed / 60);
+        return mins + ' min ago';
+      } catch {
+        return '—';
+      }
+    }
+
     let provider, signer, contract, userAddress;
     let selectedProposalId = null;
-    
+    let pendingTx = null;
+    let pendingTimeout = null;
+    let sseConn = null;
+    let countdownIntervals = {};
+
     async function connectWallet() {
       if (typeof window.ethereum === 'undefined') {
         showToast('Install MetaMask to use this application', true);
@@ -432,7 +745,7 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-        
+
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
           try {
@@ -450,75 +763,123 @@
             return;
           }
         }
-        
+
         document.getElementById('walletAddress').style.display = 'inline';
         document.getElementById('walletAddress').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
         document.getElementById('connectBtn').textContent = 'Connected';
         document.getElementById('connectBtn').disabled = true;
-        
-        await loadProposals();
-        
+        document.getElementById('voterCountBar').style.display = 'flex';
+
+        // Update header badge + faucet
+        const badge = document.getElementById('walletBadge');
+        badge.textContent = '👛 ' + shortenAddress(userAddress);
+        badge.classList.remove('disconnected');
+        document.getElementById('faucetLink').classList.remove('hidden');
+
+        // SSE connect — inside auth block
+        connectSSE();
+
+        // Check voter registration
+        const existing = getVoterData(userAddress);
+        if (!existing) {
+          document.getElementById('registrationModal').classList.remove('hidden');
+          return; // halt flow until registered
+        }
+        // Show welcome back badge
+        const wbDiv = document.createElement('div');
+        wbDiv.className = 'welcome-back';
+        wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + existing.name + '</div><div class="wb-role">' + existing.role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+        document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
+
         contract.on("MotionVoted", async () => {
           if (selectedProposalId !== null) await refreshSelectedProposal();
           await loadProposals();
         });
 
-        // SSE — live updates for all browsers (no MetaMask needed)
-        const SSE_BASE = 'https://skirt-munich-building-paragraph.trycloudflare.com';
-        let sseConn = null;
-        function connectSSE() {
-          if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
-            sseConn = new EventSource(`${SSE_BASE}/events`);
-            sseConn.onmessage = async (e) => {
-              const { event, data } = JSON.parse(e.data);
-              if (event === 'connected' || event === 'ws_disconnected') return;
-              if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
-                if (selectedProposalId !== null) await refreshSelectedProposal();
-                await loadProposals();
-              }
-            };
-            sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
-          }
-        }
-        connectSSE();
+        await loadProposals();
+
       } catch (err) {
         showToast('Error: ' + (err.reason || err.message), true);
       }
     }
-    
+
+    function connectSSE() {
+      if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
+        sseConn = new EventSource(`${SSE_BASE}/events`);
+        sseConn.onmessage = async (e) => {
+          const { event, data } = JSON.parse(e.data);
+          if (event === 'connected' || event === 'ws_disconnected') return;
+          if (event === 'VoterCount') {
+            updateVoterCount(data);
+            return;
+          }
+          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
+            if (selectedProposalId !== null) await refreshSelectedProposal();
+            await loadProposals();
+          }
+        };
+        sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
+      }
+    }
+
+    function updateVoterCount(data) {
+      const { yes, no, abstain, total } = data;
+      const voted = parseInt(yes) + parseInt(no) + parseInt(abstain);
+      const pct = total > 0 ? (voted / total) * 100 : 0;
+      const fill = document.getElementById('voterCountFill');
+      const nums = document.getElementById('voterCountNumbers');
+      if (fill) fill.style.width = pct + '%';
+      if (nums) nums.textContent = `${voted}/${total} voted`;
+    }
+
     async function loadProposals() {
       if (!contract) return;
       const count = parseInt((await contract.proposalCount()).toString());
       const list = document.getElementById('proposalsList');
-      
+
       if (count === 0) {
         list.innerHTML = '<div class="empty-state"><h3>No Proposals Yet</h3><p>The chair will create proposals for voting.</p></div>';
         return;
       }
-      
+
+      // Clear old countdown intervals
+      Object.keys(countdownIntervals).forEach(k => { clearInterval(countdownIntervals[k]); delete countdownIntervals[k]; });
+
       list.innerHTML = '';
       for (let i = count - 1; i >= 0; i--) {
         const p = await contract.getProposal(i);
         const state = parseInt(p[2]);
         const card = document.createElement('div');
-        const isVoting = state === 2;
-        card.className = 'proposal-card' + (isVoting ? ' voting-open' : '') + (state >= 3 ? ' closed' : '');
+        card.className = `proposal-card state-${state}`;
         card.onclick = () => selectProposal(i);
 
         const headerDiv = document.createElement('div');
         headerDiv.className = 'proposal-header';
         const idSpan = document.createElement('span');
         idSpan.className = 'proposal-id';
-        idSpan.textContent = `Proposal #${i}`;
+        idSpan.textContent = `Motion #${i + 1}`;
         const badgeSpan = document.createElement('span');
         badgeSpan.className = `state-badge state-${state}`;
         badgeSpan.textContent = STATES[state];
         headerDiv.appendChild(idSpan);
         headerDiv.appendChild(badgeSpan);
 
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'proposal-meta';
+        metaDiv.id = `proposal-meta-${i}`;
+        metaDiv.textContent = shortenAddress(p[1]) + ' · loading…';
+        // Resolve time async
+        timeSinceBlock(p[3]).then(ts => {
+          const el = document.getElementById(`proposal-meta-${i}`);
+          if (el) el.textContent = shortenAddress(p[1]) + ' · ' + ts;
+        });
+
         const descDiv = document.createElement('div');
         descDiv.className = 'proposal-desc';
         descDiv.textContent = p[0];
+
+        const footerDiv = document.createElement('div');
+        footerDiv.className = 'proposal-footer';
 
         const votesDiv = document.createElement('div');
         votesDiv.className = 'proposal-votes';
@@ -531,102 +892,188 @@
         votesDiv.appendChild(yesSpan);
         votesDiv.appendChild(noSpan);
         votesDiv.appendChild(abstainSpan);
+        footerDiv.appendChild(votesDiv);
+
+        // Countdown timer for voting state
+        if (state === 2) {
+          const endTime = parseInt(p[5]); // votingEnd
+          const countdownSpan = document.createElement('span');
+          countdownSpan.className = 'countdown';
+          countdownSpan.id = `countdown-${i}`;
+          countdownDiv = document.createElement('span');
+
+          function updateCountdown() {
+            const now = Math.floor(Date.now() / 1000);
+            const remaining = endTime - now;
+            if (remaining <= 0) {
+              countdownSpan.textContent = 'Voting closed';
+              countdownSpan.classList.add('urgent');
+              clearInterval(countdownIntervals[i]);
+            } else {
+              const mins = Math.floor(remaining / 60);
+              const secs = remaining % 60;
+              countdownSpan.textContent = `Voting closes in ${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+              if (remaining < 60) countdownSpan.classList.add('urgent');
+            }
+          }
+          updateCountdown();
+          countdownIntervals[i] = setInterval(updateCountdown, 1000);
+          footerDiv.appendChild(countdownSpan);
+        }
 
         card.appendChild(headerDiv);
+        card.appendChild(metaDiv);
         card.appendChild(descDiv);
-        card.appendChild(votesDiv);
+        card.appendChild(footerDiv);
         list.appendChild(card);
       }
     }
-    
+
     async function selectProposal(id) {
       selectedProposalId = id;
       const p = await contract.getProposal(id);
       const state = parseInt(p[2]);
-      
+
       document.getElementById('voteSection').classList.remove('hidden');
       document.getElementById('selectedProposalTitle').textContent = `Proposal #${id}`;
-      
+
       await refreshSelectedProposal();
     }
-    
+
     async function refreshSelectedProposal() {
       if (selectedProposalId === null || !contract) return;
       const p = await contract.getProposal(selectedProposalId);
       document.getElementById('voteYesCount').textContent = p[7].toString();
       document.getElementById('voteNoCount').textContent = p[8].toString();
       document.getElementById('voteAbstainCount').textContent = p[9].toString();
-      
+
       const state = parseInt(p[2]);
       const statusEl = document.getElementById('voteStatus');
       const controls = document.getElementById('votingControls');
-      
+
       if (state === 2) {
         const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
         if (alreadyVoted) {
           statusEl.textContent = 'You have already voted on this proposal.';
-          controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-voting);font-weight:700;">Your vote has been recorded.</div>';
+          controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;">Your vote has been recorded.</div>';
         } else {
           statusEl.textContent = 'Cast your vote below.';
-          controls.innerHTML = '<div class="vote-buttons"><button class="vote-btn yes" onclick="castVote(0)">Yes</button><button class="vote-btn no" onclick="castVote(1)">No</button><button class="vote-btn abstain" onclick="castVote(2)">Abstain</button></div>';
+          controls.innerHTML = '<div class="vote-buttons"><button class="vote-btn yes" onclick="castVote(0)"><span class="spinner"></span>Yes</button><button class="vote-btn no" onclick="castVote(1)"><span class="spinner"></span>No</button><button class="vote-btn abstain" onclick="castVote(2)"><span class="spinner"></span>Abstain</button></div>';
         }
       } else if (state === 0 || state === 1) {
         statusEl.textContent = 'Voting has not started for this proposal.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--text-secondary);">The chair will open voting soon.</div>';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--text-dim);font-family:\'IBM Plex Mono\',monospace;">The chair will open voting soon.</div>';
       } else if (state === 3) {
         statusEl.textContent = 'This proposal has passed.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-passed);font-weight:700;">Proposal Passed</div>';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;">✓ Proposal Passed</div>';
       } else if (state === 4) {
         statusEl.textContent = 'This proposal did not pass.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1.1rem;color:var(--state-failed);font-weight:700;">Proposal Failed</div>';
+        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--red);font-weight:700;font-family:\'JetBrains Mono\',monospace;">✗ Proposal Failed</div>';
       }
     }
-    
+
+    function setVoteButtonsLoading(loading) {
+      const btns = document.querySelectorAll('.vote-btn');
+      btns.forEach(btn => {
+        if (loading) {
+          btn.classList.add('loading');
+          btn.disabled = true;
+        } else {
+          btn.classList.remove('loading');
+          btn.disabled = false;
+        }
+      });
+    }
+
     async function castVote(choice) {
       if (!contract) {
         showToast('Connect your wallet first', true);
         return;
       }
+      if (pendingTx) {
+        showToast('A transaction is already pending', true);
+        return;
+      }
       try {
+        setVoteButtonsLoading(true);
+
+        // Clear any stale timeout
+        if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
+
         const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
         const proof = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
         const tx = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash, proof);
-        showTx(tx.hash, 'Vote Recorded');
-        await tx.wait();
-        showToast('Vote recorded');
-        await refreshSelectedProposal();
-        await loadProposals();
+        pendingTx = tx.hash;
+        showTxBanner(tx.hash);
+
+        // Wait specifically for this tx hash
+        try {
+          await provider.waitForTransaction(tx.hash);
+          clearPendingState();
+          showTxBannerConfirmed(tx.hash);
+          showToast('Vote recorded');
+          await refreshSelectedProposal();
+          await loadProposals();
+        } catch (waitErr) {
+          // 3-second timeout for MetaMask rejection
+          pendingTimeout = setTimeout(() => {
+            clearPendingState();
+            showToast('Transaction may have been rejected', true);
+          }, 3000);
+        }
+
       } catch (err) {
+        clearPendingState();
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
       }
     }
-    
-    function showTx(hash, label) {
+
+    function clearPendingState() {
+      pendingTx = null;
+      if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
+      setVoteButtonsLoading(false);
+    }
+
+    function showTxBanner(hash) {
       const banner = document.getElementById('txBanner');
-      document.getElementById('txLabel').textContent = label;
+      document.getElementById('txLabel').textContent = 'Your vote is onchain';
       document.getElementById('txHash').textContent = hash;
       document.getElementById('txLink').href = 'https://sepolia.etherscan.io/tx/' + hash;
       document.getElementById('txStatus').textContent = 'Waiting for confirmation...';
       banner.className = 'show';
-      provider.once('block', () => {
-        document.getElementById('txStatus').textContent = '✓ Confirmed onchain';
-        setTimeout(() => banner.className = '', 4000);
-      });
     }
-    
+
+    function showTxBannerConfirmed(hash) {
+      document.getElementById('txStatus').textContent = '✓ Confirmed onchain';
+      setTimeout(() => document.getElementById('txBanner').className = '', 5000);
+    }
+
     function closeVoteSection() {
       document.getElementById('voteSection').classList.add('hidden');
       selectedProposalId = null;
     }
-    
+
+    function openEditVoter() {
+      const existing = getVoterData(userAddress);
+      if (existing) {
+        document.getElementById('voterName').value = existing.name;
+        document.querySelector('input[name="voterRole"][value="' + existing.role + '"]').checked = true;
+      }
+      document.getElementById('registrationModal').classList.remove('hidden');
+    }
+
+    function closeRegistrationModal() {
+      document.getElementById('registrationModal').classList.add('hidden');
+    }
+
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
       toast.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => toast.classList.remove('show'), 5000);
     }
-    
+
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', () => location.reload());
     }
@@ -637,6 +1084,45 @@
         navigator.serviceWorker.register("/sw.js").catch(() => {});
       });
     }
+  </script>
+
+  <div id="registrationModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2>Register to Vote</h2>
+      <p class="modal-subtitle">City of Fort Worth DAO — Member Registration</p>
+      <form id="registrationForm">
+        <div class="form-group">
+          <label for="voterName">Full Name</label>
+          <input type="text" id="voterName" placeholder="Jane Smith" required maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <div class="role-options">
+            <label class="role-label"><input type="radio" name="voterRole" value="Member" checked> Member</label>
+            <label class="role-label"><input type="radio" name="voterRole" value="Chair"> Chair</label>
+            <label class="role-label"><input type="radio" name="voterRole" value="Public Observer"> Public Observer</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Join Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('voterName').value.trim();
+      const role = document.querySelector('input[name="voterRole"]:checked').value;
+      setVoterData(userAddress, { name, role });
+      document.getElementById('registrationModal').classList.add('hidden');
+      const wbDiv = document.createElement('div');
+      wbDiv.className = 'welcome-back';
+      wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + name + '</div><div class="wb-role">' + role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+      document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
+      loadProposals();
+    });
   </script>
 </body>
 </html>

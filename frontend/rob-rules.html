@@ -2,82 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#1C1C1E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rob's Rules Voting — Chair Dashboard</title>
   <link rel="manifest" href="/manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --bg-primary: #030816;
-      --bg-card: #0c1b3d;
-      --accent-blue: #2563eb;
-      --accent-light: #5BA2F1;
-      --text-primary: #ffffff;
-      --text-secondary: #94a3b8;
-      --fw-border: #1D335F;
-      --state-created: #9ca3af;
-      --state-seconded: #f59e0b;
-      --state-voting: #4ADE80;
-      --state-passed: #10b981;
-      --state-failed: #ef4444;
+      --bg: #1C1C1E;
+      --card: #252528;
+      --card-hover: #2a2a2e;
+      --amber: #F5A623;
+      --amber-dim: rgba(245, 166, 35, 0.15);
+      --amber-glow: 0 0 12px rgba(245, 166, 35, 0.4);
+      --green: #22C55E;
+      --red: #EF4444;
+      --slate: #64748B;
+      --slate-dim: rgba(100, 116, 139, 0.2);
+      --slate-glow: 0 0 10px rgba(100, 116, 139, 0.35);
+      --text: #FFFFFF;
+      --text-muted: #E5E5E5;
+      --text-dim: #9CA3AF;
+      --border: rgba(255,255,255,0.07);
+      --shadow: 0 2px 8px rgba(0,0,0,0.3);
+      --radius-card: 8px;
+      --radius-btn: 6px;
+      --radius-badge: 4px;
     }
-    
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
+      line-height: 1.5;
     }
-    
+
+    h1, h2, h3, h4, .state-badge, .proposal-id, .label, .connect-btn, .action-btn {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
     /* Header */
     .header {
-      background: var(--bg-card);
-      color: #fff;
-      padding: 1.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      border-bottom: 1px solid var(--fw-border);
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
     }
     .header-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
     .header h1 {
-      font-size: 1.5rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
+      color: var(--text);
     }
     .header-nav {
       display: flex;
       gap: 0.5rem;
     }
     .header-nav a {
-      font-size: 0.8rem;
-      color: var(--accent-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--amber);
       text-decoration: none;
       padding: 0.3rem 0.75rem;
-      border-radius: 6px;
-      border: 1px solid var(--accent-blue);
-      background: rgba(37, 99, 235, 0.15);
+      border-radius: var(--radius-btn);
+      border: 1px solid var(--amber);
+      background: var(--amber-dim);
       transition: all 0.2s;
+      letter-spacing: 0.03em;
     }
     .header-nav a:hover {
-      background: rgba(37, 99, 235, 0.35);
-      color: #fff;
+      background: var(--amber);
+      color: #1C1C1E;
     }
     .header .network {
-      font-size: 0.75rem;
-      color: var(--accent-light);
-      background: rgba(37, 99, 235, 0.2);
-      padding: 0.25rem 0.75rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      background: var(--amber-dim);
+      padding: 0.2rem 0.75rem;
       border-radius: 20px;
-      border: 1px solid var(--accent-blue);
+      border: 1px solid rgba(245,166,35,0.3);
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
     }
-    
+    .header .contract-link {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--slate);
+      text-decoration: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+    .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
+    .header .wallet-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .wallet-badge.disconnected { color: var(--slate); }
+    .header .faucet-link {
+      font-size: 0.65rem;
+      color: var(--slate);
+      text-decoration: none;
+      margin-left: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .faucet-link:hover { color: var(--amber); }
+
     /* Main Layout */
     .main {
       max-width: 1200px;
@@ -87,304 +137,490 @@
       grid-template-columns: 1fr 380px;
       gap: 2rem;
     }
-    
+
     /* Contract Info Bar */
     .contract-bar {
-      background: var(--bg-card);
-      border: 1px solid var(--fw-border);
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
       padding: 1rem 1.5rem;
       display: flex;
       align-items: center;
       gap: 2rem;
       margin-bottom: 1.5rem;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
+      box-shadow: var(--shadow);
     }
-    .contract-bar span { color: var(--text-secondary); }
-    .contract-bar strong { color: var(--accent-light); font-family: monospace; font-size: 0.8rem; }
-    
-    /* Proposal List */
-    .proposals-section h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+    .contract-bar span { color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; }
+    .contract-bar strong {
+      color: var(--amber);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    /* Create Proposal Form */
+    .create-form {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .create-form input {
+      flex: 1;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      padding: 0.75rem 1rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.9rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+      box-shadow: var(--shadow);
+    }
+    .create-form input::placeholder { color: var(--text-dim); }
+    .create-form input:focus { border-color: var(--amber); }
+    .create-form button {
+      background: var(--amber);
+      color: #1C1C1E;
+      border: none;
+      border-radius: var(--radius-btn);
+      padding: 0.75rem 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      margin-bottom: 1rem;
+      transition: all 0.15s;
+      white-space: nowrap;
+      box-shadow: var(--shadow);
     }
-    
+    .create-form button:hover:not(:disabled) { background: #f0b030; transform: translateY(-1px); }
+    .create-form button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Proposals Section */
+    .proposals-section h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
     .proposal-card {
-      background: var(--bg-card);
-      border: 2px solid var(--fw-border);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 0.75rem;
       cursor: pointer;
       transition: all 0.15s;
+      box-shadow: var(--shadow);
+      border-left: 3px solid transparent;
     }
-    .proposal-card:hover { border-color: var(--accent-blue); box-shadow: 0 4px 20px rgba(37, 99, 235, 0.2); }
-    .proposal-card.selected { border-color: var(--accent-blue); border-width: 3px; }
-    
+    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); }
+    .proposal-card.selected { border-color: var(--amber); }
+    .proposal-card.state-0 { border-left-color: transparent; }
+    .proposal-card.state-1 { border-left-color: var(--slate); }
+    .proposal-card.state-2 { border-left-color: var(--amber); }
+    .proposal-card.state-3,
+    .proposal-card.state-4 { opacity: 0.7; }
+
     .proposal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.6rem;
     }
     .proposal-id {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
     .state-badge {
-      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: 0.35rem 1rem;
-      border-radius: 20px;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--radius-badge);
       color: #fff;
     }
-    .state-0 { background: var(--state-created); }
-    .state-1 { background: var(--state-seconded); }
-    .state-2 { background: var(--state-voting); }
-    .state-3 { background: var(--state-passed); }
-    .state-4 { background: var(--state-failed); }
-    
-    .proposal-desc {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 1rem;
+    .state-badge.state-0 { background: var(--slate); color: #fff; }
+    .state-badge.state-1 {
+      background: var(--slate);
+      color: #fff;
+      box-shadow: var(--slate-glow);
     }
-    
+    .state-badge.state-2 {
+      background: var(--amber);
+      color: #1C1C1E;
+      animation: pulse-amber 2s infinite;
+    }
+    .state-badge.state-3 { background: var(--green); color: #1C1C1E; }
+    .state-badge.state-4 { background: var(--red); color: #fff; }
+
+    @keyframes pulse-amber {
+      0%, 100% { box-shadow: 0 0 6px rgba(245,166,35,0.4); }
+      50% { box-shadow: 0 0 16px rgba(245,166,35,0.7); }
+    }
+
+    .proposal-desc {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
     .proposal-stats {
       display: flex;
-      gap: 2rem;
-      font-size: 1rem;
-      color: var(--text-secondary);
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-dim);
     }
     .proposal-stats strong {
-      color: var(--text-primary);
+      color: var(--text-muted);
       font-weight: 700;
-      font-size: 1.25rem;
+      font-size: 1rem;
     }
-    
+
     /* State Progress Bar */
     .progress-bar {
       display: flex;
       align-items: center;
-      margin: 1.5rem 0;
+      margin: 1.25rem 0;
       gap: 0;
     }
     .progress-step {
       flex: 1;
       text-align: center;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      padding: 0.75rem 0;
-      border-top: 4px solid var(--fw-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      padding: 0.65rem 0;
+      border-top: 4px solid rgba(255,255,255,0.08);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: all 0.2s;
     }
-    .progress-step.active { color: var(--accent-light); border-color: var(--accent-light); }
-    .progress-step.done { color: var(--state-passed); border-color: var(--state-passed); }
-    
+    .progress-step.active { color: var(--amber); border-color: var(--amber); }
+    .progress-step.done { color: var(--green); border-color: var(--green); }
+    .progress-step.final-pass { color: var(--green); border-color: var(--green); }
+    .progress-step.final-fail { color: var(--red); border-color: var(--red); }
+
     /* Detail Panel */
     .detail-panel {
-      background: var(--bg-card);
-      border: 1px solid var(--fw-border);
-      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
       padding: 1.5rem;
       position: sticky;
       top: 2rem;
+      box-shadow: var(--shadow);
     }
     .detail-panel h3 {
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       font-weight: 700;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
     .detail-meta {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 1.25rem;
+      font-family: 'IBM Plex Mono', monospace;
     }
-    
+
     /* Large Vote Counts */
     .vote-display {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin: 1.5rem 0;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
     }
     .vote-cell {
-      background: var(--bg-primary);
-      border: 1px solid var(--fw-border);
-      border-radius: 12px;
-      padding: 1.5rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1rem;
       text-align: center;
     }
     .vote-cell .count {
-      font-size: 3rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.5rem;
       font-weight: 800;
       line-height: 1;
-      color: var(--text-primary);
+      color: var(--text);
     }
     .vote-cell .label {
-      font-size: 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
       font-weight: 600;
-      color: var(--text-secondary);
-      margin-top: 0.5rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.08em;
     }
-    .vote-cell.yes .count { color: var(--state-passed); }
-    .vote-cell.no .count { color: var(--state-failed); }
-    .vote-cell.abstain .count { color: var(--accent-light); }
-    
-    /* Chair Actions — BIG BUTTONS */
+    .vote-cell.yes .count { color: var(--green); }
+    .vote-cell.no .count { color: var(--red); }
+    .vote-cell.abstain .count { color: var(--slate); }
+
+    /* Chair Actions */
     .chair-actions {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--fw-border);
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
     }
     .chair-actions h4 {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.25rem;
     }
-    
+
     .action-btn {
       width: 100%;
-      padding: 1.25rem;
-      font-size: 1.1rem;
+      padding: 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
       font-weight: 700;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-btn);
       cursor: pointer;
       transition: all 0.15s;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
     }
-    .action-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .action-btn.primary {
-      background: var(--accent-blue);
-      color: #fff;
+    .action-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+    .action-btn.primary { background: var(--amber); color: #1C1C1E; }
+    .action-btn.primary:hover:not(:disabled) { background: #f0b030; transform: translateY(-1px); }
+    .action-btn.secondary { background: var(--bg); color: var(--text); border: 1px solid rgba(255,255,255,0.12); }
+    .action-btn.secondary:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+    .action-btn.success { background: var(--green); color: #1C1C1E; }
+    .action-btn.success:hover:not(:disabled) { background: #1db954; transform: translateY(-1px); }
+    .action-btn.danger { background: var(--red); color: #fff; }
+    .action-btn.danger:hover:not(:disabled) { background: #dc2626; transform: translateY(-1px); }
+
+    .action-btn .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(0,0,0,0.2);
+      border-top-color: #1C1C1E;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+      margin-right: 0.4rem;
     }
-    .action-btn.primary:hover:not(:disabled) { background: #1d4ed8; transform: translateY(-1px); }
-    .action-btn.secondary {
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      border: 2px solid var(--accent-blue);
-    }
-    .action-btn.secondary:hover:not(:disabled) { background: rgba(37,99,235,0.1); }
-    .action-btn.success {
-      background: var(--state-voting);
-      color: #030816;
-    }
-    .action-btn.success:hover:not(:disabled) { background: #22c55e; }
-    
+    .action-btn.loading .spinner { display: inline-block; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Member Actions */
     .member-actions {
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--fw-border);
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
     }
     .member-actions h4 {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 0.5rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.25rem;
     }
-    
+
     /* Amendments */
     .amendments-section {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--fw-border);
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
     }
     .amendments-section h4 {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-dim);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 1rem;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
     }
     .amendment-item {
-      background: var(--bg-primary);
-      border: 1px solid var(--fw-border);
-      border-radius: 8px;
-      padding: 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 0.85rem;
       margin-bottom: 0.5rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 0.5rem;
     }
-    .amendment-item .desc { font-size: 1rem; font-weight: 500; color: var(--text-primary); }
-    .amendment-item .status { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
-    .amendment-item .status.approved { color: var(--state-passed); }
-    .amendment-item .status.pending { color: var(--state-seconded); }
-    
+    .amendment-item .desc {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      flex: 1;
+    }
+    .amendment-item .status {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-badge);
+    }
+    .amendment-item .status.approved {
+      background: rgba(34,197,94,0.15);
+      color: var(--green);
+    }
+    .amendment-item .status.pending {
+      background: var(--slate-dim);
+      color: var(--slate);
+    }
+    .amendment-approve-btn {
+      padding: 0.35rem 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--amber);
+      color: #1C1C1E;
+      border: none;
+      border-radius: var(--radius-badge);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .amendment-approve-btn:hover { background: #f0b030; }
+
+    .amendment-input-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .amendment-input-row input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-btn);
+      padding: 0.6rem 0.85rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .amendment-input-row input::placeholder { color: var(--text-dim); }
+    .amendment-input-row input:focus { border-color: var(--amber); }
+    .amendment-input-row button {
+      padding: 0.6rem 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-btn);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .amendment-input-row button:hover:not(:disabled) { border-color: var(--amber); color: var(--amber); }
+    .amendment-input-row button:disabled { opacity: 0.35; cursor: not-allowed; }
+
     /* Toast */
     .toast {
       position: fixed;
       bottom: 2rem;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--accent-blue);
-      color: #fff;
+      background: var(--card);
+      border: 1px solid var(--amber);
+      color: var(--text);
       padding: 0.75rem 2rem;
-      border-radius: 8px;
-      font-size: 1rem;
+      border-radius: var(--radius-btn);
+      font-size: 0.9rem;
       opacity: 0;
       transition: opacity 0.3s;
       z-index: 100;
+      font-family: 'IBM Plex Mono', monospace;
+      box-shadow: var(--shadow);
     }
     .toast.show { opacity: 1; }
-    .toast.error { background: var(--state-failed); }
-    
+    .toast.error {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
     /* TX Notification */
     #txBanner {
       position: fixed;
       top: 5rem;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--bg-card);
-      border: 2px solid var(--state-voting);
-      border-radius: 12px;
+      background: var(--card);
+      border: 2px solid var(--amber);
+      border-radius: var(--radius-card);
       padding: 0.75rem 1.5rem;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       z-index: 200;
       display: none;
       text-align: center;
       max-width: 600px;
       width: 90%;
-      box-shadow: 0 4px 24px rgba(74, 222, 128, 0.15);
+      box-shadow: 0 4px 24px rgba(245,166,35,0.15);
     }
     #txBanner.show { display: block; }
-    #txBanner .tx-label { color: var(--state-voting); font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-    #txBanner .tx-hash { color: var(--accent-light); font-family: monospace; font-size: 0.8rem; margin-top: 0.25rem; word-break: break-all; }
-    #txBanner .tx-link { color: var(--accent-light); text-decoration: underline; font-size: 0.8rem; }
-    #txBanner .tx-status { color: var(--state-voting); font-size: 0.8rem; margin-top: 0.25rem; }
-    
-    .hidden { display: none; }
+    #txBanner .tx-label {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--amber);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+    }
+    #txBanner .tx-hash {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+      word-break: break-all;
+    }
+    #txBanner .tx-link {
+      color: var(--amber);
+      text-decoration: underline;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    #txBanner .tx-status {
+      color: var(--green);
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .hidden { display: none !important; }
 
     /* Chair Wallet Gate */
     .wallet-gate {
       position: fixed;
       inset: 0;
-      background: rgba(10, 14, 23, 0.97);
+      background: rgba(28, 28, 30, 0.97);
       z-index: 9999;
       display: flex;
       align-items: center;
@@ -396,19 +632,40 @@
       text-align: center;
       max-width: 440px;
       padding: 3rem 2rem;
-      background: var(--bg-card);
-      border: 1px solid var(--fw-border);
+      background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 16px;
       box-shadow: 0 24px 64px rgba(0,0,0,0.5);
     }
     .gate-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .gate-content h2 { font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.75rem; }
-    .gate-content p { color: var(--fw-gray); font-size: 0.95rem; margin-bottom: 0.5rem; }
-    .gate-note { font-size: 0.8rem !important; color: var(--fw-gray) !important; margin-top: 0.5rem !important; }
-    .gate-connect-btn { margin-top: 1.5rem; padding: 0.75rem 2rem; font-size: 1rem; }
-    .gate-error { color: #ef4444; margin-top: 1rem; font-size: 0.9rem; }
-    
-    /* Responsive — on big screen keep it centered and readable */
+    .gate-content h2 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+    .gate-content p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+    .gate-note {
+      font-size: 0.75rem !important;
+      color: var(--text-dim) !important;
+      margin-top: 0.5rem !important;
+    }
+    .gate-connect-btn {
+      margin-top: 1.5rem;
+      padding: 0.75rem 2rem;
+      font-size: 0.9rem;
+    }
+    .gate-error {
+      color: var(--red);
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+
     @media (min-width: 1200px) {
       .main { grid-template-columns: 1fr 420px; }
     }
@@ -422,7 +679,7 @@
       <h2>Chair Access Required</h2>
       <p>Connect your wallet to access the Chair Dashboard.</p>
       <p class="gate-note">Only the chair address can manage proposals.</p>
-      <button id="gateConnectBtn" class="action-btn primary" onclick="connectWallet()">
+      <button id="gateConnectBtn" class="action-btn primary gate-connect-btn" onclick="connectWallet()">
         Connect Wallet
       </button>
       <p id="gateError" class="gate-error hidden"></p>
@@ -438,8 +695,11 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
+    <a class="contract-link" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
+    <a class="faucet-link" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener" style="display:none;">Get Sepolia ETH ↗</a>
   </div>
-  
+
   <div class="main">
     <!-- Left: Proposal List + Create -->
     <div class="proposals-area">
@@ -449,37 +709,38 @@
         <div><span>Chair:</span> <strong id="chairAddr">0x6A8C...54e0</strong></div>
         <div><span>Proposals:</span> <strong id="proposalCount">0</strong></div>
       </div>
-      
+
       <!-- Create Proposal -->
       <div class="create-form">
         <input type="text" id="newProposalText" placeholder="Enter new proposal description..." />
         <button class="action-btn primary" onclick="createProposal()">Create Proposal</button>
       </div>
-      
+
       <!-- Proposals -->
       <div class="proposals-section">
         <h2>Active Proposals</h2>
         <div id="proposalsList">
-          <div style="text-align: center; padding: 3rem; color: var(--fw-gray); font-size: 1.25rem;">
-            No proposals yet. Create one above.
+          <div class="empty-state">
+            <h3>No Proposals Yet</h3>
+            <p>Create one above to get started.</p>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Right: Detail Panel -->
     <div class="detail-panel" id="detailPanel">
       <h3 id="detailTitle">Select a proposal</h3>
       <p class="detail-meta" id="detailMeta"></p>
-      
+
       <!-- State Progress -->
       <div class="progress-bar" id="progressBar">
         <div class="progress-step" data-state="0">Created</div>
         <div class="progress-step" data-state="1">Seconded</div>
         <div class="progress-step" data-state="2">Voting</div>
-        <div class="progress-step" data-state="3">Result</div>
+        <div class="progress-step" data-state="3" id="progressResult">Result</div>
       </div>
-      
+
       <!-- Large Vote Counts -->
       <div class="vote-display" id="voteDisplay">
         <div class="vote-cell yes">
@@ -495,32 +756,44 @@
           <div class="label">Abstain</div>
         </div>
       </div>
-      
+
       <!-- Chair Actions -->
       <div class="chair-actions" id="chairActions">
         <h4>Chair Actions</h4>
-        <button class="action-btn primary" id="btnSecond" onclick="secondProposal()">Second Motion</button>
-        <button class="action-btn primary" id="btnOpenVoting" onclick="openVoting()">Open Voting — 3 Days</button>
-        <button class="action-btn secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">Open Voting — Custom</button>
-        <button class="action-btn success" id="btnFinalize" onclick="finalizeProposal()">Finalize Proposal</button>
+        <button class="action-btn primary" id="btnSecond" onclick="secondProposal()">
+          <span class="spinner"></span>Second Motion
+        </button>
+        <button class="action-btn primary" id="btnOpenVoting" onclick="openVoting()">
+          <span class="spinner"></span>Open Voting — 3 Days
+        </button>
+        <button class="action-btn secondary" id="btnSetVotingDuration" onclick="openVotingCustom()">
+          <span class="spinner"></span>Open Voting — Custom
+        </button>
+        <button class="action-btn success" id="btnFinalize" onclick="finalizeProposal()">
+          <span class="spinner"></span>Finalize Proposal
+        </button>
       </div>
 
       <!-- Member Actions -->
       <div class="member-actions" id="memberActions">
         <h4>Member Actions</h4>
-        <button class="action-btn secondary" id="btnCallDivision" onclick="callForDivision()">Call for Division</button>
+        <button class="action-btn secondary" id="btnCallDivision" onclick="callForDivision()">
+          <span class="spinner"></span>Call for Division
+        </button>
       </div>
-      
+
       <!-- Amendments -->
       <div class="amendments-section" id="amendmentsSection">
         <h4>Amendments</h4>
         <div id="amendmentList"></div>
-        <input type="text" id="amendmentText" placeholder="Submit amendment..." style="width:100%;margin-top:0.75rem;padding:0.75rem;border:1px solid var(--fw-border);border-radius:8px;font-size:0.9rem;" />
-        <button class="action-btn secondary" style="margin-top:0.5rem;padding:0.75rem;font-size:0.9rem;" onclick="submitAmendment()" id="btnSubmitAmendment" disabled>Submit Amendment</button>
+        <div class="amendment-input-row">
+          <input type="text" id="amendmentText" placeholder="Submit amendment..." />
+          <button onclick="submitAmendment()" id="btnSubmitAmendment" disabled>Submit</button>
+        </div>
       </div>
     </div>
   </div>
-  
+
   <div class="toast" id="toast"></div>
   <div id="txBanner">
     <div class="tx-label" id="txLabel">Transaction Submitted</div>
@@ -532,6 +805,8 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
+    const SSE_BASE = 'https://bookmarks-around-breaks-cult.trycloudflare.com';
+
     const ROB_RULES_ABI = [
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
@@ -547,11 +822,20 @@
       "function finalizeProposal(uint256 _proposalId)",
       "function callForDivision(uint256 _proposalId)"
     ];
-    
+
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
-    
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function shortenAddress(addr) {
+      if (!addr || typeof addr !== 'string' || addr.length < 10) return '—';
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
     let provider, signer, contract, userAddress, currentProposalId = null;
-    
+    let pendingTx = null;
+    let pendingTimeout = null;
+    let sseConn = null;
+
     async function connectWallet() {
       if (typeof window.ethereum === 'undefined') {
         showToast('Please install MetaMask', true);
@@ -563,7 +847,7 @@
         signer = provider.getSigner();
         userAddress = await signer.getAddress();
         contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, signer);
-        
+
         const network = await provider.getNetwork();
         if (network.chainId.toString() !== '11155111') {
           try {
@@ -581,10 +865,10 @@
             return;
           }
         }
-        
-        document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
-        document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
-        
+
+        document.getElementById('contractAddr').textContent = shortenAddress(CONTRACT_ADDRESS);
+        document.getElementById('chairAddr').textContent = shortenAddress(userAddress);
+
         const chair = await contract.chair();
 
         if (chair.toLowerCase() !== userAddress.toLowerCase()) {
@@ -595,6 +879,16 @@
         }
 
         document.getElementById('walletGate').classList.add('hidden');
+
+        // Update header badge + faucet
+        const badge = document.getElementById('walletBadge');
+        badge.textContent = '👛 ' + shortenAddress(userAddress);
+        badge.classList.remove('disconnected');
+        document.getElementById('faucetLink').style.display = 'inline';
+
+        // SSE connect — inside auth block
+        connectSSE();
+
         await loadProposals();
       } catch (err) {
         const gateErr = document.getElementById('gateError');
@@ -602,23 +896,38 @@
         gateErr.classList.remove('hidden');
       }
     }
-    
+
+    function connectSSE() {
+      if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
+        sseConn = new EventSource(`${SSE_BASE}/events`);
+        sseConn.onmessage = async (e) => {
+          const { event } = JSON.parse(e.data);
+          if (event === 'connected' || event === 'ws_disconnected') return;
+          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
+            await loadProposals();
+            if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
+          }
+        };
+        sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
+      }
+    }
+
     async function loadProposals() {
       const count = parseInt((await contract.proposalCount()).toString());
       document.getElementById('proposalCount').textContent = count;
       const list = document.getElementById('proposalsList');
-      
+
       if (count === 0) {
-        list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--fw-gray);font-size:1.25rem;">No proposals yet. Create one above.</div>';
+        list.innerHTML = '<div class="empty-state"><h3>No Proposals Yet</h3><p>Create one above to get started.</p></div>';
         return;
       }
-      
+
       list.innerHTML = '';
       for (let i = count - 1; i >= 0; i--) {
         const p = await contract.getProposal(i);
         const state = parseInt(p[2]);
         const card = document.createElement('div');
-        card.className = 'proposal-card' + (currentProposalId === i ? ' selected' : '');
+        card.className = `proposal-card state-${state}` + (currentProposalId === i ? ' selected' : '');
         card.onclick = () => selectProposal(i);
 
         const headerDiv = document.createElement('div');
@@ -646,13 +955,13 @@
         list.appendChild(card);
       }
     }
-    
+
     async function selectProposal(id) {
       currentProposalId = id;
       await loadProposalDetail(id);
       loadProposals();
     }
-    
+
     async function loadProposalDetail(id) {
       const p = await contract.getProposal(id);
       const state = parseInt(p[2]);
@@ -660,17 +969,29 @@
       const hasVoted = await contract.hasVoted(id, userAddress);
 
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
-      document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? p[1].slice(0,8) + '...' : 'N/A'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
+      document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? shortenAddress(p[1]) : '—'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
       document.getElementById('yesCount').textContent = p[7].toString();
       document.getElementById('noCount').textContent = p[8].toString();
       document.getElementById('abstainCount').textContent = p[9].toString();
 
       // Update progress bar
+      const progressResult = document.getElementById('progressResult');
       document.querySelectorAll('.progress-step').forEach((el, idx) => {
-        el.classList.remove('active', 'done');
+        el.classList.remove('active', 'done', 'final-pass', 'final-fail');
         if (idx < state) el.classList.add('done');
         else if (idx === state) el.classList.add('active');
       });
+      // Final result step: show emoji
+      if (state === 3) {
+        progressResult.classList.add('final-pass');
+        progressResult.textContent = '✓ Passed';
+      } else if (state === 4) {
+        progressResult.classList.add('final-fail');
+        progressResult.textContent = '✗ Failed';
+      } else {
+        progressResult.classList.remove('final-pass', 'final-fail');
+        progressResult.textContent = 'Result';
+      }
 
       // Enable/disable chair buttons
       document.getElementById('btnSecond').disabled = state !== 0;
@@ -680,23 +1001,22 @@
       document.getElementById('btnSubmitAmendment').disabled = state < 1;
 
       // Enable/disable member buttons
-      const btnCallDivision = document.getElementById('btnCallDivision');
-      btnCallDivision.disabled = state !== 2;
+      document.getElementById('btnCallDivision').disabled = state !== 2;
 
       // Load amendments
       await loadAmendments(id, state, isChair);
     }
-    
+
     async function loadAmendments(proposalId, state, isChair) {
       const p = await contract.getProposal(proposalId);
       const count = parseInt(p[10].toString());
       const list = document.getElementById('amendmentList');
-      
+
       if (count === 0) {
-        list.innerHTML = '<div style="color:var(--fw-gray);font-size:0.9rem;">No amendments submitted</div>';
+        list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;">No amendments submitted</div>';
         return;
       }
-      
+
       list.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const a = await contract.getAmendment(proposalId, i);
@@ -709,14 +1029,14 @@
 
         const statusSpan = document.createElement('span');
         statusSpan.className = 'status ' + (a[2] ? 'approved' : 'pending');
-        statusSpan.textContent = a[2] ? 'Approved' : 'Pending';
+        statusSpan.textContent = a[2] ? '✓ Approved' : 'Pending';
 
         item.appendChild(descSpan);
         item.appendChild(statusSpan);
 
         if (isChair && !a[2] && state === 1) {
           const approveBtn = document.createElement('button');
-          approveBtn.style.cssText = 'padding:0.5rem 1rem;font-size:0.8rem;cursor:pointer;';
+          approveBtn.className = 'amendment-approve-btn';
           approveBtn.textContent = 'Approve';
           approveBtn.onclick = () => approveAmendment(proposalId, i);
           item.appendChild(approveBtn);
@@ -724,11 +1044,22 @@
         list.appendChild(item);
       }
     }
-    
+
+    function setActionBtnLoading(btn, loading) {
+      if (loading) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('loading');
+      }
+    }
+
     async function createProposal() {
       const text = document.getElementById('newProposalText').value.trim();
       if (!text) { showToast('Enter proposal text', true); return; }
+      const btn = document.querySelector('.create-form .action-btn');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.createProposal(text);
         showTx(tx.hash, 'Proposal Created');
         await tx.wait();
@@ -738,12 +1069,16 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
-    
+
     async function secondProposal() {
       if (currentProposalId === null) return;
+      const btn = document.getElementById('btnSecond');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.secondProposal(currentProposalId);
         showTx(tx.hash, 'Proposal Seconded');
         await tx.wait();
@@ -753,12 +1088,16 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
-    
+
     async function openVoting() {
       if (currentProposalId === null) return;
+      const btn = document.getElementById('btnOpenVoting');
       try {
+        setActionBtnLoading(btn, true);
         const duration = 3 * 24 * 60 * 60;
         const tx = await contract.openVoting(currentProposalId, duration);
         showTx(tx.hash, 'Voting Opened');
@@ -769,9 +1108,11 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
-    
+
     async function openVotingCustom() {
       const secs = prompt('Enter voting duration in SECONDS (e.g. 60 for 1 minute, 300 for 5 minutes):', '60');
       if (!secs) return;
@@ -781,24 +1122,30 @@
         return;
       }
       if (currentProposalId === null) return;
+      const btn = document.getElementById('btnSetVotingDuration');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.openVoting(currentProposalId, duration);
         showTx(tx.hash, 'Voting Opened for ' + secs + 's');
         await tx.wait();
-        showToast('Voting is now open for ' + secs + 's — wait for timer to expire before finalizing');
+        showToast('Voting is now open for ' + secs + 's — wait for timer before finalizing');
         await loadProposalDetail(currentProposalId);
         await loadProposals();
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
-    
+
     async function submitAmendment() {
       if (currentProposalId === null) return;
       const text = document.getElementById('amendmentText').value.trim();
       if (!text) { showToast('Enter amendment text', true); return; }
+      const btn = document.getElementById('btnSubmitAmendment');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.submitAmendment(currentProposalId, text);
         showTx(tx.hash, 'Amendment Submitted');
         await tx.wait();
@@ -808,9 +1155,11 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
-    
+
     async function approveAmendment(proposalId, amendmentId) {
       try {
         const tx = await contract.approveAmendment(proposalId, amendmentId);
@@ -823,10 +1172,12 @@
         showToast(err.reason || err.message, true);
       }
     }
-    
+
     async function finalizeProposal() {
       if (currentProposalId === null) return;
+      const btn = document.getElementById('btnFinalize');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.finalizeProposal(currentProposalId);
         showTx(tx.hash, 'Proposal Finalized');
         await tx.wait();
@@ -836,12 +1187,16 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
 
     async function callForDivision() {
       if (currentProposalId === null) return;
+      const btn = document.getElementById('btnCallDivision');
       try {
+        setActionBtnLoading(btn, true);
         const tx = await contract.callForDivision(currentProposalId);
         showTx(tx.hash, 'Division Called');
         await tx.wait();
@@ -850,6 +1205,8 @@
       } catch (err) {
         document.getElementById('txBanner').className = '';
         showToast(err.reason || err.message, true);
+      } finally {
+        setActionBtnLoading(btn, false);
       }
     }
 
@@ -859,7 +1216,7 @@
       toast.className = 'toast show' + (isError ? ' error' : '');
       setTimeout(() => toast.classList.remove('show'), 5000);
     }
-    
+
     function showTx(hash, label = 'Transaction Submitted') {
       const banner = document.getElementById('txBanner');
       document.getElementById('txLabel').textContent = label;
@@ -873,25 +1230,6 @@
       });
     }
 
-    // SSE — live vote count updates
-    const SSE_BASE = 'https://skirt-munich-building-paragraph.trycloudflare.com';
-    let sseConn = null;
-    function connectSSE() {
-      if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
-        sseConn = new EventSource(`${SSE_BASE}/events`);
-        sseConn.onmessage = async (e) => {
-          const { event } = JSON.parse(e.data);
-          if (event === 'connected' || event === 'ws_disconnected') return;
-          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
-            await loadProposals();
-            if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
-          }
-        };
-        sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
-      }
-    }
-    connectSSE();
-    
     if (typeof window.ethereum !== 'undefined') {
       window.ethereum.on('accountsChanged', () => location.reload());
     }
