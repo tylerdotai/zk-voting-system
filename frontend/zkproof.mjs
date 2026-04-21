@@ -1,12 +1,23 @@
 /**
  * ZK Proof Generation for Vote Circuit
  * Uses snarkjs to generate proofs entirely in-browser
- * 
+ *
  * Public inputs:  [proposal_id, nullifier_hash, commitment]
  * Private inputs: [vote_choice, nullifier_seed, voter_address]
  */
 
 import * as snarkjs from "snarkjs";
+import { buildPoseidon } from "circomlibjs";
+
+// Cached poseidon instance (built once)
+let _poseidon = null;
+
+async function getPoseidon() {
+  if (!_poseidon) {
+    _poseidon = await buildPoseidon();
+  }
+  return _poseidon;
+}
 
 // Convert Ethereum address string to BigInt (field element)
 function addressToBigInt(address) {
@@ -18,44 +29,23 @@ function randomNullifierSeed() {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
   const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join("");
-  // Use last 31 bytes to stay within BN128 field
+  // Use last 62 hex chars to stay within BN128 scalar field
   return BigInt("0x" + hex.slice(-62));
 }
 
 // Compute Poseidon hash of a single value
+// Uses circomlibjs buildPoseidon() — matches the WASM's built-in Poseidon
 async function poseidonHash1(a) {
-  // Use the hasher from snarkjs (built-in BN128 Poseidon)
-  // snarkjs includes poseidon in its WASM builds
-  const Wasm = await snarkjs.groth16.WASM;
-  // Use circomlibjs poseidon if available, otherwise use ethers.js
-  try {
-    const { buildPoseidon } = await import("circomlibjs");
-    const poseidon = await buildPoseidon();
-    const hash = poseidon.F.toObject(poseidon([BigInt(a)]));
-    return hash;
-  } catch {
-    // Fallback: use ethers keccak256 as proxy hash
-    // NOTE: This won't match the circuit's Poseidon!
-    // For production, you MUST use the correct Poseidon
-    const { ethers } = await import("ethers");
-    const hash = await ethers.id(a.toString());
-    return BigInt(hash);
-  }
+  const poseidon = await getPoseidon();
+  const hash = poseidon.F.toObject(poseidon([BigInt(a)]));
+  return hash;
 }
 
 // Compute Poseidon hash of two values
 async function poseidonHash2(a, b) {
-  try {
-    const { buildPoseidon } = await buildPoseidon();
-    const poseidon = await buildPoseidon();
-    const hash = poseidon.F.toObject(poseidon([BigInt(a), BigInt(b)]));
-    return hash;
-  } catch {
-    // Fallback
-    const { ethers } = await import("ethers");
-    const hash = await ethers.id(a.toString() + b.toString());
-    return BigInt(hash);
-  }
+  const poseidon = await getPoseidon();
+  const hash = poseidon.F.toObject(poseidon([BigInt(a), BigInt(b)]));
+  return hash;
 }
 
 // Main proof generation function
@@ -66,19 +56,22 @@ async function generateVoteProof({
   voterAddress,    // Ethereum address as BigInt or string
   proposalId,      // Proposal ID as BigInt
 }) {
-  const addr = typeof voterAddress === "string" 
-    ? addressToBigInt(voterAddress) 
+  const addr = typeof voterAddress === "string"
+    ? addressToBigInt(voterAddress)
     : voterAddress;
-  
-  // Compute public signals
+
+  // Compute public signals — MUST match the circuit's signal ordering
+  // The circuit template Vote has public inputs: proposal_id, nullifier_hash, commitment
   const nullifierHash = await poseidonHash1(nullifierSeed);
   const commitment = await poseidonHash2(nullifierSeed, addr);
 
   // Witness object — field names must match circuit signal names
-  // NOTE: The WASM binary includes the Poseidon hasher,
-  // so this automatically uses the correct Poseidon implementation
+  // NOTE: The WASM binary includes the Poseidon hasher from poseidon.circom,
+  // so the witness computation inside WASM uses the same Poseidon that
+  // circomlibjs.buildPoseidon() produces. We pre-compute public signals
+  // here so they can be passed as inputs to fullProve for verification.
   const input = {
-    // Public inputs (order matters!)
+    // Public inputs (order matters for snarkjs)
     proposal_id: proposalId,
     nullifier_hash: nullifierHash,
     commitment: commitment,
@@ -101,11 +94,11 @@ async function generateVoteProof({
   const wasmBuffer = await wasmResponse.arrayBuffer();
   const zkeyBuffer = await zkeyResponse.arrayBuffer();
 
-  // Generate proof — all computation happens in WASM (including Poseidon)
+  // Generate proof — all computation happens in WASM (including Poseidon for witness)
   const { proof, publicSignals } = await snarkjs.groth16.fullProve(
     input,
-    wasmBuffer,
-    zkeyBuffer
+    new Uint8Array(wasmBuffer),
+    new Uint8Array(zkeyBuffer)
   );
 
   return {
@@ -116,7 +109,7 @@ async function generateVoteProof({
   };
 }
 
-// Verify proof (local check before on-chain submission)
+// Verify proof locally before on-chain submission
 async function verifyProof({ proof, publicSignals }) {
   const zkeyResponse = await fetch("/vote_0001.zkey");
   const zkeyBuffer = await zkeyResponse.arrayBuffer();
@@ -124,18 +117,30 @@ async function verifyProof({ proof, publicSignals }) {
   return snarkjs.groth16.verify(vKey, publicSignals, proof);
 }
 
-// Format snarkjs proof to Solidity Verifier contract format
+/**
+ * Format snarkjs proof to Solidity Verifier contract format.
+ *
+ * Solidity verifier signature:
+ *   function verifyProof(
+ *     uint[2] calldata _pA,
+ *     uint[2][2] calldata _pB,
+ *     uint[2] calldata _pC,
+ *     uint[] calldata _pubSignals
+ *   ) public view returns (bool)
+ *
+ * snarkjs proof structure:
+ *   proof.pi_a = [a0, a1, a2?]
+ *   proof.pi_b = [[b0, b1], [b2, b3]]
+ *   proof.pi_c = [c0, c1, c2?]
+ *
+ * Where G1 points are [x, y] and G2 points are [[x0, x1], [y0, y1]]
+ * with x1,y1 being the imaginary component (the "high" 128-bit words).
+ */
 function formatProofForVerifier(proof) {
-  // snarkjs proof structure:
-  // proof.pi_a = [a0, a1, a2?]  (G1 x-coordinate, y-coordinate)
-  // proof.pi_b = [[b0, b1], [b2, b3], ...]  (G2 x-coords, y-coords)
-  // proof.pi_c = [c0, c1, c2?]
-  
-  // Solidity expects:
-  // Proof.A:   uint256[2]  — G1 point (x, y)
-  // Proof.B:   uint256[2][2] — G2 point (x₀,x₁,y₀,y₁) as [2][2]
-  // Proof.C:   uint256[2]  — G1 point for commitment
-  
+  // snarkjs groth16 proof elements:
+  // pi_a: [a0, a1] (G1 x, y) — third element is 1 for BN128
+  // pi_b: [[b00, b01], [b10, b11]] (G2: [x0,x1], [y0,y1])
+  // pi_c: [c0, c1] (G1 x, y)
   return {
     a: [proof.pi_a[0], proof.pi_a[1]],
     b: [
