@@ -3,3 +3,4 @@ coverage/
 artifacts/
 cache/
 .env
+.vercel

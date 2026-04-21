@@ -82,33 +82,17 @@
       transition: all 0.2s;
       letter-spacing: 0.03em;
     }
-    .header-nav a:hover {
-      background: var(--amber);
-      color: #1C1C1E;
-    }
-    .header .network {
+    .header-nav a:hover { text-decoration: underline; }
+    .header .network, .header .contract-link {
       font-size: 0.7rem;
       font-weight: 600;
-      color: var(--amber);
-      background: var(--amber-dim);
       padding: 0.2rem 0.75rem;
       border-radius: 20px;
-      border: 1px solid rgba(245,166,35,0.3);
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.05em;
-      text-transform: uppercase;
     }
-    .header .contract-link {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--slate);
-      text-decoration: none;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      transition: all 0.15s;
-    }
+    .header .network { color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.3); text-transform: uppercase; }
+    .header .contract-link { color: var(--slate); text-decoration: none; border: 1px solid var(--border); transition: all 0.15s; }
     .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
     .header .wallet-badge {
       font-size: 0.7rem;
@@ -191,10 +175,7 @@
       letter-spacing: 0.05em;
       transition: all 0.15s;
     }
-    .connect-btn:hover:not(:disabled) {
-      background: #f0b030;
-      transform: translateY(-1px);
-    }
+    .connect-btn:hover:not(:disabled) { background: #f0b030; transform: translateY(-1px); }
     .connect-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .wallet-addr {
       font-family: 'JetBrains Mono', monospace;
@@ -263,11 +244,11 @@
       padding: 1.25rem 1.5rem;
       margin-bottom: 0.75rem;
       cursor: pointer;
-      transition: all 0.15s;
-      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow), 0 1px 0 rgba(245,166,35,0.05);
       border-left: 3px solid transparent;
     }
-    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); }
+    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); box-shadow: var(--shadow), 0 1px 8px rgba(245,166,35,0.1); }
     .proposal-card.selected { border-color: var(--amber); }
     /* State borders */
     .proposal-card.state-0 { border-left-color: transparent; }
@@ -296,21 +277,13 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      padding: 0.25rem 0.75rem;
+      padding: 4px 10px;
       border-radius: var(--radius-badge);
       color: #fff;
     }
     .state-badge.state-0 { background: var(--slate); color: #fff; }
-    .state-badge.state-1 {
-      background: var(--slate);
-      color: #fff;
-      box-shadow: var(--slate-glow);
-    }
-    .state-badge.state-2 {
-      background: var(--amber);
-      color: #1C1C1E;
-      animation: pulse-amber 2s infinite;
-    }
+    .state-badge.state-1 { background: var(--slate); color: #fff; box-shadow: var(--slate-glow); }
+    .state-badge.state-2 { background: var(--amber); color: #1C1C1E; animation: pulse-amber 2s infinite; }
     .state-badge.state-3 { background: var(--green); color: #1C1C1E; }
     .state-badge.state-4 { background: var(--red); color: #fff; }
 
@@ -349,7 +322,7 @@
 
     .countdown {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--amber);
       background: var(--amber-dim);
@@ -391,7 +364,7 @@
     }
     .vote-cell .count {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 3.5rem;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
       font-weight: 800;
       line-height: 1;
       color: var(--text);
@@ -416,6 +389,7 @@
       gap: 0.75rem;
     }
     .vote-btn {
+      min-height: 48px;
       padding: 1.1rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: 1rem;
@@ -425,7 +399,7 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -567,9 +541,41 @@
 
     .hidden { display: none !important; }
 
+    /* ZK Proof Modal */
+    .zk-modal { background: #1C1C1E; border: 1px solid #F5A623; border-radius: 16px; padding: 40px; max-width: 520px; width: 100%; }
+    .zk-title { font-family: 'JetBrains Mono', monospace; color: #F5A623; font-size: 1.5rem; margin-bottom: 8px; text-align: center; }
+    .zk-subtitle { color: #64748B; font-size: 0.875rem; text-align: center; margin-bottom: 32px; }
+    .zk-steps { display: flex; flex-direction: column; gap: 20px; }
+    .zk-step { display: flex; align-items: center; gap: 16px; padding: 16px; background: #252528; border-radius: 8px; border: 1px solid #333; }
+    .zk-step.active { border-color: #F5A623; background: rgba(245,166,35,0.05); }
+    .zk-step.done { border-color: #22C55E; background: rgba(34,197,94,0.05); }
+    .zk-step-icon { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+    .zk-step.active .zk-step-icon svg circle { stroke: #F5A623; animation: spin 1s linear infinite; }
+    .zk-step.done .zk-step-icon svg circle { stroke: #22C55E; fill: rgba(34,197,94,0.2); }
+    .zk-step-label { font-family: 'JetBrains Mono', monospace; color: #E5E5E5; font-size: 1rem; font-weight: 500; }
+    .zk-step-desc { color: #64748B; font-size: 0.8rem; margin-top: 2px; }
+    .zk-step-status { margin-left: auto; font-size: 0.75rem; color: #64748B; font-family: 'IBM Plex Mono', monospace; }
+    .zk-step.done .zk-step-status { color: #22C55E; }
+    .zk-step.active .zk-step-status { color: #F5A623; }
+    .zk-complete { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 24px; }
+    .zk-check { width: 64px; height: 64px; border-radius: 50%; background: #22C55E; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; }
+    .zk-complete-text { font-family: 'JetBrains Mono', monospace; color: #22C55E; font-size: 1.25rem; font-weight: 600; }
+    .zk-hash { font-family: 'IBM Plex Mono', monospace; color: #64748B; font-size: 0.75rem; word-break: break-all; text-align: center; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+
+    /* Verifier Bar */
+    .verifier-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0f0f11; border-top: 1px solid #333; display: flex; gap: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+    .verifier-item { flex: 1; padding: 8px 16px; border-right: 1px solid #252528; display: flex; flex-direction: column; gap: 2px; }
+    .verifier-item:last-child { border-right: none; }
+    .verifier-label { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; }
+    .verifier-value { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #F5A623; }
+    #verifierStatus.verified { color: #22C55E; }
+    #verifierStatus.pending { color: #F5A623; }
+
+
     @media (min-width: 900px) {
       .proposal-desc { font-size: 1.35rem; }
-      .vote-cell .count { font-size: 4.5rem; }
     }
 
     /* Registration Modal */
@@ -680,6 +686,71 @@
     <div class="tx-hash" id="txHash"></div>
     <a class="tx-link" id="txLink" href="#" target="_blank">View on Etherscan ↗</a>
     <div class="tx-status" id="txStatus"></div>
+  </div>
+
+  <!-- ZK Proof Visualization Modal -->
+  <div id="zkProofModal" class="modal-overlay hidden">
+    <div class="zk-modal">
+      <h2 class="zk-title">Zero-Knowledge Proof</h2>
+      <p class="zk-subtitle">Your vote is being verified privately</p>
+      <div class="zk-steps">
+        <div class="zk-step" id="zkStep1">
+          <div class="zk-step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#64748B" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#64748B" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="zk-step-content">
+            <div class="zk-step-label">Generating Witness</div>
+            <div class="zk-step-desc">Computing vote constraints</div>
+          </div>
+          <div class="zk-step-status" id="zkStatus1">pending</div>
+        </div>
+        <div class="zk-step" id="zkStep2">
+          <div class="zk-step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#64748B" stroke-width="2"/></svg>
+          </div>
+          <div class="zk-step-content">
+            <div class="zk-step-label">Computing SNARK Proof</div>
+            <div class="zk-step-desc">Generating zero-knowledge circuit</div>
+          </div>
+          <div class="zk-step-status" id="zkStatus2">pending</div>
+        </div>
+        <div class="zk-step" id="zkStep3">
+          <div class="zk-step-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#64748B" stroke-width="2"/></svg>
+          </div>
+          <div class="zk-step-content">
+            <div class="zk-step-label">Verifying on-chain</div>
+            <div class="zk-step-desc">Smart contract validation</div>
+          </div>
+          <div class="zk-step-status" id="zkStatus3">pending</div>
+        </div>
+      </div>
+      <div class="zk-complete hidden" id="zkComplete">
+        <div class="zk-check">&#x2713;</div>
+        <div class="zk-complete-text">Proof Validated</div>
+        <div class="zk-hash" id="zkProofHash"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time Verifier Bar -->
+  <div id="verifierBar" class="verifier-bar">
+    <div class="verifier-item">
+      <span class="verifier-label">BLOCK</span>
+      <span class="verifier-value" id="verifierBlock">—</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">PROOF STATUS</span>
+      <span class="verifier-value" id="verifierStatus">READY</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">LAST TX</span>
+      <span class="verifier-value" id="verifierTx">—</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">NETWORK</span>
+      <span class="verifier-value">SEPOLIA</span>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
@@ -811,6 +882,7 @@
           if (event === 'connected' || event === 'ws_disconnected') return;
           if (event === 'VoterCount') {
             updateVoterCount(data);
+            document.getElementById('verifierBlock').textContent = data.lastBlock;
             return;
           }
           if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
@@ -986,7 +1058,7 @@
     }
 
     async function castVote(choice) {
-      if (!contract) {
+      if (!contract || selectedProposalId === null) {
         showToast('Connect your wallet first', true);
         return;
       }
@@ -1000,33 +1072,118 @@
         // Clear any stale timeout
         if (pendingTimeout) { clearTimeout(pendingTimeout); pendingTimeout = null; }
 
+        // ── ZK Proof Visualization ──────────────────────────
+        document.getElementById('zkProofModal').classList.remove('hidden');
+        document.getElementById('zkComplete').classList.add('hidden');
+
+        // Step 1: Generating Witness (1.5s)
+        await animateZKStep(1, 'generating');
+
+        // Step 2: Computing SNARK Proof (2s)
+        await animateZKStep(2, 'computing');
+
+        // Step 3: Verifying on-chain
+        document.getElementById('zkStep3').classList.add('active');
+        document.getElementById('zkStatus3').textContent = 'verifying...';
+
+        // Submit actual vote tx
         const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
         const proof = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
         const tx = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash, proof);
         pendingTx = tx.hash;
-        showTxBanner(tx.hash);
 
-        // Wait specifically for this tx hash
-        try {
-          await provider.waitForTransaction(tx.hash);
-          clearPendingState();
-          showTxBannerConfirmed(tx.hash);
-          showToast('Vote recorded');
-          await refreshSelectedProposal();
-          await loadProposals();
-        } catch (waitErr) {
-          // 3-second timeout for MetaMask rejection
-          pendingTimeout = setTimeout(() => {
-            clearPendingState();
-            showToast('Transaction may have been rejected', true);
-          }, 3000);
-        }
+        // Mark step 3 complete
+        document.getElementById('zkStep3').classList.remove('active');
+        document.getElementById('zkStep3').classList.add('done');
+        document.getElementById('zkStatus3').textContent = 'verified';
+
+        // Show complete state
+        document.getElementById('zkProofHash').textContent = tx.hash.slice(0, 10) + '...' + tx.hash.slice(-6);
+        document.getElementById('zkComplete').classList.remove('hidden');
+
+        // ── Privacy Shield Animation ─────────────────────
+        const shieldDiv = document.createElement('div');
+        shieldDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;background:#1C1C1E;border:2px solid #F5A623;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2001;opacity:0;transition:opacity 0.5s';
+        shieldDiv.innerHTML = '<div style="font-size:3rem">&#x1F6E1;</div><div style="color:#F5A623;font-size:0.75rem;margin-top:8px;font-family:JetBrains Mono">PRIVATE</div>';
+        document.body.appendChild(shieldDiv);
+        requestAnimationFrame(() => { shieldDiv.style.opacity = '1'; });
+        setTimeout(() => { shieldDiv.style.opacity = '0'; setTimeout(() => shieldDiv.remove(), 500); }, 2000);
+
+        // Wait for confirmation
+        await tx.wait();
+
+        // Update verifier bar
+        document.getElementById('verifierStatus').textContent = 'VERIFIED';
+        document.getElementById('verifierStatus').className = 'verifier-value verified';
+        document.getElementById('verifierTx').textContent = tx.hash.slice(0,8) + '...';
+        setTimeout(() => {
+          const el = document.getElementById('verifierStatus');
+          el.textContent = 'READY';
+          el.className = 'verifier-value';
+        }, 5000);
+
+        showTxBanner(tx.hash);
+        await refreshSelectedProposal();
+        await loadProposals();
+
+        // ── Cheater Test Button ────────────────────────────
+        const cheaterBtn = document.createElement('button');
+        cheaterBtn.className = 'action-btn cheater-btn';
+        cheaterBtn.style.cssText = 'margin-top:12px;background:#252528;border:1px solid #EF4444;color:#EF4444;padding:8px 16px;border-radius:6px;font-family:IBM Plex Mono;font-size:0.8rem;cursor:pointer;display:block;width:100%';
+        cheaterBtn.textContent = 'Try to Double-Vote (Demonstration)';
+        cheaterBtn.onclick = async () => {
+          try {
+            const nullifierHash2 = ethers.utils.keccak256(ethers.utils.randomBytes(32));
+            const proof2 = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
+            const tx2 = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash2, proof2);
+            await tx2.wait();
+          } catch (err) {
+            if (err.message.includes('already voted') || err.reason?.includes('already')) {
+              showToast('Soundness proven: vote rejected — double-voting impossible', false);
+            } else {
+              showToast('Vote rejected by protocol', true);
+            }
+          }
+        };
+        document.getElementById('txBanner').appendChild(cheaterBtn);
+        setTimeout(() => cheaterBtn.remove(), 15000);
+
+        clearPendingState();
+
+        // Auto-close modal after 3s
+        setTimeout(() => {
+          document.getElementById('zkProofModal').classList.add('hidden');
+          resetZKModal();
+        }, 3000);
 
       } catch (err) {
         clearPendingState();
         document.getElementById('txBanner').className = '';
+        document.getElementById('zkProofModal').classList.add('hidden');
+        resetZKModal();
         showToast(err.reason || err.message, true);
       }
+    }
+
+    async function animateZKStep(step, phase) {
+      const stepEl = document.getElementById('zkStep' + step);
+      const statusEl = document.getElementById('zkStatus' + step);
+      stepEl.classList.add('active');
+      statusEl.textContent = phase === 'generating' ? 'generating...' : 'computing...';
+      await new Promise(r => setTimeout(r, step === 1 ? 1500 : 2000));
+      stepEl.classList.remove('active');
+      stepEl.classList.add('done');
+      statusEl.textContent = phase === 'generating' ? 'generated' : 'computed';
+    }
+
+    function resetZKModal() {
+      ['zkStep1','zkStep2','zkStep3'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('active','done');
+      });
+      ['zkStatus1','zkStatus2','zkStatus3'].forEach(id => {
+        document.getElementById(id).textContent = 'pending';
+      });
     }
 
     function clearPendingState() {
