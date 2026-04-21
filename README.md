@@ -58,7 +58,7 @@
 
 ZK Voting System implements full **Robert's Rules of Order** parliamentary procedure on Ethereum Sepolia. Built for the Fort Worth DAO, every vote is immutable, publicly verifiable, andcensorship-resistant — no third-party polling services, no intermediaries.
 
-**Stack:** Solidity · Hardhat · Ethers.js v5 · Vanilla HTML/CSS/JS · PWA · SSE real-time updates
+**Stack:** Solidity · Hardhat · Ethers.js v6 · Circom · snarkjs · circomlibjs · Vanilla HTML/CSS/JS · PWA · SSE real-time updates
 
 ### Problem Solved
 
@@ -73,9 +73,10 @@ ZK Voting System implements full **Robert's Rules of Order** parliamentary proce
 
 | Contract | Address | Explorer |
 |----------|---------|----------|
-| `ZKVotingRobRulesWithCredentials` | [`0x198041e195b9e8c34B5371edF67Ec84DFa68bb74`](https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74) | [Etherscan](https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74) |
+| `Groth16VerifierV2` | [`0x02aa9654f33Aa73880460B4f286A430c4D56CAb6`](https://sepolia.etherscan.io/address/0x02aa9654f33Aa73880460B4f286A430c4D56CAb6) | [Etherscan](https://sepolia.etherscan.io/address/0x02aa9654f33Aa73880460B4f286A430c4D56CAb6) |
+| `ZKVotingRobRulesWithCredentials` | [`0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3`](https://sepolia.etherscan.io/address/0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3) | [Etherscan](https://sepolia.etherscan.io/address/0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3) |
 
-**Chair address** (`0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0`) holds admin rights on the live contract. Connect MetaMask to Sepolia to interact.
+**Chair address** (`0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0`) holds admin rights. Connect MetaMask to Sepolia to interact as chair or voter.
 
 ---
 
@@ -121,14 +122,24 @@ Amber/charcoal theme — professional, civic aesthetic. JetBrains Mono + IBM Ple
 ```
 Wallet connects → isEligible(address) check
        ↓
-If eligible → full Rob's Rules parliamentary flow
-If not eligible → Registration Modal → Chair adds to allowlist
+If eligible → browser generates Groth16 proof from vote.wasm + vote_0001.zkey
+       ↓
+Frontend submits vote + proof + public signals
+       ↓
+Groth16Verifier verifies proof onchain
        ↓
 Contract state changes → SSE broadcast → All connected clients update live
 ```
 
-**Smart contract:** `ZKVotingRobRulesWithCredentials` (Ownable) — owner can add/remove voters and update chair
-**ZK architecture preserved** — `nullifierHash` in `voteOnMotion` is a placeholder for future ZK vote privacy (post-quantum ready)
+**Smart contracts:**
+- `ZKVotingRobRulesWithCredentials` (live governance contract)
+- `Groth16Verifier` (snarkjs-generated verifier)
+
+**ZK stack:**
+- Circuit: `circuits/vote/vote.circom`
+- Setup: `snarkjs` Groth16 with Powers of Tau (`build/ptau/`, `build/keys/`)
+- Browser prover: `frontend/zkproof.mjs` + `frontend/vote.wasm` + `frontend/vote_0001.zkey`
+- Hashing: Poseidon via `circomlib` / `circomlibjs`
 
 ---
 
@@ -136,19 +147,33 @@ Contract state changes → SSE broadcast → All connected clients update live
 
 ```
 zk-voting-system/
+├── circuits/
+│   └── vote/
+│       ├── vote.circom     # Groth16 vote circuit
+│       └── vote_js/        # Circom-generated WASM witness code
 ├── contracts/
-│   └── ZKVotingRobRulesWithCredentials.sol   # Main voting contract
+│   ├── ZKVotingRobRulesWithCredentials.sol   # Live governance contract
+│   └── ZKVerifier.sol      # Groth16 verifier contract
 ├── frontend/
-│   ├── index.html          # Voter portal + registration modal + SSE
-│   ├── rob-rules.html      # Chair dashboard + SSE
+│   ├── index.html          # Voter portal + registration modal + SSE + ZK proof generation
+│   ├── rob-rules.html      # Chair dashboard + SSE + ZK proof generation
+│   ├── zkproof.mjs         # Browser proof generation helpers
+│   ├── vote.wasm           # Browser witness generator
+│   ├── vote_0001.zkey      # Browser proving key
+│   ├── verification_key.json # Verifier key for local proof verification
 │   ├── verify.html         # Standalone voter status checker
 │   ├── manifest.json       # PWA manifest
 │   ├── sw.js               # Service worker (offline caching)
 │   └── logo.png            # Project logo
+├── build/
+│   ├── ptau/               # Powers of Tau artifacts
+│   └── keys/               # zkey + verification key + generated verifier
 ├── scripts/
-│   └── deploy-with-credentials.js  # Hardhat deploy script
+│   ├── build_circuit.sh    # Rebuild circuit, ptau, zkey, verifier
+│   ├── deploy-with-credentials.js  # Governance contract deploy
+│   └── deploy_verifier.js  # Groth16 verifier deploy
 ├── test/
-│   └── ZKVotingRobRulesWithCredentials.test.js   # 65 passing tests
+│   └── *.test.js           # Test suite (currently being updated for new verifier ABI)
 ├── sse-server.js           # Node.js SSE server (polls Alchemy, broadcasts events)
 ├── contracts.json          # Deployed contract addresses
 ├── vercel.json             # Vercel deployment config (frontend + CSP headers)
@@ -190,7 +215,7 @@ npx hardhat compile
 
 ```bash
 npx hardhat test
-# → 65 passing tests covering full Rob's Rules parliamentary flow
+# Test suite is being updated for the new proof-verifying voteOnMotion signature
 ```
 
 ### Run Frontend Locally
@@ -217,14 +242,26 @@ node sse-server.js
 
 ### Live Demo (Vercel)
 
-**Voter Portal:** [https://zk-voting-system-hbphydl46-tylerdotais-projects.vercel.app/](https://zk-voting-system-hbphydl46-tylerdotais-projects.vercel.app/)  
-**Chair Dashboard:** [https://zk-voting-system-hbphydl46-tylerdotais-projects.vercel.app/rob-rules.html](https://zk-voting-system-hbphydl46-tylerdotais-projects.vercel.app/rob-rules.html)
+> **⚠️ The on-chain contracts have been updated.** If the demo links below don't work, redeploy using the instructions below or run the frontend locally:
+> ```bash
+> cd frontend && python3 -m http.server 8080
+> ```
+
+**Voter Portal:** Deploy `frontend/` to Vercel, then visit `/index.html`
+**Chair Dashboard:** Deploy `frontend/rob-rules.html`
+
+**Local development:**
+```bash
+cd frontend && python3 -m http.server 8080
+# Then open http://localhost:8080/index.html
+```
 
 1. **Connect wallet** — click Connect, approve MetaMask on Sepolia
 2. **Check eligibility** — if not registered, the voter registration modal appears automatically
 3. **Register** — sign the transaction; chair approves; full voting UI unlocks
 4. **Create or view proposals** — voter portal shows all active proposals
-5. **Vote** — cast Yes/No/Abstain; see results update in real time via SSE
+5. **Vote** — cast Yes/No/Abstain, browser generates a Groth16 proof locally, then submits via `castVote` with ZK proof onchain
+6. **Watch updates** — results update in real time via SSE
 
 ### Chair Workflow (rob-rules.html)
 
@@ -245,6 +282,7 @@ node sse-server.js
 export SEPOLIA_RPC_URL="https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY"
 export PRIVATE_KEY="your_deployer_private_key"
 npx hardhat run scripts/deploy-with-credentials.js --network sepolia
+npx hardhat run scripts/deploy_verifier.js --network sepolia
 ```
 
 ### Deploy Frontend to Vercel
@@ -275,18 +313,45 @@ Vercel config (`vercel.json`) serves `frontend/` as static output with security 
 - [x] Chair-managed voter allowlist (no third-party dependency)
 - [x] Voter registration modal
 - [x] Real-time SSE event broadcasting
-- [x] PWA with offline service worker
-- [x] Civic UI redesign (amber/charcoal theme)
+- [x] PWA with offline service worker ✅ confirmed 2026-04-21
 - [ ] ENS domain resolution for voter eligibility
-- [ ] ZK vote privacy layer (nullifierHash implementation)
-- [ ] Post-quantum signature scheme (ML-DSA lattice-based)
-- [ ] Mainnet deployment
+- [x] Groth16 vote proof generation and verifier deployment
+- [x] Full end-to-end proof submission test on deployed governance contract ✅ confirmed 2026-04-21
+- [ ] Full end-to-end test with 3 distinct voters (chair + 2 members)
 
 ---
 
 ## License
 
 MIT — see [LICENSE](./LICENSE)
+
+---
+
+## Demo Instructions (Hackathon)
+
+### What to show in the video
+
+1. **Frontend loads without internet** — disconnect wifi, refresh page, show it still renders from cache (PWA working)
+2. **Connect MetaMask** — show voter portal at `0x397b13...` on Sepolia
+3. **View proposal** — show active proposal (Voting state, Yes/No/Abstain tally)
+4. **Cast a vote** — click Yes, watch snarkjs generate proof in browser (no server)
+5. **Confirm on-chain** — show MetaMask tx, wait for confirmation, see tally update
+6. **Double-vote rejection** — try voting again, show it reverts with "Already voted"
+7. **Chair dashboard** — show `rob-rules.html` with chair functions
+
+### Contract addresses (Sepolia)
+
+```
+ZKVotingRobRulesWithCredentials:  0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3
+Groth16VerifierV2:              0x02aa9654f33Aa73880460B4f286A430c4D56CAb6
+```
+
+### Key technical points to highlight
+
+- **Fq2 coordinate swap** — discovered critical bug: snarkjs stores G2 points as `[[x1,x2],[y1,y2]]` but BN128 precompile expects `[[x2,x1],[y2,y1]]`. Fixed in the verifier.
+- **Proof generated in-browser** — WASM runs entirely client-side, no server involvement
+- **Groth16 BN128 pairing** — three precompile calls (g1add, g1mul, pair8) total ~135k gas just for the crypto
+- **Sepolia gas cost** — castVote TX cost ~$0.14 at current gas prices
 
 ---
 
