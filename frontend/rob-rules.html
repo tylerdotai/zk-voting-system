@@ -1016,6 +1016,19 @@
         <button class="action-btn secondary" id="btnCallDivision" onclick="callForDivision()">
           <span class="spinner"></span>Call for Division
         </button>
+        <h4 style="margin-top:0.75rem;">Cast Vote (ZK Proof)</h4>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+          <button class="action-btn success" id="chairBtnVoteYes" onclick="castChairVote(0)" disabled>
+            <span class="spinner"></span>Yes
+          </button>
+          <button class="action-btn danger" id="chairBtnVoteNo" onclick="castChairVote(1)" disabled>
+            <span class="spinner"></span>No
+          </button>
+          <button class="action-btn secondary" id="chairBtnVoteAbstain" onclick="castChairVote(2)" disabled>
+            <span class="spinner"></span>Abstain
+          </button>
+        </div>
+        <div id="proof-status" style="text-align:center;font-size:0.75rem;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:0.5rem;min-height:1.2em;"></div>
       </div>
 
       <!-- Amendments -->
@@ -1038,6 +1051,12 @@
     <div class="tx-status" id="txStatus">Waiting for confirmation...</div>
   </div>
 
+  <script type="module">
+    import { generateVoteProof, formatProofForVerifier, randomNullifierSeed } from './zkproof.mjs';
+    window._zkGenerateVoteProof = generateVoteProof;
+    window._zkFormatProof = formatProofForVerifier;
+    window._zkRandomNullifierSeed = randomNullifierSeed;
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
@@ -1054,7 +1073,7 @@
       "function openVoting(uint256 _proposalId, uint256 _duration)",
       "function submitAmendment(uint256 _proposalId, string calldata _description) returns (uint256)",
       "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
-      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
+      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _a, uint256[2][2] calldata _b, uint256[2] calldata _c, uint256[] calldata _publicSignals)",
       "function finalizeProposal(uint256 _proposalId)",
       "function callForDivision(uint256 _proposalId)"
     ];
@@ -1277,6 +1296,10 @@
 
       // Enable/disable member buttons
       document.getElementById('btnCallDivision').disabled = state !== 2;
+      const chairHasVoted = state === 2 ? await contract.hasVoted(id, userAddress) : true;
+      document.getElementById('chairBtnVoteYes').disabled = state !== 2 || chairHasVoted;
+      document.getElementById('chairBtnVoteNo').disabled = state !== 2 || chairHasVoted;
+      document.getElementById('chairBtnVoteAbstain').disabled = state !== 2 || chairHasVoted;
 
       // Load amendments
       await loadAmendments(id, state, isChair);
@@ -1471,6 +1494,52 @@
       }
     }
 
+    async function castChairVote(choice) {
+      if (!contract || currentProposalId === null) return;
+      if (!window._zkGenerateVoteProof) {
+        showToast('ZK module loading \u2014 please try again in a moment', true);
+        return;
+      }
+      const proofStatusEl = document.getElementById('proof-status');
+      const voteIds = ['chairBtnVoteYes', 'chairBtnVoteNo', 'chairBtnVoteAbstain'];
+      const voteBtns = voteIds.map(id => document.getElementById(id));
+      try {
+        voteBtns.forEach(b => { b.disabled = true; b.classList.add('loading'); });
+        if (proofStatusEl) proofStatusEl.textContent = 'Generating ZK proof...';
+
+        const nullifierSeed = window._zkRandomNullifierSeed();
+        const zkResult = await window._zkGenerateVoteProof({
+          voteChoice: choice,
+          nullifierSeed,
+          voterAddress: userAddress,
+          proposalId: BigInt(currentProposalId),
+        });
+        const formattedProof = window._zkFormatProof(zkResult.proof);
+        const nullifierHashBytes32 = ethers.utils.hexZeroPad(
+          ethers.BigNumber.from(zkResult.nullifierHash).toHexString(), 32
+        );
+
+        if (proofStatusEl) proofStatusEl.textContent = 'Submitting vote on-chain...';
+
+        const tx = await contract.voteOnMotion(
+          currentProposalId, choice, nullifierHashBytes32,
+          formattedProof.a, formattedProof.b, formattedProof.c, zkResult.publicSignals
+        );
+        showTx(tx.hash, 'Vote Submitted');
+        if (proofStatusEl) proofStatusEl.textContent = '\u2713 Vote submitted with ZK proof';
+        await tx.wait();
+        await loadProposalDetail(currentProposalId);
+        await loadProposals();
+      } catch (err) {
+        document.getElementById('txBanner').className = '';
+        if (proofStatusEl) proofStatusEl.textContent = 'Proof failed: ' + (err.message || 'Unknown error');
+        showToast(err.reason || err.message, true);
+        voteBtns.forEach(b => b.classList.remove('loading'));
+        // Re-enable if still in voting state
+        await loadProposalDetail(currentProposalId);
+      }
+    }
+
     async function callForDivision() {
       if (currentProposalId === null) return;
       const btn = document.getElementById('btnCallDivision');
@@ -1519,6 +1588,7 @@
         navigator.serviceWorker.register("/sw.js").catch(() => {});
       });
     }
+  </script>
   <div id="verifierBar" class="verifier-bar">
     <div class="verifier-item">
       <span class="verifier-label">BLOCK</span>
@@ -1537,6 +1607,5 @@
       <span class="verifier-value">SEPOLIA</span>
     </div>
   </div>
-  </script>
 </body>
 </html>

@@ -693,6 +693,7 @@
           </button>
         </div>
       </div>
+      <div id="proof-status" style="text-align:center;font-size:0.8rem;color:var(--amber);font-family:'IBM Plex Mono',monospace;margin-top:0.75rem;min-height:1.2em;"></div>
       <div class="vote-status" id="voteStatus"></div>
       <button class="close-btn" onclick="closeVoteSection()">Close</button>
     </div>
@@ -772,6 +773,12 @@
     </div>
   </div>
 
+  <script type="module">
+    import { generateVoteProof, formatProofForVerifier, randomNullifierSeed } from './zkproof.mjs';
+    window._zkGenerateVoteProof = generateVoteProof;
+    window._zkFormatProof = formatProofForVerifier;
+    window._zkRandomNullifierSeed = randomNullifierSeed;
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
@@ -781,7 +788,7 @@
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
       "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
-      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata)",
+      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _a, uint256[2][2] calldata _b, uint256[2] calldata _c, uint256[] calldata _publicSignals)",
       "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)"
     ];
 
@@ -1145,6 +1152,10 @@
         showToast('Connect your wallet first', true);
         return;
       }
+      if (!window._zkGenerateVoteProof) {
+        showToast('ZK module loading — please try again in a moment', true);
+        return;
+      }
       if (pendingTx) {
         showToast('A transaction is already pending', true);
         return;
@@ -1162,17 +1173,39 @@
         // Step 1: Generating Witness (1.5s)
         await animateZKStep(1, 'generating');
 
-        // Step 2: Computing SNARK Proof (2s)
-        await animateZKStep(2, 'computing');
+        // Step 2: Compute actual SNARK proof
+        const zkStep2El = document.getElementById('zkStep2');
+        const zkStatus2El = document.getElementById('zkStatus2');
+        zkStep2El.classList.add('active');
+        zkStatus2El.textContent = 'computing...';
+        const proofStatusEl = document.getElementById('proof-status');
+        if (proofStatusEl) proofStatusEl.textContent = 'Generating ZK proof...';
 
-        // Step 3: Verifying on-chain
+        const nullifierSeed = window._zkRandomNullifierSeed();
+        const zkResult = await window._zkGenerateVoteProof({
+          voteChoice: choice,
+          nullifierSeed,
+          voterAddress: userAddress,
+          proposalId: BigInt(selectedProposalId),
+        });
+        const formattedProof = window._zkFormatProof(zkResult.proof);
+        const nullifierHashBytes32 = ethers.utils.hexZeroPad(
+          ethers.BigNumber.from(zkResult.nullifierHash).toHexString(), 32
+        );
+
+        zkStep2El.classList.remove('active');
+        zkStep2El.classList.add('done');
+        zkStatus2El.textContent = 'computed';
+
+        // Step 3: Submit on-chain
         document.getElementById('zkStep3').classList.add('active');
         document.getElementById('zkStatus3').textContent = 'verifying...';
+        if (proofStatusEl) proofStatusEl.textContent = 'Submitting vote on-chain...';
 
-        // Submit actual vote tx
-        const nullifierHash = ethers.utils.keccak256(ethers.utils.randomBytes(32));
-        const proof = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
-        const tx = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash, proof);
+        const tx = await contract.voteOnMotion(
+          selectedProposalId, choice, nullifierHashBytes32,
+          formattedProof.a, formattedProof.b, formattedProof.c, zkResult.publicSignals
+        );
         pendingTx = tx.hash;
 
         // Mark step 3 complete
@@ -1182,12 +1215,20 @@
 
         // Show complete state
         document.getElementById('zkProofHash').textContent = tx.hash.slice(0, 10) + '...' + tx.hash.slice(-6);
+        if (proofStatusEl) proofStatusEl.textContent = '✓ Vote submitted with ZK proof';
         document.getElementById('zkComplete').classList.remove('hidden');
 
         // ── Privacy Shield Animation ─────────────────────
         const shieldDiv = document.createElement('div');
         shieldDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;background:#1C1C1E;border:2px solid #F5A623;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2001;opacity:0;transition:opacity 0.5s';
-        shieldDiv.innerHTML = '<div style="font-size:3rem">&#x1F6E1;</div><div style="color:#F5A623;font-size:0.75rem;margin-top:8px;font-family:JetBrains Mono">PRIVATE</div>';
+        const shieldIcon = document.createElement('div');
+        shieldIcon.style.fontSize = '3rem';
+        shieldIcon.textContent = '🛡️';
+        const shieldLabel = document.createElement('div');
+        shieldLabel.style.cssText = 'color:#F5A623;font-size:0.75rem;margin-top:8px;font-family:JetBrains Mono';
+        shieldLabel.textContent = 'PRIVATE';
+        shieldDiv.appendChild(shieldIcon);
+        shieldDiv.appendChild(shieldLabel);
         document.body.appendChild(shieldDiv);
         requestAnimationFrame(() => { shieldDiv.style.opacity = '1'; });
         setTimeout(() => { shieldDiv.style.opacity = '0'; setTimeout(() => shieldDiv.remove(), 500); }, 2000);
@@ -1216,9 +1257,14 @@
         cheaterBtn.textContent = 'Try to Double-Vote (Demonstration)';
         cheaterBtn.onclick = async () => {
           try {
-            const nullifierHash2 = ethers.utils.keccak256(ethers.utils.randomBytes(32));
-            const proof2 = [ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero,ethers.constants.HashZero];
-            const tx2 = await contract.voteOnMotion(selectedProposalId, choice, nullifierHash2, proof2);
+            const n2 = window._zkRandomNullifierSeed();
+            const zkR2 = await window._zkGenerateVoteProof({
+              voteChoice: choice, nullifierSeed: n2,
+              voterAddress: userAddress, proposalId: BigInt(selectedProposalId),
+            });
+            const fp2 = window._zkFormatProof(zkR2.proof);
+            const nh2 = ethers.utils.hexZeroPad(ethers.BigNumber.from(zkR2.nullifierHash).toHexString(), 32);
+            const tx2 = await contract.voteOnMotion(selectedProposalId, choice, nh2, fp2.a, fp2.b, fp2.c, zkR2.publicSignals);
             await tx2.wait();
           } catch (err) {
             if (err.message.includes('already voted') || err.reason?.includes('already')) {
@@ -1237,6 +1283,8 @@
         setTimeout(() => {
           document.getElementById('zkProofModal').classList.add('hidden');
           resetZKModal();
+          const ps = document.getElementById('proof-status');
+          if (ps) ps.textContent = '';
         }, 3000);
 
       } catch (err) {
@@ -1244,6 +1292,8 @@
         document.getElementById('txBanner').className = '';
         document.getElementById('zkProofModal').classList.add('hidden');
         resetZKModal();
+        const ps = document.getElementById('proof-status');
+        if (ps) ps.textContent = 'Proof generation failed: ' + (err.message || 'Unknown error');
         showToast(err.reason || err.message, true);
       }
     }
