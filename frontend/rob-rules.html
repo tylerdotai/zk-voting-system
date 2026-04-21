@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
     :root {
       --bg: #1C1C1E;
@@ -666,6 +667,135 @@
       font-family: 'IBM Plex Mono', monospace;
     }
 
+    @media (max-width: 900px) {
+      /* Layout: stack columns */
+      .main {
+        grid-template-columns: 1fr !important;
+        padding: 1rem;
+        gap: 1rem;
+      }
+      /* Header: compact */
+      .header {
+        padding: 1rem;
+      }
+      .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      .header-nav {
+        width: 100%;
+        flex-wrap: wrap;
+      }
+      .header-nav a {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+      }
+      /* Contract bar: wrap */
+      .contract-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.7rem;
+      }
+      /* Create form: stack on small screens */
+      .create-form {
+        flex-direction: column;
+      }
+      .create-form button {
+        width: 100%;
+        padding: 1rem;
+      }
+      /* Vote display: tighter 3-column */
+      .vote-display {
+        gap: 0.5rem;
+        margin: 1rem 0;
+      }
+      .vote-cell {
+        padding: 0.75rem 0.5rem;
+      }
+      .vote-cell .count {
+        font-size: clamp(1.5rem, 6vw, 2.5rem);
+      }
+      .vote-cell .label {
+        font-size: 0.6rem;
+      }
+      /* Detail panel: no sticky, full width */
+      .detail-panel {
+        position: static;
+        padding: 1rem;
+      }
+      /* Proposal card: tighter padding */
+      .proposal-card {
+        padding: 1rem;
+      }
+      .proposal-desc {
+        font-size: 0.95rem;
+      }
+      .proposal-stats {
+        gap: 1rem;
+        font-size: 0.75rem;
+      }
+      .proposal-stats strong {
+        font-size: 0.9rem;
+      }
+      /* Chair/member action buttons: full width, min 48px tap target */
+      .chair-actions .action-btn,
+      .member-actions .action-btn {
+        min-height: 48px;
+        font-size: 0.8rem;
+      }
+      /* Verifier bar: safe area bottom */
+      .verifier-bar {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .verifier-bar .verifier-item {
+        padding: 6px 8px;
+      }
+      .verifier-bar .verifier-label {
+        font-size: 0.55rem;
+      }
+      .verifier-bar .verifier-value {
+        font-size: 0.65rem;
+      }
+    }
+    @media (min-width: 901px) {
+      .verifier-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #0f0f11;
+        border-top: 1px solid #252528;
+        display: flex;
+        z-index: 100;
+      }
+      .verifier-bar .verifier-item {
+        flex: 1;
+        padding: 8px 16px;
+        border-right: 1px solid #252528;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .verifier-bar .verifier-item:last-child { border-right: none; }
+      .verifier-bar .verifier-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.6rem;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .verifier-bar .verifier-value {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #F5A623;
+      }
+      #verifierStatus.verified { color: #22C55E; }
+      #verifierStatus.pending { color: #F5A623; }
+      /* Add bottom padding to main so verifier bar doesn't cover content */
+      .main { padding-bottom: 3rem; }
+    }
     @media (min-width: 1200px) {
       .main { grid-template-columns: 1fr 420px; }
     }
@@ -901,11 +1031,24 @@
       if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
         sseConn = new EventSource(`${SSE_BASE}/events`);
         sseConn.onmessage = async (e) => {
-          const { event } = JSON.parse(e.data);
+          const { event, data } = JSON.parse(e.data);
           if (event === 'connected' || event === 'ws_disconnected') return;
+          if (event === 'VoterCount' && data?.lastBlock) {
+            document.getElementById('verifierBlock').textContent = data.lastBlock;
+          }
           if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
             await loadProposals();
             if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
+            // Update verifier bar on vote activity
+            const statusEl = document.getElementById('verifierStatus');
+            if (statusEl) {
+              statusEl.textContent = 'VERIFIED';
+              statusEl.className = 'verifier-value';
+              setTimeout(() => {
+                statusEl.textContent = 'READY';
+                statusEl.className = 'verifier-value';
+              }, 5000);
+            }
           }
         };
         sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
@@ -1240,6 +1383,24 @@
         navigator.serviceWorker.register("/sw.js").catch(() => {});
       });
     }
+  <div id="verifierBar" class="verifier-bar">
+    <div class="verifier-item">
+      <span class="verifier-label">BLOCK</span>
+      <span class="verifier-value" id="verifierBlock">—</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">PROOF STATUS</span>
+      <span class="verifier-value" id="verifierStatus">READY</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">LAST TX</span>
+      <span class="verifier-value" id="verifierTx">—</span>
+    </div>
+    <div class="verifier-item">
+      <span class="verifier-label">NETWORK</span>
+      <span class="verifier-value">SEPOLIA</span>
+    </div>
+  </div>
   </script>
 </body>
 </html>
