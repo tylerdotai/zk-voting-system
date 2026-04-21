@@ -3,7 +3,7 @@
 **Version:** 0.9-draft  
 **Author:** Tyler Delano + Dexter  
 **Context:** Fort Worth DAO HackFW 2026 Grant — $2,500  
-**Updated:** 2026-04-19 (ENS-gated pivot)
+**Updated:** 2026-04-21 (Groth16VerifierV2 + ZKVotingSimple live on Sepolia)
 
 ---
 
@@ -56,7 +56,7 @@ User connects wallet → isEligible(address) → voter allowlist
 Created → Seconded (any member) → Amendments → Voting (any member) → Passed/Failed
 ```
 
-Stack: Solidity ^0.8.19 · Hardhat · Ethers.js v5 · OpenZeppelin  
+Stack: Solidity ^0.8.19 · Hardhat · Ethers.js v6 · OpenZeppelin  
 Network: Ethereum Sepolia testnet
 
 ### Application Layer
@@ -123,7 +123,7 @@ Static HTML/JS — deploys directly from `frontend/` directory.
 |-------|-----------|
 | Smart Contracts | Solidity ^0.8.19, Hardhat, OpenZeppelin |
 | Network | Ethereum Sepolia |
-| Frontend | Vanilla HTML/CSS/JS, PWA |
+| Frontend | Vanilla HTML/CSS/JS, Ethers.js v6, PWA |
 | Wallet | MetaMask (window.ethereum) |
 
 ---

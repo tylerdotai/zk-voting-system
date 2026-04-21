@@ -46,3 +46,4 @@ Priority legend: P0 critical, P1 important, P2 useful
 - [x] TX hash display + Etherscan links on all write actions
 - [x] Chair voter management UI (add voters from dashboard)
 - [x] README rewritten — clean, accurate, no stale references
+- [x] Repo cleaned — test artifacts, credential infra, dead code removed

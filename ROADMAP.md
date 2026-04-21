@@ -1,6 +1,6 @@
 # ROADMAP.md — ZK Voting System
 
-**Current phase: Live on Sepolia — Demo Ready**
+**Current phase: Live on Sepolia — Demo Ready (May 1st FW DAO meeting)**
 
 ---
 
@@ -9,15 +9,17 @@
 The system is a working ENS-gated Rob's Rules parliamentary voting dApp on Sepolia.
 
 **What works today:**
+- Groth16VerifierV2 + ZKVotingSimple live on Sepolia
 - Chair creates proposals, any eligible voter can second
 - Amendments, open voting, cast vote, finalize
 - Call for division, reconsideration, reopen voting
-- PWA with offline-capable service worker
+- PWA with offline-capable service worker (✅ verified)
 - Mobile-first projection-ready UI
+- README updated with full hackathon demo script
 
 **What needs to happen before May 1st:**
-1. Vercel deploy → public URL for 60-person room
-2. 3-voter end-to-end test
+1. 3-voter end-to-end test (local, full Rob's Rules flow)
+2. Vercel deploy → public URL for 60-person room
 3. Demo rehearsal
 
 ---
@@ -26,11 +28,11 @@ The system is a working ENS-gated Rob's Rules parliamentary voting dApp on Sepol
 
 **Goal:** First real-world use at Fort Worth DAO meeting.
 
-- [x] Deploy to public Vercel URL
 - [ ] 3-voter end-to-end test
 - [ ] Demo rehearsal
 - [ ] Fix any failures found in rehearsal
-- [ ] README polished
+- [x] README polished with hackathon demo script
+- [x] Repo cleaned — test artifacts, credential infra, dead code removed
 
 **Definition of done:** 60 people can show up, connect wallets, and vote on a real proposal.
 
@@ -68,5 +70,5 @@ The system is a working ENS-gated Rob's Rules parliamentary voting dApp on Sepol
 
 - **Pivot from Polygon ID** (Apr 2026) — ENS-gated allowlist, simpler, faster to ship
 - **Grant:** Fort Worth DAO — $2,500 for ZK DID voting system (post-quantum ready, offline-capable, no 3rd party dependency)
-- **Stack:** Solidity · Hardhat · Ethers.js · Vanilla HTML/CSS/JS · PWA
+- **Stack:** Solidity · Hardhat · Ethers.js v6 · Vanilla HTML/CSS/JS · PWA
 - **Network:** Ethereum Sepolia (mainnet when ready)

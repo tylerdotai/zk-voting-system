@@ -7,6 +7,13 @@ No ENS Allowlist / ZK credential dependency. ZK vote privacy layer preserved for
 
 ---
 
+## Live Contracts
+
+| Contract | Address | Purpose |
+|---|---|---|
+| **Groth16VerifierV2** | `0x198041e195b9e8C34B5371edF67Ec84DFa68bb74` | Groth16 proof verifier |
+| **ZKVotingSimple** | `0xdA9B09bA4B059A84F98Ce27dF45de09F434A4F12` | Working demo voting |
+
 ## Architecture
 
 ```
@@ -73,8 +80,7 @@ If not eligible → "Register Now" button → calls addVoter(address)
 
 ## Out of Scope (for now)
 
-- ENS Allowlist / ZK credential verification
-- On-chain ZK proof validation
+- ZK credential verification (ENS-gated allowlist deployed instead)
 - Multi-chain support
 - Mobile app
 - Mainnet deployment
@@ -83,10 +89,11 @@ If not eligible → "Register Now" button → calls addVoter(address)
 
 ## In Scope
 
-- ENS domain resolution for voter eligibility (future)
 - ZK vote privacy layer (post-quantum, future)
 - Offline-capable PWA
 - Real-time SSE updates (future)
+- 3-voter end-to-end test (pre-demo)
+- Demo rehearsal
 
 ---
 

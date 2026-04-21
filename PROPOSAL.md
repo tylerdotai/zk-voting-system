@@ -2,9 +2,10 @@
 
 ## Project Overview
 
-**Project Name:** ZK DID Voting System  
-**Organization:** Fort Worth DAO  
-**Bounty:** Zero Knowledge DID Blockchain Voting System ($2,500)  
+**Project Name:** ZK DID Voting System
+**Organization:** Fort Worth DAO / Hacker Fund
+**Bounty:** Zero Knowledge DID Blockchain Voting System ($2,500)
+**Author:** Tyler Delano — [@tylerdotai](https://x.com/tylerdotai)
 **Repository:** https://github.com/tylerdotai/zk-voting-system
 
 ---
@@ -21,31 +22,18 @@ A fully functional blockchain voting system with the following capabilities:
 
 ### Core Features Implemented
 
-1. **Blockchain-Based Voting**
-   - Smart contract deployed on Ethereum Sepolia testnet
-   - Address: `0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e`
-   - Immutable vote recording on-chain
+### Live Contracts (Sepolia)
 
-2. **Offline Capable**
-   - Votes can be cast without internet connection
-   - LocalStorage persistence
-   - Export/Import backup functionality
-   - Sync when back online
-
-3. **Real-Time Updates**
-   - Live vote tallying from blockchain
-   - Server-Sent Events style updates
-
-4. **Wallet Integration**
-   - MetaMask connection
-   - Sepolia testnet support
+| Contract | Address |
+|---|---|
+| **Groth16VerifierV2** (verifier) | [`0x198041e195b9e8C34B5371edF67Ec84DFa68bb74`](https://sepolia.etherscan.io/address/0x198041e195b9e8C34B5371edF67Ec84DFa68bb74) |
+| **ZKVotingSimple** (demo voting) | [`0xdA9B09bA4B059A84F98Ce27dF45de09F434A4F12`](https://sepolia.etherscan.io/address/0xdA9B09bA4B059A84F98Ce27dF45de09F434A4F12) |
 
 ### Technical Implementation
 
 - **Smart Contract:** Solidity with OpenZeppelin
-- **Testing:** 22 tests, 100% line coverage, 87.5% branch coverage
-- **Frontend:** Vanilla HTML/JS with Ethers.js
-- **Deployment:** Hardhat
+- **ZK Credential Verification** — Groth16 proof-verified voter eligibility (no third-party dependency)
+- **Offline Capable** — PWA with service worker, blockchain sync when online
 
 ---
 
@@ -87,9 +75,8 @@ Our implementation enables:
 
 ## Future Enhancements
 
-- Real ZK proof verification
-- DID integration (Ceramic/ENS Allowlist)
-- Post-quantum cryptography
+- DID integration (Ceramic/ENS)
+- Post-quantum cryptography (ML-DSA)
 - Multi-chain support
 - Mobile application
 
@@ -97,10 +84,11 @@ Our implementation enables:
 
 ## Submission
 
+### Submission
+
 - **Repository:** https://github.com/tylerdotai/zk-voting-system
-- **Live Contract:** https://sepolia.etherscan.io/address/0xb5a5Dd671e70df618c9694541e7F1e4E66b1a88e
-- **Demo Video:** [To be added]
-- **Author:** Tyler Delano
+- **Live Contract:** https://sepolia.etherscan.io/address/0xdA9B09bA4B059A84F98Ce27dF45de09F434A4F12
+- **Demo Video:** [Link to be added]
 
 ---
 
