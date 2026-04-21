@@ -98,6 +98,65 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
+    .header .contract-link {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--slate);
+      text-decoration: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+    .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
+    .header .wallet-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .wallet-badge.disconnected { color: var(--slate); }
+    .header .faucet-link {
+      font-size: 0.65rem;
+      color: var(--slate);
+      text-decoration: none;
+      margin-left: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .faucet-link:hover { color: var(--amber); }
+    .header .faucet-link.hidden { display: none; }
+
+    /* Chair floating badge */
+    .chair-badge {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--amber);
+      color: #1C1C1E;
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-btn);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: var(--shadow);
+      z-index: 50;
+      transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+    .chair-badge:hover { background: #f0b030; transform: translateY(-1px); }
+
+
+    /* Proposal meta */
+    .proposal-meta {
+      font-size: 0.7rem;
+      color: var(--slate);
+      margin-bottom: 0.4rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
 
     /* Main */
     .main {
@@ -524,6 +583,9 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
+    <a class="contract-link" id="contractLink" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
+    <a class="faucet-link hidden" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener">Get Sepolia ETH ↗</a>
   </div>
 
   <div class="main">
@@ -589,6 +651,7 @@
   </div>
 
   <div class="toast" id="toast"></div>
+  <a class="chair-badge" href="rob-rules.html">👑 Chair Dashboard</a>
   <div id="txBanner">
     <div class="tx-label" id="txLabel">Your vote is onchain</div>
     <div class="tx-hash" id="txHash"></div>
@@ -610,6 +673,25 @@
     ];
 
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function shortenAddress(addr) {
+      if (!addr || typeof addr !== 'string' || addr.length < 10) return '—';
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
+    async function timeSinceBlock(blockNum) {
+      if (!blockNum || blockNum.toString() === '0') return '—';
+      try {
+        const currentBlock = await provider.getBlockNumber();
+        const elapsed = (currentBlock - parseInt(blockNum.toString())) * 12;
+        if (elapsed < 60) return 'just now';
+        const mins = Math.floor(elapsed / 60);
+        return mins + ' min ago';
+      } catch {
+        return '—';
+      }
+    }
 
     let provider, signer, contract, userAddress;
     let selectedProposalId = null;
@@ -653,6 +735,12 @@
         document.getElementById('connectBtn').textContent = 'Connected';
         document.getElementById('connectBtn').disabled = true;
         document.getElementById('voterCountBar').style.display = 'flex';
+
+        // Update header badge + faucet
+        const badge = document.getElementById('walletBadge');
+        badge.textContent = '👛 ' + shortenAddress(userAddress);
+        badge.classList.remove('disconnected');
+        document.getElementById('faucetLink').classList.remove('hidden');
 
         // SSE connect — inside auth block
         connectSSE();
@@ -723,12 +811,22 @@
         headerDiv.className = 'proposal-header';
         const idSpan = document.createElement('span');
         idSpan.className = 'proposal-id';
-        idSpan.textContent = `Proposal #${i}`;
+        idSpan.textContent = `Motion #${i + 1}`;
         const badgeSpan = document.createElement('span');
         badgeSpan.className = `state-badge state-${state}`;
         badgeSpan.textContent = STATES[state];
         headerDiv.appendChild(idSpan);
         headerDiv.appendChild(badgeSpan);
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'proposal-meta';
+        metaDiv.id = `proposal-meta-${i}`;
+        metaDiv.textContent = shortenAddress(p[1]) + ' · loading…';
+        // Resolve time async
+        timeSinceBlock(p[3]).then(ts => {
+          const el = document.getElementById(`proposal-meta-${i}`);
+          if (el) el.textContent = shortenAddress(p[1]) + ' · ' + ts;
+        });
 
         const descDiv = document.createElement('div');
         descDiv.className = 'proposal-desc';
@@ -778,6 +876,7 @@
         }
 
         card.appendChild(headerDiv);
+        card.appendChild(metaDiv);
         card.appendChild(descDiv);
         card.appendChild(footerDiv);
         list.appendChild(card);

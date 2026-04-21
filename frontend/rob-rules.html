@@ -98,6 +98,35 @@
       letter-spacing: 0.05em;
       text-transform: uppercase;
     }
+    .header .contract-link {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--slate);
+      text-decoration: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      transition: all 0.15s;
+    }
+    .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
+    .header .wallet-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--amber);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .wallet-badge.disconnected { color: var(--slate); }
+    .header .faucet-link {
+      font-size: 0.65rem;
+      color: var(--slate);
+      text-decoration: none;
+      margin-left: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header .faucet-link:hover { color: var(--amber); }
 
     /* Main Layout */
     .main {
@@ -666,6 +695,9 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
+    <a class="contract-link" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
+    <a class="faucet-link" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener" style="display:none;">Get Sepolia ETH ↗</a>
   </div>
 
   <div class="main">
@@ -793,6 +825,12 @@
 
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
 
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function shortenAddress(addr) {
+      if (!addr || typeof addr !== 'string' || addr.length < 10) return '—';
+      return addr.slice(0, 6) + '...' + addr.slice(-4);
+    }
+
     let provider, signer, contract, userAddress, currentProposalId = null;
     let pendingTx = null;
     let pendingTimeout = null;
@@ -828,8 +866,8 @@
           }
         }
 
-        document.getElementById('contractAddr').textContent = CONTRACT_ADDRESS.slice(0,10) + '...' + CONTRACT_ADDRESS.slice(-6);
-        document.getElementById('chairAddr').textContent = userAddress.slice(0,8) + '...' + userAddress.slice(-6);
+        document.getElementById('contractAddr').textContent = shortenAddress(CONTRACT_ADDRESS);
+        document.getElementById('chairAddr').textContent = shortenAddress(userAddress);
 
         const chair = await contract.chair();
 
@@ -841,6 +879,12 @@
         }
 
         document.getElementById('walletGate').classList.add('hidden');
+
+        // Update header badge + faucet
+        const badge = document.getElementById('walletBadge');
+        badge.textContent = '👛 ' + shortenAddress(userAddress);
+        badge.classList.remove('disconnected');
+        document.getElementById('faucetLink').style.display = 'inline';
 
         // SSE connect — inside auth block
         connectSSE();
@@ -925,7 +969,7 @@
       const hasVoted = await contract.hasVoted(id, userAddress);
 
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
-      document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? p[1].slice(0,8) + '...' : 'N/A'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
+      document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? shortenAddress(p[1]) : '—'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
       document.getElementById('yesCount').textContent = p[7].toString();
       document.getElementById('noCount').textContent = p[8].toString();
       document.getElementById('abstainCount').textContent = p[9].toString();
