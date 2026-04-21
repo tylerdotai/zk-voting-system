@@ -571,6 +571,29 @@
       .proposal-desc { font-size: 1.35rem; }
       .vote-cell .count { font-size: 4.5rem; }
     }
+
+    /* Registration Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-overlay.hidden { display: none; }
+    .modal-card { background: #252528; border: 1px solid #F5A623; border-radius: 12px; padding: 32px; max-width: 420px; width: 100%; }
+    .modal-card h2 { font-family: 'JetBrains Mono', monospace; color: #F5A623; margin-bottom: 8px; font-size: 1.5rem; }
+    .modal-subtitle { color: #64748B; font-size: 0.875rem; margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; color: #E5E5E5; font-size: 0.875rem; margin-bottom: 6px; font-family: 'IBM Plex Mono', monospace; }
+    .form-group input[type="text"] { width: 100%; padding: 10px 14px; border: 1px solid #333; border-radius: 6px; background: #1C1C1E; color: #fff; font-size: 1rem; box-sizing: border-box; }
+    .form-group input[type="text"]:focus { outline: none; border-color: #F5A623; }
+    .role-options { display: flex; gap: 16px; flex-wrap: wrap; }
+    .role-label { display: flex; align-items: center; gap: 6px; color: #E5E5E5; cursor: pointer; font-size: 0.875rem; }
+    .role-label input[type="radio"] { accent-color: #F5A623; width: 16px; height: 16px; }
+    .form-actions { margin-top: 24px; }
+    .btn-primary { width: 100%; padding: 12px; background: #F5A623; color: #1C1C1E; border: none; border-radius: 6px; font-weight: 600; font-size: 1rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; }
+    .btn-primary:hover { background: #ffb84d; }
+    .welcome-back { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #252528; border: 1px solid #333; border-radius: 8px; margin-bottom: 16px; }
+    .welcome-back .wb-info { flex: 1; }
+    .welcome-back .wb-name { color: #F5A623; font-weight: 600; font-size: 1rem; }
+    .welcome-back .wb-role { color: #64748B; font-size: 0.875rem; margin-top: 2px; }
+    .welcome-back .edit-btn { background: none; border: 1px solid #333; color: #64748B; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem; }
+    .welcome-back .edit-btn:hover { border-color: #F5A623; color: #F5A623; }
   </style>
 </head>
 <body>
@@ -680,6 +703,17 @@
       return addr.slice(0, 6) + '...' + addr.slice(-4);
     }
 
+    function getVoterData(addr) {
+      try {
+        const data = localStorage.getItem('zkvoter_' + addr);
+        return data ? JSON.parse(data) : null;
+      } catch { return null; }
+    }
+
+    function setVoterData(addr, data) {
+      localStorage.setItem('zkvoter_' + addr, JSON.stringify(data));
+    }
+
     async function timeSinceBlock(blockNum) {
       if (!blockNum || blockNum.toString() === '0') return '—';
       try {
@@ -744,6 +778,18 @@
 
         // SSE connect — inside auth block
         connectSSE();
+
+        // Check voter registration
+        const existing = getVoterData(userAddress);
+        if (!existing) {
+          document.getElementById('registrationModal').classList.remove('hidden');
+          return; // halt flow until registered
+        }
+        // Show welcome back badge
+        const wbDiv = document.createElement('div');
+        wbDiv.className = 'welcome-back';
+        wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + existing.name + '</div><div class="wb-role">' + existing.role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+        document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
 
         contract.on("MotionVoted", async () => {
           if (selectedProposalId !== null) await refreshSelectedProposal();
@@ -1008,6 +1054,19 @@
       selectedProposalId = null;
     }
 
+    function openEditVoter() {
+      const existing = getVoterData(userAddress);
+      if (existing) {
+        document.getElementById('voterName').value = existing.name;
+        document.querySelector('input[name="voterRole"][value="' + existing.role + '"]').checked = true;
+      }
+      document.getElementById('registrationModal').classList.remove('hidden');
+    }
+
+    function closeRegistrationModal() {
+      document.getElementById('registrationModal').classList.add('hidden');
+    }
+
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -1025,6 +1084,45 @@
         navigator.serviceWorker.register("/sw.js").catch(() => {});
       });
     }
+  </script>
+
+  <div id="registrationModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <h2>Register to Vote</h2>
+      <p class="modal-subtitle">City of Fort Worth DAO — Member Registration</p>
+      <form id="registrationForm">
+        <div class="form-group">
+          <label for="voterName">Full Name</label>
+          <input type="text" id="voterName" placeholder="Jane Smith" required maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <div class="role-options">
+            <label class="role-label"><input type="radio" name="voterRole" value="Member" checked> Member</label>
+            <label class="role-label"><input type="radio" name="voterRole" value="Chair"> Chair</label>
+            <label class="role-label"><input type="radio" name="voterRole" value="Public Observer"> Public Observer</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Join Session</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = document.getElementById('voterName').value.trim();
+      const role = document.querySelector('input[name="voterRole"]:checked').value;
+      setVoterData(userAddress, { name, role });
+      document.getElementById('registrationModal').classList.add('hidden');
+      const wbDiv = document.createElement('div');
+      wbDiv.className = 'welcome-back';
+      wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + name + '</div><div class="wb-role">' + role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+      document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
+      loadProposals();
+    });
   </script>
 </body>
 </html>
