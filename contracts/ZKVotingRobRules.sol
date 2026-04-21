@@ -3,6 +3,15 @@ pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+interface IZKVerifier {
+    function verifyProof(
+        uint256[2] memory _pA,
+        uint256[2][2] memory _pB,
+        uint256[2] memory _pC,
+        uint256[] memory _pubSignals
+    ) external view returns (bool);
+}
+
 /**
  * @title ZKVotingRobRules
  * @dev ZK Voting System with Rob's Rules of Order Parliamentary Process
@@ -10,6 +19,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ZKVotingRobRules is Ownable {
     
     // State variables
+    address public verifier;
     address public chair;
     uint256 public choiceCount;
     uint256 public proposalCount;
@@ -52,6 +62,8 @@ contract ZKVotingRobRules is Ownable {
     mapping(uint256 => mapping(address => bool)) public hasVotedOnProposal;
     
     // Events
+    event VerifierUpdated(address indexed oldVerifier, address indexed newVerifier);
+    event ProofVerified(address indexed voter, uint256 indexed proposalId);
     event ChairUpdated(address indexed oldChair, address indexed newChair);
     event ProposalCreated(uint256 indexed proposalId, string description, address indexed chair);
     event ProposalSeconded(uint256 indexed proposalId);
@@ -76,6 +88,14 @@ contract ZKVotingRobRules is Ownable {
         choiceCount = _choiceCount;
     }
     
+    // Verifier Management
+    function setVerifier(address _verifier) external onlyOwner {
+        require(_verifier != address(0), "Verifier cannot be zero address");
+        address oldVerifier = verifier;
+        verifier = _verifier;
+        emit VerifierUpdated(oldVerifier, _verifier);
+    }
+
     // Chair Management
     function setChair(address _newChair) external onlyOwner {
         require(_newChair != address(0), "Chair cannot be zero address");
@@ -161,8 +181,17 @@ contract ZKVotingRobRules is Ownable {
         uint256 _proposalId,
         uint256 _choice,
         bytes32 _nullifierHash,
-        bytes32[8] calldata
+        uint256[2] memory _pA,
+        uint256[2][2] memory _pB,
+        uint256[2] memory _pC,
+        uint256[] memory _pubSignals
     ) external {
+        require(verifier != address(0), "Verifier not set");
+        require(
+            IZKVerifier(verifier).verifyProof(_pA, _pB, _pC, _pubSignals),
+            "ZK proof invalid"
+        );
+        emit ProofVerified(msg.sender, _proposalId);
         Proposal storage p = proposals[_proposalId];
         
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");
