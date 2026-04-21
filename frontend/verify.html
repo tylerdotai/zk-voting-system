@@ -141,11 +141,29 @@
       if (eligible) {
         banner.className = 'status eligible';
         banner.textContent = 'Eligible Voter';
-        document.getElementById('infoText').innerHTML = '<strong>You are registered to vote.</strong><br><br>Go to the Voter Portal to create proposals, vote on motions, and participate in governance.';
+        const infoText = document.getElementById('infoText');
+        infoText.innerHTML = '';
+        const strong1 = document.createElement('strong');
+        strong1.textContent = 'You are registered to vote.';
+        infoText.appendChild(strong1);
+        infoText.appendChild(document.createElement('br'));
+        infoText.appendChild(document.createElement('br'));
+        const p1 = document.createElement('p');
+        p1.textContent = 'Go to the Voter Portal to create proposals, vote on motions, and participate in governance.';
+        infoText.appendChild(p1);
       } else {
         banner.className = 'status not-eligible';
         banner.textContent = 'Not Registered';
-        document.getElementById('infoText').innerHTML = '<strong>You are not on the voter allowlist.</strong><br><br>Contact the chair to request being added to the voter allowlist.';
+        const infoText = document.getElementById('infoText');
+        infoText.innerHTML = '';
+        const strong2 = document.createElement('strong');
+        strong2.textContent = 'You are not on the voter allowlist.';
+        infoText.appendChild(strong2);
+        infoText.appendChild(document.createElement('br'));
+        infoText.appendChild(document.createElement('br'));
+        const p2 = document.createElement('p');
+        p2.textContent = 'Contact the chair to request being added to the voter allowlist.';
+        infoText.appendChild(p2);
       }
     }
     

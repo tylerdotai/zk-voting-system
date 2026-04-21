@@ -880,7 +880,22 @@
         if (existingWb) existingWb.remove();
         const wbDiv = document.createElement('div');
         wbDiv.className = 'welcome-back';
-        wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + existing.name + '</div><div class="wb-role">' + existing.role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+        const wbInfo = document.createElement('div');
+        wbInfo.className = 'wb-info';
+        const wbName = document.createElement('div');
+        wbName.className = 'wb-name';
+        wbName.textContent = '👋 ' + existing.name;
+        const wbRole = document.createElement('div');
+        wbRole.className = 'wb-role';
+        wbRole.textContent = existing.role;
+        wbInfo.appendChild(wbName);
+        wbInfo.appendChild(wbRole);
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = openEditVoter;
+        wbDiv.appendChild(wbInfo);
+        wbDiv.appendChild(editBtn);
         document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
 
         contract.on("MotionVoted", async () => {
@@ -931,7 +946,16 @@
       const list = document.getElementById('proposalsList');
 
       if (count === 0) {
-        list.innerHTML = '<div class="empty-state"><h3>No Proposals Yet</h3><p>The chair will create proposals for voting.</p></div>';
+        list.innerHTML = '';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'empty-state';
+        const emptyH3 = document.createElement('h3');
+        emptyH3.textContent = 'No Proposals Yet';
+        const emptyP = document.createElement('p');
+        emptyP.textContent = 'The chair will create proposals for voting.';
+        emptyDiv.appendChild(emptyH3);
+        emptyDiv.appendChild(emptyP);
+        list.appendChild(emptyDiv);
         return;
       }
 
@@ -977,11 +1001,20 @@
         const votesDiv = document.createElement('div');
         votesDiv.className = 'proposal-votes';
         const yesSpan = document.createElement('span');
-        yesSpan.innerHTML = `Yes <strong>${p[7].toString()}</strong>`;
+        yesSpan.textContent = 'Yes ';
+        const yesStrong = document.createElement('strong');
+        yesStrong.textContent = p[7].toString();
+        yesSpan.appendChild(yesStrong);
         const noSpan = document.createElement('span');
-        noSpan.innerHTML = `No <strong>${p[8].toString()}</strong>`;
+        noSpan.textContent = 'No ';
+        const noStrong = document.createElement('strong');
+        noStrong.textContent = p[8].toString();
+        noSpan.appendChild(noStrong);
         const abstainSpan = document.createElement('span');
-        abstainSpan.innerHTML = `Abstain <strong>${p[9].toString()}</strong>`;
+        abstainSpan.textContent = 'Abstain ';
+        const abstainStrong = document.createElement('strong');
+        abstainStrong.textContent = p[9].toString();
+        abstainSpan.appendChild(abstainStrong);
         votesDiv.appendChild(yesSpan);
         votesDiv.appendChild(noSpan);
         votesDiv.appendChild(abstainSpan);
@@ -1048,20 +1081,49 @@
         const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
         if (alreadyVoted) {
           statusEl.textContent = 'You have already voted on this proposal.';
-          controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;">Your vote has been recorded.</div>';
+          controls.innerHTML = '';
+          const recordedDiv = document.createElement('div');
+          recordedDiv.style.cssText = 'text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;';
+          recordedDiv.textContent = 'Your vote has been recorded.';
+          controls.appendChild(recordedDiv);
         } else {
           statusEl.textContent = 'Cast your vote below.';
-          controls.innerHTML = '<div class="vote-buttons"><button class="vote-btn yes" onclick="castVote(0)"><span class="spinner"></span>Yes</button><button class="vote-btn no" onclick="castVote(1)"><span class="spinner"></span>No</button><button class="vote-btn abstain" onclick="castVote(2)"><span class="spinner"></span>Abstain</button></div>';
+          controls.innerHTML = '';
+          const voteBtnsDiv = document.createElement('div');
+          voteBtnsDiv.className = 'vote-buttons';
+          ['Yes', 'No', 'Abstain'].forEach((label, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'vote-btn ' + label.toLowerCase();
+            btn.onclick = () => castVote(i);
+            const spinner = document.createElement('span');
+            spinner.className = 'spinner';
+            btn.appendChild(spinner);
+            btn.appendChild(document.createTextNode(label));
+            voteBtnsDiv.appendChild(btn);
+          });
+          controls.appendChild(voteBtnsDiv);
         }
       } else if (state === 0 || state === 1) {
         statusEl.textContent = 'Voting has not started for this proposal.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--text-dim);font-family:\'IBM Plex Mono\',monospace;">The chair will open voting soon.</div>';
+        controls.innerHTML = '';
+        const notStartedDiv = document.createElement('div');
+        notStartedDiv.style.cssText = 'text-align:center;padding:1rem;font-size:1rem;color:var(--text-dim);font-family:\'IBM Plex Mono\',monospace;';
+        notStartedDiv.textContent = 'The chair will open voting soon.';
+        controls.appendChild(notStartedDiv);
       } else if (state === 3) {
         statusEl.textContent = 'This proposal has passed.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;">✓ Proposal Passed</div>';
+        controls.innerHTML = '';
+        const passedDiv = document.createElement('div');
+        passedDiv.style.cssText = 'text-align:center;padding:1rem;font-size:1rem;color:var(--green);font-weight:700;font-family:\'JetBrains Mono\',monospace;';
+        passedDiv.textContent = '✓ Proposal Passed';
+        controls.appendChild(passedDiv);
       } else if (state === 4) {
         statusEl.textContent = 'This proposal did not pass.';
-        controls.innerHTML = '<div style="text-align:center;padding:1rem;font-size:1rem;color:var(--red);font-weight:700;font-family:\'JetBrains Mono\',monospace;">✗ Proposal Failed</div>';
+        controls.innerHTML = '';
+        const failedDiv = document.createElement('div');
+        failedDiv.style.cssText = 'text-align:center;padding:1rem;font-size:1rem;color:var(--red);font-weight:700;font-family:\'JetBrains Mono\',monospace;';
+        failedDiv.textContent = '✗ Proposal Failed';
+        controls.appendChild(failedDiv);
       }
     }
 
@@ -1299,7 +1361,22 @@
       if (existingWb2) existingWb2.remove();
       const wbDiv = document.createElement('div');
       wbDiv.className = 'welcome-back';
-      wbDiv.innerHTML = '<div class="wb-info"><div class="wb-name">👋 ' + name + '</div><div class="wb-role">' + role + '</div></div><button class="edit-btn" onclick="openEditVoter()">Edit</button>';
+      const wbInfo = document.createElement('div');
+      wbInfo.className = 'wb-info';
+      const wbName = document.createElement('div');
+      wbName.className = 'wb-name';
+      wbName.textContent = '👋 ' + name;
+      const wbRole = document.createElement('div');
+      wbRole.className = 'wb-role';
+      wbRole.textContent = role;
+      wbInfo.appendChild(wbName);
+      wbInfo.appendChild(wbRole);
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = 'Edit';
+      editBtn.onclick = openEditVoter;
+      wbDiv.appendChild(wbInfo);
+      wbDiv.appendChild(editBtn);
       document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
       loadProposals();
     });

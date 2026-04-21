@@ -1167,7 +1167,16 @@
       const list = document.getElementById('proposalsList');
 
       if (count === 0) {
-        list.innerHTML = '<div class="empty-state"><h3>No Proposals Yet</h3><p>Create one above to get started.</p></div>';
+        list.innerHTML = '';
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'empty-state';
+        const emptyH3 = document.createElement('h3');
+        emptyH3.textContent = 'No Proposals Yet';
+        const emptyP = document.createElement('p');
+        emptyP.textContent = 'Create one above to get started.';
+        emptyDiv.appendChild(emptyH3);
+        emptyDiv.appendChild(emptyP);
+        list.appendChild(emptyDiv);
         return;
       }
 
@@ -1196,7 +1205,24 @@
 
         const statsDiv = document.createElement('div');
         statsDiv.className = 'proposal-stats';
-        statsDiv.innerHTML = `<span>Yes: <strong>${p[7].toString()}</strong></span><span>No: <strong>${p[8].toString()}</strong></span><span>Abstain: <strong>${p[9].toString()}</strong></span>`;
+        const yesSpan = document.createElement('span');
+        yesSpan.textContent = 'Yes: ';
+        const yesStrong = document.createElement('strong');
+        yesStrong.textContent = p[7].toString();
+        yesSpan.appendChild(yesStrong);
+        const noSpan = document.createElement('span');
+        noSpan.textContent = 'No: ';
+        const noStrong = document.createElement('strong');
+        noStrong.textContent = p[8].toString();
+        noSpan.appendChild(noStrong);
+        const abstainSpan = document.createElement('span');
+        abstainSpan.textContent = 'Abstain: ';
+        const abstainStrong = document.createElement('strong');
+        abstainStrong.textContent = p[9].toString();
+        abstainSpan.appendChild(abstainStrong);
+        statsDiv.appendChild(yesSpan);
+        statsDiv.appendChild(noSpan);
+        statsDiv.appendChild(abstainSpan);
 
         card.appendChild(headerDiv);
         card.appendChild(descDiv);
@@ -1262,7 +1288,11 @@
       const list = document.getElementById('amendmentList');
 
       if (count === 0) {
-        list.innerHTML = '<div style="color:var(--text-dim);font-size:0.85rem;">No amendments submitted</div>';
+        list.innerHTML = '';
+        const noAmendDiv = document.createElement('div');
+        noAmendDiv.style.cssText = 'color:var(--text-dim);font-size:0.85rem;';
+        noAmendDiv.textContent = 'No amendments submitted';
+        list.appendChild(noAmendDiv);
         return;
       }
 
