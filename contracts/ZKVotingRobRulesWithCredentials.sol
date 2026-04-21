@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Groth16VerifierV2.sol";
 
 /**
  * @title ZKVotingRobRulesWithCredentials
@@ -27,15 +28,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract ZKVotingRobRulesWithCredentials is Ownable {
     
-    // ENS Resolver contract (for future ENS-gated eligibility)
-    address public ensResolver;
+    // ZK Verifier (immutable)
+    address public immutable verifier;
     
     // Voter eligibility registry — chair-managed allowlist
     mapping(address => bool) public allowedUsers;
     
     // Chair role
     address public chair;
-    uint256 public choiceCount;
+    uint256 public immutable choiceCount;
     uint256 public proposalCount;
     
     // Division call threshold (configurable)
@@ -110,13 +111,15 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     // Constructor
-    constructor(address _chair, uint256 _choiceCount) {
+    constructor(address _verifier, address _chair, uint256 _choiceCount) {
+        require(_verifier != address(0), "Verifier cannot be zero");
         require(_chair != address(0), "Chair cannot be zero address");
         require(_choiceCount >= 2, "Must have at least 2 choices");
         
-        _transferOwnership(msg.sender);
+        verifier = _verifier;
         chair = _chair;
         choiceCount = _choiceCount;
+        _transferOwnership(msg.sender);
     }
     
     // ============================================================
@@ -168,12 +171,14 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     }
     
     // ============================================================
-    // ENS Resolver (for future ENS-gated eligibility)
+    // ENS Resolver (for future ENS-gated eligibility — reserved)
     // ============================================================
     
-    function setEnsResolver(address _resolver) external onlyChairOrOwner {
-        ensResolver = _resolver;
-    }
+    // address public ensResolver; // Removed — ZK verifier takes precedence
+    
+    // function setEnsResolver(address _resolver) external onlyChairOrOwner {
+    //     ensResolver = _resolver;
+    // }
     
     // ============================================================
     // Rob's Rules Parliamentary Process
@@ -256,17 +261,44 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         p.votingEndsAt = block.timestamp + _duration;
     }
     
-    /// @dev Any eligible voter casts a vote
-    /// @param _proposalId The proposal ID
+    /// @dev Fast-track for demo: open voting directly from Created state (bypass seconding)
+    /// Not for production — only for hackathon demo where chair is sole member
+    function fastTrackVoting(uint256 _proposalId, uint256 _duration) external onlyChair {
+        Proposal storage p = proposals[_proposalId];
+        require(p.state == ProposalState.Created || p.state == ProposalState.Seconded, "Proposal not eligible");
+        require(_duration > 0 && _duration <= 7 days, "Invalid voting duration");
+        
+        p.state = ProposalState.Voting;
+        p.votingStartsAt = block.timestamp;
+        p.votingEndsAt = block.timestamp + _duration;
+    }
+    
+    /// @dev Cast a vote with Groth16 ZK proof verification.
     /// @param _choice 0=Yes, 1=No, 2=Abstain
-    /// @param _nullifierHash ZK placeholder for future vote privacy layer
-    function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, bytes32[8] calldata) external isEligibleVoter {
+    /// @param _nullifierHash ZK nullifier hash for vote privacy
+    /// @param _pA G1 point A from snarkjs proof
+    /// @param _pB G2 point B from snarkjs proof (Fq2 swapped for BN128 precompile)
+    /// @param _pC G1 point C from snarkjs proof
+    /// @param _pubSignals Public signals: [proposal_id, nullifier_hash, commitment]
+    function castVote(
+        uint256 _proposalId,
+        uint256 _choice,
+        bytes32 _nullifierHash,
+        uint256[2] calldata _pA,
+        uint256[2][2] calldata _pB,
+        uint256[2] calldata _pC,
+        uint256[3] calldata _pubSignals
+    ) external isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
         
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");
         require(block.timestamp <= p.votingEndsAt, "Voting period has ended");
         require(_choice < choiceCount, "Invalid choice");
         require(!p.hasVotedOnMotion[msg.sender], "Already voted");
+        
+        // Verify the ZK proof
+        bool proofOk = Groth16Verifier(verifier).verifyProof(_pA, _pB, _pC, _pubSignals);
+        require(proofOk, "Invalid ZK proof");
         
         p.hasVotedOnMotion[msg.sender] = true;
         

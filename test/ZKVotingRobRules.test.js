@@ -4,23 +4,34 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("ZKVotingRobRules", function () {
   let contract;
+  let mockVerifier;
   let owner;
   let chair;
   let member1;
   let member2;
   let member3;
-  let proof;
+
+  function buildMockProof(proposalId, nullifierHash, commitment = 0n) {
+    return {
+      pA: [1, 2],
+      pB: [[1, 2], [3, 4]],
+      pC: [1, 2],
+      pubSignals: [BigInt(proposalId), BigInt(nullifierHash), BigInt(commitment)],
+    };
+  }
 
   beforeEach(async function () {
     [owner, chair, member1, member2, member3] = await ethers.getSigners();
-    
+
     const ZKVotingRobRules = await ethers.getContractFactory("ZKVotingRobRules");
     contract = await ZKVotingRobRules.deploy(chair.address, 3);
     await contract.waitForDeployment();
-    
-    // Default proof array
-    proof = [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash,
-             ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash];
+
+    const MockVerifier = await ethers.getContractFactory("MockVerifier");
+    mockVerifier = await MockVerifier.deploy();
+    await mockVerifier.waitForDeployment();
+
+    await contract.connect(owner).setVerifier(await mockVerifier.getAddress());
   });
 
   describe("Deployment", function () {
@@ -66,7 +77,7 @@ describe("ZKVotingRobRules", function () {
     it("should allow chair to create a proposal", async function () {
       const tx = await contract.connect(chair).createProposal("Test proposal");
       const receipt = await tx.wait();
-      
+
       expect(await contract.proposalCount()).to.equal(1);
       expect(receipt.logs[0].args.proposalId).to.equal(0);
     });
@@ -202,45 +213,52 @@ describe("ZKVotingRobRules", function () {
 
     it("should allow voting Yes", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, pA, pB, pC, pubSignals);
       const proposal = await contract.proposals(0);
       expect(proposal.yesVotes).to.equal(1);
     });
 
     it("should allow voting No", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 1, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 1, nullifierHash, pA, pB, pC, pubSignals);
       const proposal = await contract.proposals(0);
       expect(proposal.noVotes).to.equal(1);
     });
 
     it("should allow voting Abstain", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 2, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 2, nullifierHash, pA, pB, pC, pubSignals);
       const proposal = await contract.proposals(0);
       expect(proposal.abstainVotes).to.equal(1);
     });
 
     it("should reject invalid choice", async function () {
       const nullifierHash = ethers.id("nullifier");
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
       await expect(
-        contract.connect(member1).voteOnMotion(0, 5, nullifierHash, proof)
+        contract.connect(member1).voteOnMotion(0, 5, nullifierHash, pA, pB, pC, pubSignals)
       ).to.be.revertedWith("Invalid choice");
     });
 
     it("should reject double voting", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, pA, pB, pC, pubSignals);
       await expect(
-        contract.connect(member1).voteOnMotion(0, 1, nullifierHash, proof)
+        contract.connect(member1).voteOnMotion(0, 1, nullifierHash, pA, pB, pC, pubSignals)
       ).to.be.revertedWith("Already voted");
     });
 
     it("should allow different members to vote", async function () {
       const nullifier1 = ethers.id("nullifier-1");
       const nullifier2 = ethers.id("nullifier-2");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifier1, proof);
-      await contract.connect(member2).voteOnMotion(0, 1, nullifier2, proof);
+      const proof1 = buildMockProof(0, nullifier1, 1n);
+      const proof2 = buildMockProof(0, nullifier2, 2n);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifier1, proof1.pA, proof1.pB, proof1.pC, proof1.pubSignals);
+      await contract.connect(member2).voteOnMotion(0, 1, nullifier2, proof2.pA, proof2.pB, proof2.pC, proof2.pubSignals);
       const proposal = await contract.proposals(0);
       expect(proposal.yesVotes).to.equal(1);
       expect(proposal.noVotes).to.equal(1);
@@ -248,7 +266,8 @@ describe("ZKVotingRobRules", function () {
 
     it("should emit MotionVoted event", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await expect(contract.connect(member1).voteOnMotion(0, 0, nullifierHash, proof))
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await expect(contract.connect(member1).voteOnMotion(0, 0, nullifierHash, pA, pB, pC, pubSignals))
         .to.emit(contract, "MotionVoted")
         .withArgs(0, 0, member1.address);
     });
@@ -258,16 +277,19 @@ describe("ZKVotingRobRules", function () {
     beforeEach(async function () {
       await contract.connect(chair).createProposal("Test proposal");
       await contract.connect(chair).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 60); // 60 seconds for testing
+      await contract.connect(chair).openVoting(0, 60);
     });
 
     it("should pass when yes > no", async function () {
       const nullifier1 = ethers.id("nullifier-1");
       const nullifier2 = ethers.id("nullifier-2");
       const nullifier3 = ethers.id("nullifier-3");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifier1, proof); // Yes
-      await contract.connect(member2).voteOnMotion(0, 0, nullifier2, proof); // Yes
-      await contract.connect(member3).voteOnMotion(0, 1, nullifier3, proof); // No
+      const proof1 = buildMockProof(0, nullifier1, 1n);
+      const proof2 = buildMockProof(0, nullifier2, 2n);
+      const proof3 = buildMockProof(0, nullifier3, 3n);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifier1, proof1.pA, proof1.pB, proof1.pC, proof1.pubSignals);
+      await contract.connect(member2).voteOnMotion(0, 0, nullifier2, proof2.pA, proof2.pB, proof2.pC, proof2.pubSignals);
+      await contract.connect(member3).voteOnMotion(0, 1, nullifier3, proof3.pA, proof3.pB, proof3.pC, proof3.pubSignals);
       await time.increase(61);
       await contract.finalizeProposal(0);
       const proposal = await contract.proposals(0);
@@ -277,8 +299,10 @@ describe("ZKVotingRobRules", function () {
     it("should fail when no >= yes", async function () {
       const nullifier1 = ethers.id("nullifier-1");
       const nullifier2 = ethers.id("nullifier-2");
-      await contract.connect(member1).voteOnMotion(0, 1, nullifier1, proof); // No
-      await contract.connect(member2).voteOnMotion(0, 0, nullifier2, proof); // Yes
+      const proof1 = buildMockProof(0, nullifier1, 1n);
+      const proof2 = buildMockProof(0, nullifier2, 2n);
+      await contract.connect(member1).voteOnMotion(0, 1, nullifier1, proof1.pA, proof1.pB, proof1.pC, proof1.pubSignals);
+      await contract.connect(member2).voteOnMotion(0, 0, nullifier2, proof2.pA, proof2.pB, proof2.pC, proof2.pubSignals);
       await time.increase(61);
       await contract.finalizeProposal(0);
       const proposal = await contract.proposals(0);
@@ -293,7 +317,8 @@ describe("ZKVotingRobRules", function () {
 
     it("should emit ProposalFinalized event", async function () {
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, pA, pB, pC, pubSignals);
       await time.increase(61);
       await expect(contract.finalizeProposal(0))
         .to.emit(contract, "ProposalFinalized")
@@ -310,30 +335,27 @@ describe("ZKVotingRobRules", function () {
     });
 
     it("should allow voting on approved amendment", async function () {
-      await contract.connect(member1).voteOnAmendment(0, 0, 0); // Yes
+      await contract.connect(member1).voteOnAmendment(0, 0, 0);
       const amendment = await contract.getAmendment(0, 0);
       expect(amendment.yesVotes).to.equal(1);
     });
 
     it("should allow voting No on amendment", async function () {
-      await contract.connect(member1).voteOnAmendment(0, 0, 1); // No
+      await contract.connect(member1).voteOnAmendment(0, 0, 1);
       const amendment = await contract.getAmendment(0, 0);
       expect(amendment.noVotes).to.equal(1);
     });
 
     it("should reject voting on unapproved amendment", async function () {
-      // Submit and approve a second amendment but don't approve it
       await contract.connect(member2).submitAmendment(0, "Add clause B");
-      // amendmentId 1 is not approved
       await expect(
         contract.connect(member1).voteOnAmendment(0, 1, 0)
       ).to.be.revertedWith("Amendment must be approved");
     });
 
     it("should allow multiple members to vote on amendment", async function () {
-      // Multiple members can vote on the same amendment
-      await contract.connect(member1).voteOnAmendment(0, 0, 0); // Yes
-      await contract.connect(member2).voteOnAmendment(0, 0, 1); // No
+      await contract.connect(member1).voteOnAmendment(0, 0, 0);
+      await contract.connect(member2).voteOnAmendment(0, 0, 1);
       const amendment = await contract.getAmendment(0, 0);
       expect(amendment.yesVotes).to.equal(1);
       expect(amendment.noVotes).to.equal(1);
@@ -363,49 +385,47 @@ describe("ZKVotingRobRules", function () {
       await contract.connect(chair).secondProposal(0);
       await contract.connect(chair).openVoting(0, 3 * 24 * 60 * 60);
       const nullifierHash = ethers.id("nullifier");
-      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, proof);
+      const { pA, pB, pC, pubSignals } = buildMockProof(0, nullifierHash);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifierHash, pA, pB, pC, pubSignals);
       expect(await contract.hasVoted(0, member1.address)).to.equal(true);
     });
   });
 
   describe("Full Parliamentary Flow", function () {
     it("should complete full Rob's Rules flow", async function () {
-      // 1. Chair creates proposal
       await contract.connect(chair).createProposal("Hire a community manager");
       let proposal = await contract.proposals(0);
       expect(proposal.state).to.equal(0);
-      
-      // 2. Chair seconds proposal
+
       await contract.connect(chair).secondProposal(0);
       proposal = await contract.proposals(0);
       expect(proposal.state).to.equal(1);
-      
-      // 3. Members submit amendments
+
       await contract.connect(member1).submitAmendment(0, "Part-time only");
       await contract.connect(member2).submitAmendment(0, "Remote preferred");
-      
-      // 4. Chair approves amendment
+
       await contract.connect(chair).approveAmendment(0, 0);
-      
-      // 5. Chair opens voting
+
       await contract.connect(chair).openVoting(0, 3 * 24 * 60 * 60);
       proposal = await contract.proposals(0);
       expect(proposal.state).to.equal(2);
-      
-      // 6. Members vote
-      await contract.connect(member1).voteOnMotion(0, 0, ethers.id("v1"), proof);
-      await contract.connect(member2).voteOnMotion(0, 1, ethers.id("v2"), proof);
-      
+
+      const nullifier1 = ethers.id("v1");
+      const nullifier2 = ethers.id("v2");
+      const proof1 = buildMockProof(0, nullifier1, 1n);
+      const proof2 = buildMockProof(0, nullifier2, 2n);
+      await contract.connect(member1).voteOnMotion(0, 0, nullifier1, proof1.pA, proof1.pB, proof1.pC, proof1.pubSignals);
+      await contract.connect(member2).voteOnMotion(0, 1, nullifier2, proof2.pA, proof2.pB, proof2.pC, proof2.pubSignals);
+
       proposal = await contract.proposals(0);
       expect(proposal.yesVotes).to.equal(1);
       expect(proposal.noVotes).to.equal(1);
-      
-      // 7. Finalize
+
       await time.increase(3 * 24 * 60 * 60 + 1);
       await contract.finalizeProposal(0);
-      
+
       proposal = await contract.proposals(0);
-      expect(proposal.state).to.equal(4); // Tied = Failed
+      expect(proposal.state).to.equal(4);
     });
   });
 });

@@ -136,16 +136,27 @@ async function verifyProof({ proof, publicSignals }) {
  * Where G1 points are [x, y] and G2 points are [[x0, x1], [y0, y1]]
  * with x1,y1 being the imaginary component (the "high" 128-bit words).
  */
+/**
+ * Format snarkjs proof to Solidity Verifier contract format.
+ *
+ * CRITICAL: The BN128 precompile expects G2 points in Fq2 coordinate order [x1, x2]
+ * but snarkjs stores them as [x0, x1]. We must SWAP the coordinate pairs:
+ *
+ * snarkjs pi_b: [[b0, b1], [b2, b3]] where:
+ *   b0,b1 = x = b0 + b1*i
+ *   b2,b3 = y = b2 + b3*i
+ *
+ * Solidity needs: [[x2, x1], [y2, y1]] for the BN128 pairing precompile (0x08).
+ * This is the "Fq2 swap" — swapping the high/low words of each Fq2 coordinate.
+ */
 function formatProofForVerifier(proof) {
-  // snarkjs groth16 proof elements:
-  // pi_a: [a0, a1] (G1 x, y) — third element is 1 for BN128
-  // pi_b: [[b00, b01], [b10, b11]] (G2: [x0,x1], [y0,y1])
-  // pi_c: [c0, c1] (G1 x, y)
   return {
+    // G1 points stay the same
     a: [proof.pi_a[0], proof.pi_a[1]],
+    // G2 points need Fq2 coordinate swap: [[x2,x1],[y2,y1]]
     b: [
-      [proof.pi_b[0][0], proof.pi_b[0][1]],
-      [proof.pi_b[1][0], proof.pi_b[1][1]],
+      [proof.pi_b[0][1], proof.pi_b[0][0]],  // [x2, x1] — SWAPPED
+      [proof.pi_b[1][1], proof.pi_b[1][0]],  // [y2, y1] — SWAPPED
     ],
     c: [proof.pi_c[0], proof.pi_c[1]],
   };

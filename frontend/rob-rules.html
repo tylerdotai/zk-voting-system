@@ -931,7 +931,7 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
-    <a class="contract-link" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <a class="contract-link" href="https://sepolia.etherscan.io/address/0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3" target="_blank" rel="noopener">0x1980…4e0</a>
     <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
     <a class="faucet-link" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener" style="display:none;">Get Sepolia ETH ↗</a>
   </div>
@@ -1059,23 +1059,30 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
+    const CONTRACT_ADDRESS = '0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3';
     const SSE_BASE = 'https://bookmarks-around-breaks-cult.trycloudflare.com';
 
     const ROB_RULES_ABI = [
       "function proposalCount() view returns (uint256)",
-      "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
+      "function getProposal(uint256 _proposalId) view returns (string, address, uint8, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool, address)",
       "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
-      "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
+      "function hasVotedOnProposal(uint256 _proposalId, address _voter) view returns (bool)",
+      "function allowedUsers(address _voter) view returns (bool)",
+      "function isEligible(address _user) view returns (bool)",
       "function chair() view returns (address)",
+      "function addVoter(address _voter)",
+      "function removeVoter(address _voter)",
       "function createProposal(string calldata _description) returns (uint256)",
       "function secondProposal(uint256 _proposalId)",
-      "function openVoting(uint256 _proposalId, uint256 _duration)",
       "function submitAmendment(uint256 _proposalId, string calldata _description) returns (uint256)",
       "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
-      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _a, uint256[2][2] calldata _b, uint256[2] calldata _c, uint256[] calldata _publicSignals)",
+      "function fastTrackVoting(uint256 _proposalId, uint256 _duration)",
+      "function openVoting(uint256 _proposalId, uint256 _duration)",
+      "function castVote(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, uint256[3] calldata _pubSignals)",
       "function finalizeProposal(uint256 _proposalId)",
-      "function callForDivision(uint256 _proposalId)"
+      "function callForDivision(uint256 _proposalId)",
+      "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)",
+      "event ProposalCreated(uint256 indexed proposalId, address proposer, string description)"
     ];
 
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
@@ -1260,7 +1267,7 @@
       const p = await contract.getProposal(id);
       const state = parseInt(p[2]);
       const isChair = (await contract.chair()).toLowerCase() === userAddress.toLowerCase();
-      const hasVoted = await contract.hasVoted(id, userAddress);
+      const hasVoted = await contract.hasVotedOnProposal(id, userAddress);
 
       document.getElementById('detailTitle').textContent = `Proposal #${id}`;
       document.getElementById('detailMeta').textContent = `Chair: ${p[1] ? shortenAddress(p[1]) : '—'} | Created: ${new Date(parseInt(p[3])*1000).toLocaleDateString()}`;
@@ -1296,7 +1303,7 @@
 
       // Enable/disable member buttons
       document.getElementById('btnCallDivision').disabled = state !== 2;
-      const chairHasVoted = state === 2 ? await contract.hasVoted(id, userAddress) : true;
+      const chairHasVoted = state === 2 ? await contract.hasVotedOnProposal(id, userAddress) : true;
       document.getElementById('chairBtnVoteYes').disabled = state !== 2 || chairHasVoted;
       document.getElementById('chairBtnVoteNo').disabled = state !== 2 || chairHasVoted;
       document.getElementById('chairBtnVoteAbstain').disabled = state !== 2 || chairHasVoted;
@@ -1521,7 +1528,7 @@
 
         if (proofStatusEl) proofStatusEl.textContent = 'Submitting vote on-chain...';
 
-        const tx = await contract.voteOnMotion(
+        const tx = await contract.castVote(
           currentProposalId, choice, nullifierHashBytes32,
           formattedProof.a, formattedProof.b, formattedProof.c, zkResult.publicSignals
         );

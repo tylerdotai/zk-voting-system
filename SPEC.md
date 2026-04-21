@@ -22,7 +22,7 @@ If not eligible → "Register Now" button → calls addVoter(address)
 
 ## Contract: ZKVotingRobRulesWithCredentials
 
-**Deployed (Sepolia):** `0xb3254AB74e5103F7374eEcDb57078eB10388CaC3`
+**Deployed (Sepolia):** `0x198041e195b9e8C34B5371edF67Ec84DFa68bb74`
 
 ### Voter Eligibility (ENS-gated, no ENS Allowlist)
 

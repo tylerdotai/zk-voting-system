@@ -1,0 +1,21 @@
+{
+  "network": "sepolia",
+  "timestamp": "2026-04-21T22:35:00.000Z",
+  "deployer": "0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0",
+  "contracts": {
+    "Groth16VerifierV2": "0x02aa9654f33Aa73880460B4f286A430c4D56CAb6",
+    "ZKVotingRobRulesWithCredentials": "0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3"
+  },
+  "proposal": {
+    "id": 0,
+    "description": "FW DAO Test Vote: Should Fort Worth DAO allocate 0.5 ETH to sponsor the next HackFW event?",
+    "state": "Voting",
+    "votingEndsAt": "2026-04-28T22:35:48.000Z"
+  },
+  "features": {
+    "zkProofVerification": "confirmed",
+    "robRulesParliamentaryFlow": "confirmed",
+    "doubleVotePrevention": "confirmed",
+    "chairVoterManagement": "confirmed"
+  }
+}

@@ -10,7 +10,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -49,7 +49,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -87,7 +87,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -123,7 +123,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -151,15 +151,15 @@
       ]
     },
     "/home/tyler/zk-voting-system/contracts/ZKVotingRobRules.sol": {
-      "lastModificationDate": 1775706630430,
-      "contentHash": "a5c5f0949e3799bba0b96129dfa32e6a",
+      "lastModificationDate": 1776749014888,
+      "contentHash": "77a871a8af9ec128e4d8dae4ef65eea0",
       "sourceName": "contracts/ZKVotingRobRules.sol",
       "solcConfig": {
         "version": "0.8.19",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -185,6 +185,7 @@
         "^0.8.19"
       ],
       "artifacts": [
+        "IZKVerifier",
         "ZKVotingRobRules"
       ]
     },
@@ -197,7 +198,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -236,7 +237,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -276,7 +277,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -312,7 +313,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -350,7 +351,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -381,15 +382,15 @@
       ]
     },
     "/home/tyler/zk-voting-system/contracts/ZKVotingRobRulesWithCredentials.sol": {
-      "lastModificationDate": 1776717165859,
-      "contentHash": "cea7863b15a5f87645ca7b7193b0878e",
+      "lastModificationDate": 1776810852228,
+      "contentHash": "2acf9ff6a656a2e83fe13d1a51e00242",
       "sourceName": "contracts/ZKVotingRobRulesWithCredentials.sol",
       "solcConfig": {
         "version": "0.8.19",
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -409,7 +410,8 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/access/Ownable.sol"
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "./Groth16VerifierV2.sol"
       ],
       "versionPragmas": [
         "^0.8.19"
@@ -427,7 +429,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -465,7 +467,7 @@
         "settings": {
           "optimizer": {
             "enabled": true,
-            "runs": 200
+            "runs": 10000
           },
           "viaIR": true,
           "outputSelection": {
@@ -490,6 +492,440 @@
       ],
       "artifacts": [
         "BytesLib"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/ZKVerifier.sol": {
+      "lastModificationDate": 1776752467231,
+      "contentHash": "3d8359715a4f55091261e107cc6b6efb",
+      "sourceName": "contracts/ZKVerifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "Groth16Verifier"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/test/MockVerifier.sol": {
+      "lastModificationDate": 1776749679371,
+      "contentHash": "8a35d0cb75b06b613336dcb97e6517b0",
+      "sourceName": "contracts/test/MockVerifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "MockVerifier"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/BN128PrecompileTest.sol": {
+      "lastModificationDate": 1776785331717,
+      "contentHash": "c341e8fde0322df77f302655ee6b7130",
+      "sourceName": "contracts/BN128PrecompileTest.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "BN128PrecompileTest"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/ZKVerifierTest.sol": {
+      "lastModificationDate": 1776786430924,
+      "contentHash": "670220bfd20f493187a8294f2a748ba9",
+      "sourceName": "contracts/ZKVerifierTest.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "ZKVerifierTest"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/MinimalBN128Test.sol": {
+      "lastModificationDate": 1776787259915,
+      "contentHash": "b67e997fd4386afae5dd1fdf9fe7d483",
+      "sourceName": "contracts/MinimalBN128Test.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "MinimalBN128Test"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/Groth16Verifier.sol": {
+      "lastModificationDate": 1776799527512,
+      "contentHash": "3d8359715a4f55091261e107cc6b6efb",
+      "sourceName": "contracts/Groth16Verifier.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "Groth16Verifier"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/EcMulTest.sol": {
+      "lastModificationDate": 1776801200389,
+      "contentHash": "fd67af6bd6f4069c24244c25eca2bc5d",
+      "sourceName": "contracts/EcMulTest.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "EcMulTest"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/PairingTest.sol": {
+      "lastModificationDate": 1776801195354,
+      "contentHash": "67f009fcdd04cb98e02ccdeaee15ffba",
+      "sourceName": "contracts/PairingTest.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "PairingTest"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/Groth16VerifierFixed.sol": {
+      "lastModificationDate": 1776801676360,
+      "contentHash": "9eb38bacc0733af848e81c3903dfc838",
+      "sourceName": "contracts/Groth16VerifierFixed.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "Groth16Verifier"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/BN128Test.sol": {
+      "lastModificationDate": 1776801867766,
+      "contentHash": "0711691433ef32c1ee72f2a6580f2f21",
+      "sourceName": "contracts/BN128Test.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "BN128Test"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/Groth16VerifierV2.sol": {
+      "lastModificationDate": 1776805089382,
+      "contentHash": "76d06966780d79014895cf96528157d1",
+      "sourceName": "contracts/Groth16VerifierV2.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.7.0 <0.9.0"
+      ],
+      "artifacts": [
+        "Groth16Verifier"
+      ]
+    },
+    "/home/tyler/zk-voting-system/contracts/ZKVotingSimple.sol": {
+      "lastModificationDate": 1776810071574,
+      "contentHash": "16f69a2d0a05f9f80d634ec96ac452ba",
+      "sourceName": "contracts/ZKVotingSimple.sol",
+      "solcConfig": {
+        "version": "0.8.19",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 10000
+          },
+          "viaIR": true,
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Groth16VerifierV2.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.19"
+      ],
+      "artifacts": [
+        "ZKVotingSimple"
       ]
     }
   }

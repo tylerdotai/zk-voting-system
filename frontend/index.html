@@ -631,7 +631,7 @@
       </nav>
     </div>
     <span class="network">Sepolia Testnet</span>
-    <a class="contract-link" id="contractLink" href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74" target="_blank" rel="noopener">0x1980…4e0</a>
+    <a class="contract-link" id="contractLink" href="https://sepolia.etherscan.io/address/0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3" target="_blank" rel="noopener">0x8E47…252A4</a>
     <span class="wallet-badge disconnected" id="walletBadge">👛 Not connected</span>
     <a class="faucet-link hidden" id="faucetLink" href="https://www.alchemy.com/faucets/ethereum-sepolia" target="_blank" rel="noopener">Get Sepolia ETH ↗</a>
   </div>
@@ -781,15 +781,15 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
-    const CONTRACT_ADDRESS = '0x198041e195b9e8c34B5371edF67Ec84DFa68bb74';
+    const CONTRACT_ADDRESS = '0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3';
     const SSE_BASE = 'https://bookmarks-around-breaks-cult.trycloudflare.com';
 
     const CONTRACT_ABI = [
       "function proposalCount() view returns (uint256)",
       "function getProposal(uint256 _proposalId) view returns (string, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256)",
-      "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
-      "function voteOnMotion(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _a, uint256[2][2] calldata _b, uint256[2] calldata _c, uint256[] calldata _publicSignals)",
-      "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)"
+      "function hasVotedOnProposal(uint256 _proposalId, address _voter) view returns (bool)",
+      "function castVote(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, uint256[3] calldata _pubSignals)",
+      "event VoteCast(uint256 indexed proposalId, address voter, uint8 choice, bytes32 nullifierHash)"
     ];
 
     const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
@@ -905,7 +905,7 @@
         wbDiv.appendChild(editBtn);
         document.getElementById('registrationModal').parentNode.insertBefore(wbDiv, document.getElementById('registrationModal'));
 
-        contract.on("MotionVoted", async () => {
+        contract.on("VoteCast", async () => {
           if (selectedProposalId !== null) await refreshSelectedProposal();
           await loadProposals();
         });
@@ -1085,7 +1085,7 @@
       const controls = document.getElementById('votingControls');
 
       if (state === 2) {
-        const alreadyVoted = await contract.hasVoted(selectedProposalId, userAddress);
+        const alreadyVoted = await contract.hasVotedOnProposal(selectedProposalId, userAddress);
         if (alreadyVoted) {
           statusEl.textContent = 'You have already voted on this proposal.';
           controls.innerHTML = '';
@@ -1202,7 +1202,7 @@
         document.getElementById('zkStatus3').textContent = 'verifying...';
         if (proofStatusEl) proofStatusEl.textContent = 'Submitting vote on-chain...';
 
-        const tx = await contract.voteOnMotion(
+        const tx = await contract.castVote(
           selectedProposalId, choice, nullifierHashBytes32,
           formattedProof.a, formattedProof.b, formattedProof.c, zkResult.publicSignals
         );
@@ -1264,7 +1264,7 @@
             });
             const fp2 = window._zkFormatProof(zkR2.proof);
             const nh2 = ethers.utils.hexZeroPad(ethers.BigNumber.from(zkR2.nullifierHash).toHexString(), 32);
-            const tx2 = await contract.voteOnMotion(selectedProposalId, choice, nh2, fp2.a, fp2.b, fp2.c, zkR2.publicSignals);
+            const tx2 = await contract.castVote(selectedProposalId, choice, nh2, fp2.a, fp2.b, fp2.c, zkR2.publicSignals);
             await tx2.wait();
           } catch (err) {
             if (err.message.includes('already voted') || err.reason?.includes('already')) {
