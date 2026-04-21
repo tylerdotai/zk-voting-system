@@ -82,33 +82,17 @@
       transition: all 0.2s;
       letter-spacing: 0.03em;
     }
-    .header-nav a:hover {
-      background: var(--amber);
-      color: #1C1C1E;
-    }
-    .header .network {
+    .header-nav a:hover { text-decoration: underline; }
+    .header .network, .header .contract-link {
       font-size: 0.7rem;
       font-weight: 600;
-      color: var(--amber);
-      background: var(--amber-dim);
       padding: 0.2rem 0.75rem;
       border-radius: 20px;
-      border: 1px solid rgba(245,166,35,0.3);
       font-family: 'JetBrains Mono', monospace;
       letter-spacing: 0.05em;
-      text-transform: uppercase;
     }
-    .header .contract-link {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--slate);
-      text-decoration: none;
-      padding: 0.2rem 0.6rem;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      transition: all 0.15s;
-    }
+    .header .network { color: var(--amber); background: var(--amber-dim); border: 1px solid rgba(245,166,35,0.3); text-transform: uppercase; }
+    .header .contract-link { color: var(--slate); text-decoration: none; border: 1px solid var(--border); transition: all 0.15s; }
     .header .contract-link:hover { color: var(--amber); border-color: var(--amber); }
     .header .wallet-badge {
       font-size: 0.7rem;
@@ -191,10 +175,7 @@
       letter-spacing: 0.05em;
       transition: all 0.15s;
     }
-    .connect-btn:hover:not(:disabled) {
-      background: #f0b030;
-      transform: translateY(-1px);
-    }
+    .connect-btn:hover:not(:disabled) { background: #f0b030; transform: translateY(-1px); }
     .connect-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
     .wallet-addr {
       font-family: 'JetBrains Mono', monospace;
@@ -263,11 +244,11 @@
       padding: 1.25rem 1.5rem;
       margin-bottom: 0.75rem;
       cursor: pointer;
-      transition: all 0.15s;
-      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow), 0 1px 0 rgba(245,166,35,0.05);
       border-left: 3px solid transparent;
     }
-    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); }
+    .proposal-card:hover { background: var(--card-hover); border-color: rgba(245,166,35,0.25); box-shadow: var(--shadow), 0 1px 8px rgba(245,166,35,0.1); }
     .proposal-card.selected { border-color: var(--amber); }
     /* State borders */
     .proposal-card.state-0 { border-left-color: transparent; }
@@ -296,21 +277,13 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      padding: 0.25rem 0.75rem;
+      padding: 4px 10px;
       border-radius: var(--radius-badge);
       color: #fff;
     }
     .state-badge.state-0 { background: var(--slate); color: #fff; }
-    .state-badge.state-1 {
-      background: var(--slate);
-      color: #fff;
-      box-shadow: var(--slate-glow);
-    }
-    .state-badge.state-2 {
-      background: var(--amber);
-      color: #1C1C1E;
-      animation: pulse-amber 2s infinite;
-    }
+    .state-badge.state-1 { background: var(--slate); color: #fff; box-shadow: var(--slate-glow); }
+    .state-badge.state-2 { background: var(--amber); color: #1C1C1E; animation: pulse-amber 2s infinite; }
     .state-badge.state-3 { background: var(--green); color: #1C1C1E; }
     .state-badge.state-4 { background: var(--red); color: #fff; }
 
@@ -349,7 +322,7 @@
 
     .countdown {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.9rem;
       font-weight: 600;
       color: var(--amber);
       background: var(--amber-dim);
@@ -391,7 +364,7 @@
     }
     .vote-cell .count {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 3.5rem;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
       font-weight: 800;
       line-height: 1;
       color: var(--text);
@@ -416,6 +389,7 @@
       gap: 0.75rem;
     }
     .vote-btn {
+      min-height: 48px;
       padding: 1.1rem;
       font-family: 'JetBrains Mono', monospace;
       font-size: 1rem;
@@ -425,7 +399,7 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      transition: all 0.15s;
+      transition: all 0.2s ease;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -569,7 +543,6 @@
 
     @media (min-width: 900px) {
       .proposal-desc { font-size: 1.35rem; }
-      .vote-cell .count { font-size: 4.5rem; }
     }
 
     /* Registration Modal */

@@ -23,9 +23,11 @@
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/contracts": "^4.9.0",
     "hardhat": "^2.19.0",
+    "hardhat-verify": "^1.0.0",
     "solidity-coverage": "^0.8.17"
   },
   "dependencies": {
+    "alchemy-sdk": "^3.6.5",
     "circomlib": "^2.0.5",
     "dotenv": "^17.4.1",
     "solidity-bytes-utils": "^0.8.4"
