@@ -1060,7 +1060,6 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3';
-    const SSE_BASE = 'https://bookmarks-around-breaks-cult.trycloudflare.com';
 
     const ROB_RULES_ABI = [
       "function proposalCount() view returns (uint256)",
@@ -1149,7 +1148,7 @@
         document.getElementById('faucetLink').style.display = 'inline';
 
         // SSE connect — inside auth block
-        connectSSE();
+        startPolling();
 
         await loadProposals();
       } catch (err) {
@@ -1159,32 +1158,25 @@
       }
     }
 
-    function connectSSE() {
-      if (!sseConn || sseConn.readyState === EventSource.CLOSED) {
-        sseConn = new EventSource(`${SSE_BASE}/events`);
-        sseConn.onmessage = async (e) => {
-          const { event, data } = JSON.parse(e.data);
-          if (event === 'connected' || event === 'ws_disconnected') return;
-          if (event === 'VoterCount' && data?.lastBlock) {
-            document.getElementById('verifierBlock').textContent = data.lastBlock;
-          }
-          if (['MotionVoted', 'ProposalCreated', 'ProposalFinalized'].includes(event)) {
-            await loadProposals();
-            if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
-            // Update verifier bar on vote activity
-            const statusEl = document.getElementById('verifierStatus');
-            if (statusEl) {
-              statusEl.textContent = 'VERIFIED';
-              statusEl.className = 'verifier-value';
-              setTimeout(() => {
-                statusEl.textContent = 'READY';
-                statusEl.className = 'verifier-value';
-              }, 5000);
-            }
-          }
-        };
-        sseConn.onerror = () => { sseConn.close(); setTimeout(connectSSE, 5000); };
-      }
+    let pollInterval = null;
+    let lastPollBlock = 0;
+
+    async function pollForUpdates() {
+      try {
+        const block = await provider.getBlockNumber();
+        if (block !== lastPollBlock) {
+          lastPollBlock = block;
+          document.getElementById('verifierBlock').textContent = 'Block #' + block;
+          await loadProposals();
+          if (currentProposalId !== null) await loadProposalDetail(currentProposalId);
+        }
+      } catch (e) { /* silent */ }
+    }
+
+    function startPolling() {
+      pollForUpdates();
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(pollForUpdates, 10000);
     }
 
     async function loadProposals() {
