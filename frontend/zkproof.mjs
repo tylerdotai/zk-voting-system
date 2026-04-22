@@ -7,7 +7,7 @@
  */
 
 import * as snarkjs from "https://esm.sh/snarkjs@0.7.5";
-import { buildPoseidon } from "circomlibjs";
+import { buildPoseidon } from "https://esm.sh/circomlibjs@0.1.7";
 
 // Cached poseidon instance (built once)
 let _poseidon = null;
