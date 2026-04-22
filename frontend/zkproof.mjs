@@ -6,8 +6,8 @@
  * Private inputs: [vote_choice, nullifier_seed, voter_address]
  */
 
-import * as snarkjs from "https://esm.sh/snarkjs@0.7.5";
-import { buildPoseidon } from "https://esm.sh/circomlibjs@0.1.7";
+import * as snarkjs from "https://cdn.jsdelivr.net/npm/snarkjs/+esm";
+import { buildPoseidon } from "https://cdn.jsdelivr.net/npm/circomlibjs/+esm";
 
 // Cached poseidon instance (built once)
 let _poseidon = null;
