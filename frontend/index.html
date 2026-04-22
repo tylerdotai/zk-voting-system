@@ -773,12 +773,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import { generateVoteProof, formatProofForVerifier, randomNullifierSeed } from './zkproof.mjs';
-    window._zkGenerateVoteProof = generateVoteProof;
-    window._zkFormatProof = formatProofForVerifier;
-    window._zkRandomNullifierSeed = randomNullifierSeed;
-  </script>
+  <script src="zkproof.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <script>
     const CONTRACT_ADDRESS = '0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3';
