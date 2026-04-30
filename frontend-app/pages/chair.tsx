@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import WalletConnect from '../components/WalletConnect';
 import ChairDashboard from '../components/ChairDashboard';
+import { ethers } from 'ethers';
 import { getContract, ContractState, ProposalData } from '../lib/ethereum';
+import { CONTRACT_ADDRESS, ROB_RULES_ABI } from '../lib/constants';
 import { STATES } from '../lib/constants';
 
 export default function ChairPage() {
@@ -12,13 +14,16 @@ export default function ChairPage() {
   const [showBanner, setShowBanner] = useState(false);
   const [toast, setToast] = useState('');
 
-  const loadProposals = useCallback(async (s: ContractState) => {
+  async function loadProposalsFromChain() {
+    if (!window.ethereum) return;
     try {
-      const count = Number(await s.contract.proposalCount());
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, provider);
+      const count = Number(await contract.proposalCount());
       const items: ProposalData[] = [];
       for (let i = 0; i < count; i++) {
         try {
-          const raw = await s.contract.getProposal(i);
+          const raw = await contract.getProposal(i);
           items.push({
             id: i,
             description: raw[0],
@@ -46,19 +51,17 @@ export default function ChairPage() {
     } catch (e) {
       console.error('Error loading proposals:', e);
     }
-  }, []);
+  }
 
   useEffect(() => {
-    const s = getContract();
-    if (!s) return;
-    setState(s);
-    loadProposals(s);
-    const iv = setInterval(() => loadProposals(s), 8000);
+    if (!window.ethereum) return;
+    loadProposalsFromChain();
+    const iv = setInterval(loadProposalsFromChain, 8000);
     return () => clearInterval(iv);
-  }, [loadProposals]);
+  }, []);
 
   function handleConnected() {
-    if (state) loadProposals(state);
+    loadProposalsFromChain();
   }
 
   function handleWalletUpdate(addr: string) {
@@ -71,7 +74,7 @@ export default function ChairPage() {
   }
 
   async function handleCreate(description: string) {
-    const s = state;
+    const s = getContract();
     if (!s || !s.contract) return;
     try {
       const tx = await s.contract.createProposal(description);
@@ -79,7 +82,7 @@ export default function ChairPage() {
       setShowBanner(true);
       await tx.wait();
       setShowBanner(false);
-      await loadProposals(s);
+      loadProposalsFromChain();
       showToastMsg('Proposal created.');
     } catch (e: any) {
       showToastMsg(e.reason || 'Transaction failed');
@@ -208,9 +211,8 @@ export default function ChairPage() {
         {/* Right column: detail panel */}
         <div>
           <ChairDashboard
-            proposals={proposals}
             selectedProposal={selected}
-            onProposalCreated={() => { if (state) loadProposals(state); }}
+            onProposalCreated={loadProposalsFromChain}
           />
         </div>
       </div>
