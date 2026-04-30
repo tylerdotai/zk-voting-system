@@ -26,7 +26,14 @@ jobs:
       - name: Compile contracts
         run: npx hardhat compile --force
 
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hardhat-artifacts
+          path: artifacts/
+
   test:
+    needs: compile
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -45,10 +52,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: hardhat-artifacts
+          path: artifacts/
+
       - name: Run tests
         run: npm test
 
   build-frontend:
+    needs: compile
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
