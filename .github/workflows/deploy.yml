@@ -20,6 +20,7 @@ jobs:
 
       - name: Deploy to Vercel (Production)
         run: |
-          vercel --prod --yes frontend-app \
+          cd frontend-app && vercel --prod --yes . \
+            --no-cache \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --build-env ALCHEMY_API_KEY=${{ secrets.ALCHEMY_API_KEY }}
