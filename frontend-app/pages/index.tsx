@@ -160,6 +160,43 @@ export default function VoterPage() {
     }
   }
 
+  async function handleSubmitAmendment(proposalId: number) {
+    const s = state;
+    if (!s || !s.contract) return;
+    const inp = document.getElementById(`amendment-${proposalId}`) as HTMLInputElement;
+    if (!inp?.value.trim()) { showToast('Enter an amendment first.'); return; }
+    setLoading(true);
+    try {
+      const tx = await s.contract.submitAmendment(proposalId, inp.value.trim());
+      showTxBanner(tx.hash);
+      await tx.wait();
+      inp.value = '';
+      await loadProposals();
+      showToast('Amendment submitted.');
+    } catch (e: any) {
+      showToast(e.reason || 'Failed to submit amendment');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleReconsider(proposalId: number) {
+    const s = state;
+    if (!s || !s.contract) return;
+    setLoading(true);
+    try {
+      const tx = await s.contract.reconsider(proposalId);
+      showTxBanner(tx.hash);
+      await tx.wait();
+      await loadProposals();
+      showToast('Reconsideration requested.');
+    } catch (e: any) {
+      showToast(e.reason || 'Reconsideration failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(''), 4000);
@@ -276,6 +313,29 @@ export default function VoterPage() {
           </div>
         )}
 
+        {/* Amendment submission — available after proposal is seconded, before finalized */}
+        {sp && state && state.isEligible && sp.state >= 1 && sp.state < 3 && (
+          <div style={{ marginTop: '1rem', marginBottom: '1rem', padding: '1rem', background: 'var(--fw-light)', borderRadius: '12px', border: '2px solid var(--fw-border)' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--fw-gray)', marginBottom: '0.75rem' }}>
+              Submit Amendment
+            </div>
+            <div className="amendment-input-row">
+              <input
+                id={`amendment-${sp.id}`}
+                type="text"
+                placeholder="Describe your amendment…"
+              />
+              <button
+                className="action-btn secondary"
+                onClick={() => handleSubmitAmendment(sp.id)}
+                disabled={loading}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Vote Section */}
         {sp && state && state.isEligible && sp.state === 2 && !votedIds.has(sp.id) && (
           <div className="vote-section">
@@ -385,6 +445,16 @@ export default function VoterPage() {
             <p className="vote-status">
               Proposal {sp.state === 3 ? 'Passed' : 'Failed'}
             </p>
+            {sp.reconsiderationRequested && (
+              <button
+                className="action-btn secondary"
+                style={{ width: '100%', marginTop: '1rem' }}
+                onClick={() => handleReconsider(sp.id)}
+                disabled={loading}
+              >
+                Request Reconsideration
+              </button>
+            )}
           </div>
         )}
 
