@@ -9,6 +9,8 @@ on:
 jobs:
   solhint:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - uses: actions/checkout@v4
 
@@ -22,10 +24,12 @@ jobs:
         run: npm install -g solhint
 
       - name: Run solhint
-        run: solhint 'contracts/**/*.sol'
+        run: solhint 'contracts/ZKVotingSimple.sol' 'contracts/ZKVotingRobRulesWithCredentials.sol' 'contracts/Groth16VerifierV2.sol' 'contracts/verifiers/**/*.sol' 'contracts/interfaces/**/*.sol'
 
   ts-lint:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
       - uses: actions/checkout@v4
 

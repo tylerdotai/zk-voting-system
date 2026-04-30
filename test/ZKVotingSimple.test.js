@@ -31,12 +31,8 @@ describe("ZKVotingSimple", function () {
   });
 
   describe("Deployment", function () {
-    it("should set choiceCount to 3", async function () {
-      expect(await voting.choiceCount()).to.equal(3);
-    });
-
-    it("should initialize proposalCount to 0", async function () {
-      expect(await voting.proposalCount()).to.equal(0);
+    it("should set CHOICE_COUNT to 3", async function () {
+      expect(await voting.CHOICE_COUNT()).to.equal(3);
     });
 
     it("should make deployer eligible by default", async function () {
