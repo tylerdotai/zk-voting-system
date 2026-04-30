@@ -9,8 +9,12 @@ cache/
 build/ptau/
 build/keys/0000.zkey
 build/keys/0001.zkey
+build/keys/Verifier.sol
 build/keys/verification_key.json
+build/keys/verification_key_new.json
 circuits/vote/vote.r1cs
 circuits/vote/vote.sym
 circuits/vote/vote_constraints.json
-
+circuits/vote/vote_js/
+circuits/vote/vote_new.r1cs
+circuits/vote/vote_new.wasm
