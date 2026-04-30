@@ -6,6 +6,7 @@ export default function VerifyPage() {
   const [jsonInput, setJsonInput] = useState('');
   const [result, setResult] = useState<{ valid: boolean; msg: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [parsedData, setParsedData] = useState<any>(null);
   const state = getContract();
 
   async function handleVerify(e: React.FormEvent) {
@@ -16,6 +17,7 @@ export default function VerifyPage() {
 
     try {
       const data = JSON.parse(jsonInput);
+      setParsedData(data);
 
       // Load snarkjs
       const snarkjs = await import('snarkjs');
@@ -118,8 +120,25 @@ export default function VerifyPage() {
 
         {result && (
           <div className={`verify-result ${result.valid ? 'valid' : 'invalid'}`}>
-            {result.valid ? '✓ ' : '✗ '}
-            {result.msg}
+            <div style={{ marginBottom: '0.5rem', fontWeight: 600 }}>
+              {result.valid ? '✓ Proof is valid' : '✗ ' + result.msg}
+            </div>
+            {result.valid && parsedData && (
+              <pre style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 'var(--radius-btn)',
+                padding: '1rem',
+                fontSize: '0.75rem',
+                fontFamily: 'JetBrains Mono, monospace',
+                color: 'var(--text)',
+                overflow: 'auto',
+                maxHeight: '400px',
+                textAlign: 'left',
+              }}>
+                {JSON.stringify(parsedData, null, 2)}
+              </pre>
+            )}
           </div>
         )}
 
