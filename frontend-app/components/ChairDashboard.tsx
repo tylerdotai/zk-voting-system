@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { ProposalData, getContract } from '../lib/ethereum';
 
 interface ChairDashboardProps {
-  proposals: ProposalData[];
   selectedProposal: ProposalData | null;
   onProposalCreated?: () => void;
 }

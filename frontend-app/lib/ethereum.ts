@@ -73,6 +73,17 @@ export function getContract(): ContractState | null {
   return cachedState;
 }
 
+/** Read-only contract (no signer needed) for public view calls */
+export function getReadOnlyContract(): ethers.Contract | null {
+  if (!window.ethereum) return null;
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    return new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, provider);
+  } catch {
+    return null;
+  }
+}
+
 export function formatTimeRemaining(endsAt: number): string {
   const now = Date.now();
   const end = Number(endsAt) * 1000;
