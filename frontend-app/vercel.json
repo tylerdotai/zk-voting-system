@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "out",
+  "outputDirectory": "../out",
   "installCommand": "npm install",
   "routes": [
     { "src": "/chair", "dest": "/chair.html" },
