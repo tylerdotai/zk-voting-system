@@ -43,7 +43,7 @@ export default function VoterPage() {
     try {
       const count = await s.contract.proposalCount();
       const items: ProposalData[] = [];
-      for (let i = 1; i <= Number(count); i++) {
+      for (let i = 0; i < count; i++) {
         try {
           const raw = await s.contract.getProposal(i);
           items.push({
