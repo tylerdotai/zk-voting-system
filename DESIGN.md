@@ -225,5 +225,6 @@ Horizontal step indicator:
 
 ## Applied To
 
-- `frontend/rob-rules.html` — Chair dashboard (v1.0 applied)
-- `frontend/index.html` — Voter portal (v1.0 applied)
+- `frontend-app/pages/index.tsx` — Voter portal (v1.0 applied)
+- `frontend-app/pages/chair.tsx` — Chair dashboard (v1.0 applied)
+- `frontend-app/pages/verify.tsx` — Standalone proof verifier (v1.0 applied)
