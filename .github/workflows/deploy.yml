@@ -22,4 +22,5 @@ jobs:
         run: |
           vercel --prod --yes \
             --token=${{ secrets.VERCEL_TOKEN }} \
+            --dir frontend-app \
             --build-env ALCHEMY_API_KEY=${{ secrets.ALCHEMY_API_KEY }}
