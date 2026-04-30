@@ -1,0 +1,10 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "compiler-version": "off",
+    "func-visibility": { "enabled": true, "parameters": ["payable"] },
+    "max-line-length": { "enabled": true, "value": 120 },
+    "not-rely-on-time": "off",
+    "state-visibility": "off"
+  }
+}
