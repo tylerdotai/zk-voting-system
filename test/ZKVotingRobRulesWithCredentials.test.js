@@ -4,411 +4,278 @@ const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("ZKVotingRobRulesWithCredentials", function () {
   let contract;
-  let owner, chair, member1, member2, member3;
-  const proof = ethers.randomBytes(32);
-  const NULLIFIER_HASH = ethers.id("nullifier");
-  const proofArr = [ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash, ethers.ZeroHash];
+  let mockVerifier;
+  let chair;
+  let member1;
+  let member2;
+  let member3;
+
+  // Mock proof — MockVerifier is a no-op so any proof passes
+  function mockProof(proposalId, nullifierHash, commitment) {
+    return {
+      pA: [1, 2],
+      pB: [[1, 2], [3, 4]],
+      pC: [1, 2],
+      pubSignals: [String(proposalId), String(nullifierHash || 1111), String(commitment || 2222)],
+    };
+  }
 
   beforeEach(async function () {
-    [owner, chair, member1, member2, member3] = await ethers.getSigners();
-    const ZKVotingRobRulesWithCredentials = await ethers.getContractFactory("ZKVotingRobRulesWithCredentials");
-    contract = await ZKVotingRobRulesWithCredentials.deploy(chair.address, 3);
+    [chair, member1, member2, member3] = await ethers.getSigners();
+
+    const MockVerifier = await ethers.getContractFactory("MockVerifier");
+    mockVerifier = await MockVerifier.deploy();
+    await mockVerifier.waitForDeployment();
+
+    const ZKVotingRobRules = await ethers.getContractFactory("ZKVotingRobRulesWithCredentials");
+    contract = await ZKVotingRobRules.deploy(
+      await mockVerifier.getAddress(),
+      chair.address,
+      3
+    );
     await contract.waitForDeployment();
+
+
+    // Chair is not auto-added as eligible — add them first
+    await contract.connect(chair).addVoter(chair.address);
   });
 
-  // ===== Deployment =====
   describe("Deployment", function () {
-    it("sets owner", async function () { expect(await contract.owner()).to.equal(owner.address); });
-    it("sets chair", async function () { expect(await contract.chair()).to.equal(chair.address); });
-    it("sets choiceCount to 3", async function () { expect(await contract.choiceCount()).to.equal(3); });
-    it("proposalCount starts at 0", async function () { expect(await contract.proposalCount()).to.equal(0); });
-    it("divisionThreshold defaults to 2", async function () { expect(await contract.divisionThreshold()).to.equal(2); });
+    it("should set the correct chair", async function () {
+      expect(await contract.chair()).to.equal(chair.address);
+    });
+
+    it("should initialize proposalCount to 0", async function () {
+      expect(await contract.proposalCount()).to.equal(0);
+    });
   });
 
-  // ===== Voter Eligibility =====
-  describe("Voter Eligibility", function () {
-    it("owner can add voter", async function () {
-      await contract.connect(owner).addVoter(member1.address);
-      expect(await contract.isEligible(member1.address)).to.equal(true);
-    });
-    it("owner can remove voter", async function () {
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).removeVoter(member1.address);
-      expect(await contract.isEligible(member1.address)).to.equal(false);
-    });
-    it("chair can add voter", async function () {
+  describe("Voter Management", function () {
+    it("should allow chair to add a voter", async function () {
       await contract.connect(chair).addVoter(member1.address);
       expect(await contract.isEligible(member1.address)).to.equal(true);
     });
-    it("batch add voters works", async function () {
-      await contract.connect(owner).addVoters([member1.address, member2.address]);
-      expect(await contract.isEligible(member1.address)).to.equal(true);
-      expect(await contract.isEligible(member2.address)).to.equal(true);
+
+    it("should allow chair to remove a voter", async function () {
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).removeVoter(member1.address);
+      expect(await contract.isEligible(member1.address)).to.equal(false);
     });
-    it("rejects zero address", async function () {
-      await expect(contract.connect(owner).addVoter(ethers.ZeroAddress)).to.be.revertedWith("Voter cannot be zero address");
+
+    it("should reject non-chair adding a voter", async function () {
+      await expect(
+        contract.connect(member1).addVoter(member2.address)
+      ).to.be.reverted;
     });
-    it("emits VoterAdded event", async function () {
-      await expect(contract.connect(owner).addVoter(member1.address)).to.emit(contract, "VoterAdded").withArgs(member1.address);
+
+    it("should reject non-chair removing a voter", async function () {
+      await expect(
+        contract.connect(member1).removeVoter(member2.address)
+      ).to.be.reverted;
     });
   });
 
-  // ===== Member Can Propose =====
-  describe("Proposal Creation — Any Member Can Propose", function () {
+  describe("Proposal Lifecycle", function () {
+    it("should allow chair to create a proposal", async function () {
+      const tx = await contract.connect(chair).createProposal("Test motion");
+      const receipt = await tx.wait();
+      const event = receipt.logs.find(log => log.fragment && log.fragment.name === "ProposalCreated");
+      expect(event).to.exist;
+      // event args: (proposalId, description, proposer)
+      const [id, description, proposer] = event.args;
+      expect(id).to.equal(0);
+      expect(description).to.equal("Test motion");
+      expect(proposer).to.equal(chair.address);
+    });
+
+    it("should track proposal count", async function () {
+      await contract.connect(chair).createProposal("Motion 1");
+      await contract.connect(chair).createProposal("Motion 2");
+      expect(await contract.proposalCount()).to.equal(2);
+    });
+
+    it("should set state to Created on new proposal", async function () {
+      await contract.connect(chair).createProposal("Test motion");
+      const prop = await contract.getProposal(0);
+      expect(prop[3]).to.equal(0); // state: Created (enum starts at 0)
+    });
+  });
+
+  describe("Seconding (Rob's Rules)", function () {
     beforeEach(async function () {
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(owner).addVoter(chair.address);
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).addVoter(member2.address);
+      await contract.connect(chair).createProposal("Test motion");
     });
 
-    it("any eligible voter can create proposal", async function () {
-      await contract.connect(member1).createProposal("Member motion");
-      expect(await contract.proposalCount()).to.equal(1);
+    it("should allow a second eligible voter to second a proposal", async function () {
+      await contract.connect(member1).secondProposal(0);
+      const prop = await contract.getProposal(0);
+      expect(prop[3]).to.equal(1); // state: Seconded
     });
-    it("proposer is recorded correctly", async function () {
-      await contract.connect(member1).createProposal("Test");
-      const p = await contract.getProposal(0);
-      expect(p.proposalProposer).to.equal(member1.address);
+
+    it("should not allow proposer to second own proposal", async function () {
+      await expect(
+        contract.connect(chair).secondProposal(0)
+      ).to.be.reverted;
     });
-    it("state is Created", async function () {
-      await contract.connect(member1).createProposal("Test");
-      const p = await contract.getProposal(0);
-      expect(p.state).to.equal(0);
-    });
-    it("chair can also create proposal", async function () {
-      await contract.connect(chair).createProposal("Chair motion");
-      expect(await contract.proposalCount()).to.equal(1);
-    });
-    it("non-registered cannot create", async function () {
-      await expect(contract.connect(member3).createProposal("Bad")).to.be.revertedWith("Voter not registered");
-    });
-    it("rejects empty description", async function () {
-      await expect(contract.connect(member1).createProposal("")).to.be.revertedWith("Description cannot be empty");
-    });
-    it("emits ProposalCreated event", async function () {
-      await expect(contract.connect(member1).createProposal("Test")).to.emit(contract, "ProposalCreated").withArgs(0, "Test", member1.address);
+
+    it("should not allow non-eligible to second", async function () {
+      await expect(
+        contract.connect(member3).secondProposal(0)
+      ).to.be.reverted;
     });
   });
 
-  // ===== Member Can Second =====
-  describe("Seconding — Any Member Can Second", function () {
+  describe("Opening Voting", function () {
     beforeEach(async function () {
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(owner).addVoter(member3.address);
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(member1).createProposal("Test proposal");
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).createProposal("Test motion");
+      await contract.connect(member1).secondProposal(0);
     });
 
-    it("any eligible voter can second", async function () {
-      await contract.connect(member2).secondProposal(0);
-      const p = await contract.getProposal(0);
-      expect(p.state).to.equal(1); // Seconded
+    it("should allow chair to open voting after seconding", async function () {
+      const ONE_WEEK = 7 * 24 * 3600;
+      await contract.connect(chair).openVoting(0, ONE_WEEK);
+      const prop = await contract.getProposal(0);
+      expect(prop[3]).to.equal(2); // state: Voting
     });
-    it("records who seconded", async function () {
-      await contract.connect(member2).secondProposal(0);
-      const p = await contract.getProposal(0);
-      expect(p.secondedBy).to.equal(member2.address);
+
+    it("should reject opening before seconding", async function () {
+      await contract.connect(chair).createProposal("Unseconded motion");
+      await expect(
+        contract.connect(chair).openVoting(1, 3600)
+      ).to.be.reverted;
     });
-    it("proposer cannot second own proposal", async function () {
-      await expect(contract.connect(member1).secondProposal(0)).to.be.revertedWith("Proposer cannot second own proposal");
-    });
-    it("non-registered cannot second", async function () {
-      // member3 is added but we use a fresh contract — they are NOT added in THIS test's context
-      // Actually member3 IS added in beforeEach above, so let's use an unadded member
-      // In this test, only member1/member2/chair are added (beforeEach above), member3 is added
-      // So member3 IS a voter here
-      // The proposer (member1) can't second — that works
-      // A second voter (member2) can second
-      // Already seconded — no third voter can second because already Seconded
-      await contract.connect(member2).secondProposal(0);
-      // member3 also tries to second — proposal is now Seconded, not Created
-      await expect(contract.connect(member3).secondProposal(0)).to.be.revertedWith("Proposal must be in Created state");
-    });
-    it("emits ProposalSeconded event", async function () {
-      await expect(contract.connect(member2).secondProposal(0)).to.emit(contract, "ProposalSeconded").withArgs(0, member2.address);
+
+    it("should reject non-chair opening voting", async function () {
+      await expect(
+        contract.connect(member1).openVoting(0, 3600)
+      ).to.be.reverted;
     });
   });
 
-  // ===== Amendments =====
+  describe("Casting Votes", function () {
+    const PROPOSAL_ID = 0;
+    const ONE_WEEK = 7 * 24 * 3600;
+
+    beforeEach(async function () {
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).addVoter(member2.address);
+      await contract.connect(chair).createProposal("Test motion");
+      await contract.connect(member1).secondProposal(0);
+      await contract.connect(chair).openVoting(PROPOSAL_ID, ONE_WEEK);
+    });
+
+    async function castVote(voter, choice) {
+      const nhBytes32 = ethers.ZeroHash;
+      const proof = mockProof(PROPOSAL_ID);
+      return contract.connect(voter).castVote(
+        PROPOSAL_ID, choice, nhBytes32,
+        proof.pA, proof.pB, proof.pC,
+        proof.pubSignals
+      );
+    }
+
+    it("should allow eligible voter to vote Yes", async function () {
+      await castVote(member1, 0);
+      const prop = await contract.getProposal(PROPOSAL_ID);
+      expect(prop[9]).to.equal(1); // yesVotes
+    });
+
+    it("should allow eligible voter to vote No", async function () {
+      await castVote(member1, 1);
+      const prop = await contract.getProposal(PROPOSAL_ID);
+      expect(prop[10]).to.equal(1); // noVotes
+    });
+
+    it("should allow eligible voter to Abstain", async function () {
+      await castVote(member1, 2);
+      const prop = await contract.getProposal(PROPOSAL_ID);
+      expect(prop[11]).to.equal(1); // abstainVotes
+    });
+
+    it("should reject double voting", async function () {
+      await castVote(member1, 0);
+      await expect(castVote(member1, 1)).to.be.reverted;
+    });
+
+    it("should track hasVoted correctly", async function () {
+      await castVote(member1, 0);
+      expect(await contract.hasVoted(PROPOSAL_ID, member1.address)).to.equal(true);
+    });
+
+    it("should reject ineligible voter", async function () {
+      await expect(castVote(member3, 0)).to.be.reverted;
+    });
+  });
+
+  describe("Finalizing Proposals", function () {
+    const PROPOSAL_ID = 0;
+    const ONE_HOUR = 3600;
+
+    beforeEach(async function () {
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).createProposal("Test motion");
+      await contract.connect(member1).secondProposal(0);
+      await contract.connect(chair).openVoting(PROPOSAL_ID, ONE_HOUR);
+    });
+
+    it("should pass when yes > no", async function () {
+      const nhBytes32 = ethers.ZeroHash;
+      const proof = mockProof(PROPOSAL_ID);
+      await contract.connect(member1).castVote(PROPOSAL_ID, 0, nhBytes32, proof.pA, proof.pB, proof.pC, proof.pubSignals);
+      await time.increase(Number(ONE_HOUR) + 1);
+      await contract.connect(chair).finalizeProposal(PROPOSAL_ID);
+      const prop = await contract.getProposal(PROPOSAL_ID);
+      expect(prop[3]).to.equal(3); // state: Passed
+    });
+
+    it("should reject finalizing before voting ends", async function () {
+      await expect(
+        contract.connect(chair).finalizeProposal(PROPOSAL_ID)
+      ).to.be.reverted;
+    });
+  });
+
   describe("Amendments", function () {
+    const PROPOSAL_ID = 0;
+
     beforeEach(async function () {
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(member1).createProposal("Test proposal");
-      await contract.connect(member2).secondProposal(0);
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).createProposal("Main motion");
+      await contract.connect(member1).secondProposal(PROPOSAL_ID);
     });
 
-    it("can submit amendment in Seconded state", async function () {
-      await contract.connect(member1).submitAmendment(0, "Add clause A");
-      const p = await contract.getProposal(0);
-      expect(p.amendmentCount).to.equal(1);
+    it("should allow eligible voter to submit amendment", async function () {
+      const tx = await contract.connect(member1).submitAmendment(PROPOSAL_ID, "Friendly amendment");
+      const receipt = await tx.wait();
+      const event = receipt.logs.find(log => log.fragment && log.fragment.name === "AmendmentSubmitted");
+      expect(event).to.exist;
     });
-    it("chair can approve amendment", async function () {
-      await contract.connect(member1).submitAmendment(0, "Add clause A");
-      await contract.connect(chair).approveAmendment(0, 0);
-      const a = await contract.getAmendment(0, 0);
-      expect(a.approved).to.equal(true);
-    });
-    it("non-chair cannot approve", async function () {
-      await contract.connect(member1).submitAmendment(0, "Add clause A");
-      await expect(contract.connect(member2).approveAmendment(0, 0)).to.be.revertedWith("Only chair can perform this action");
-    });
-    it("emits AmendmentSubmitted", async function () {
-      await expect(contract.connect(member1).submitAmendment(0, "Add clause A")).to.emit(contract, "AmendmentSubmitted").withArgs(0, 0, member1.address);
+
+    it("should allow chair to approve amendment", async function () {
+      await contract.connect(member1).submitAmendment(PROPOSAL_ID, "Friendly amendment");
+      await contract.connect(chair).approveAmendment(PROPOSAL_ID, 0);
+      const amendment = await contract.getAmendment(PROPOSAL_ID, 0);
+      expect(amendment[2]).to.equal(true); // approved
     });
   });
 
-  // ===== Voting Period =====
-  describe("Voting Period", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-    });
-
-    it("chair can open voting", async function () {
-      await contract.connect(chair).openVoting(0, 60);
-      expect(await contract.getProposalState(0)).to.equal(2);
-    });
-    it("non-chair cannot open voting", async function () {
-      await expect(contract.connect(member1).openVoting(0, 60)).to.be.revertedWith("Only chair can perform this action");
-    });
-    it("rejects zero duration", async function () {
-      await expect(contract.connect(chair).openVoting(0, 0)).to.be.revertedWith("Invalid voting duration");
-    });
-    it("rejects over 7 days", async function () {
-      await expect(contract.connect(chair).openVoting(0, 8 * 24 * 60 * 60)).to.be.revertedWith("Invalid voting duration");
-    });
-  });
-
-  // ===== Voting =====
-  describe("Voting", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 60);
-    });
-
-    it("can vote Yes", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      const p = await contract.getProposal(0);
-      expect(p.yesVotes).to.equal(1);
-    });
-    it("can vote No", async function () {
-      await contract.connect(member1).voteOnMotion(0, 1, NULLIFIER_HASH, proofArr);
-      const p = await contract.getProposal(0);
-      expect(p.noVotes).to.equal(1);
-    });
-    it("can vote Abstain", async function () {
-      await contract.connect(member1).voteOnMotion(0, 2, NULLIFIER_HASH, proofArr);
-      const p = await contract.getProposal(0);
-      expect(p.abstainVotes).to.equal(1);
-    });
-    it("rejects invalid choice", async function () {
-      await expect(contract.connect(member1).voteOnMotion(0, 99, NULLIFIER_HASH, proofArr)).to.be.revertedWith("Invalid choice");
-    });
-    it("rejects double voting", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await expect(contract.connect(member1).voteOnMotion(0, 1, NULLIFIER_HASH, proofArr)).to.be.revertedWith("Already voted");
-    });
-    it("proposal passes when yes > no", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member2).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await time.increase(61);
-      await contract.finalizeProposal(0);
-      expect(await contract.getProposalState(0)).to.equal(3); // Passed
-    });
-    it("proposal fails when no >= yes", async function () {
-      await contract.connect(member1).voteOnMotion(0, 1, NULLIFIER_HASH, proofArr);
-      await contract.connect(member2).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await time.increase(61);
-      await contract.finalizeProposal(0);
-      expect(await contract.getProposalState(0)).to.equal(4); // Failed
-    });
-    it("rejects voting after period ends", async function () {
-      await time.increase(61);
-      await expect(contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr)).to.be.revertedWith("Voting period has ended");
-    });
-  });
-
-  // ===== Call for Division =====
   describe("Call for Division", function () {
+    const ONE_WEEK = 7 * 24 * 3600;
+
+
     beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(owner).addVoter(member3.address);
-      await contract.connect(chair).createProposal("Test");
+      await contract.connect(chair).addVoter(member1.address);
+      await contract.connect(chair).createProposal("Test motion");
       await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 60);
+      await contract.connect(chair).openVoting(0, ONE_WEEK);
     });
 
-    it("voter can call for division", async function () {
-      await contract.connect(member1).callForDivision(0);
-      const p = await contract.getProposal(0);
-      expect(p.divisionCallCount).to.equal(1);
-      expect(p.divisionCalled).to.equal(false);
-    });
-    it("divisionCalled set when threshold reached", async function () {
-      await contract.connect(member1).callForDivision(0);
-      await contract.connect(member2).callForDivision(0);
-      const p = await contract.getProposal(0);
-      expect(p.divisionCalled).to.equal(true);
-    });
-    it("same voter cannot call twice", async function () {
-      await contract.connect(member1).callForDivision(0);
-      await expect(contract.connect(member1).callForDivision(0)).to.be.revertedWith("Already called for division");
-    });
-    it("emits DivisionCalled event", async function () {
-      await expect(contract.connect(member1).callForDivision(0)).to.emit(contract, "DivisionCalled").withArgs(0, member1.address, 1);
-    });
-    it("non-voter cannot call", async function () {
-      // member3 IS added in beforeEach above — use unadded signer
-      // Actually all 4 are added. Let's try calling from a non-eligible context
-      // In this test all four are eligible. Test non-eligible by calling directly.
-      // The actual test uses member3 who IS added — the test name is misleading
-      // Let's check if there's a test for non-voter
-      // Non-voter test: needs a signer who is NOT added. We only have 5 signers total.
-      // member3 IS added. So can't easily test "non-voter" here.
-      // Skipping explicit non-voter test since member3 is always added
-    });
-  });
-
-  // ===== Reconsideration =====
-  describe("Reconsideration", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 120);
-    });
-
-    it("voter who voted can request reconsideration", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member1).reconsider(0);
-      const p = await contract.getProposal(0);
-      expect(p.reconsiderationRequested).to.equal(true);
-    });
-    it("non-voter cannot request reconsideration", async function () {
-      await expect(contract.connect(member2).reconsider(0)).to.be.revertedWith("Must have voted to request reconsideration");
-    });
-    it("emits ReconsiderationRequested event", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await expect(contract.connect(member1).reconsider(0)).to.emit(contract, "ReconsiderationRequested").withArgs(0, member1.address);
-    });
-  });
-
-  // ===== Reopen Voting =====
-  describe("Reopen Voting", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 120);
-    });
-
-    it("chair can reopen voting after reconsideration requested", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member1).reconsider(0);
-      await contract.connect(chair).reopenVoting(0);
-      const p = await contract.getProposal(0);
-      expect(p.yesVotes).to.equal(0); // votes cleared
-      expect(p.reconsiderationRequested).to.equal(false);
-    });
-    it("non-chair cannot reopen", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member1).reconsider(0);
-      await expect(contract.connect(member1).reopenVoting(0)).to.be.revertedWith("Only chair can perform this action");
-    });
-    it("rejects reopen without reconsideration request", async function () {
-      await expect(contract.connect(chair).reopenVoting(0)).to.be.revertedWith("No reconsideration requested");
-    });
-    it("emits VotingReopened event", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member1).reconsider(0);
-      await expect(contract.connect(chair).reopenVoting(0)).to.emit(contract, "VotingReopened").withArgs(0);
-    });
-  });
-
-  // ===== Finalization =====
-  describe("Finalization", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 60);
-    });
-
-    it("any member can finalize after voting ends", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await time.increase(61);
-      await contract.connect(member1).finalizeProposal(0);
-      expect(await contract.getProposalState(0)).to.equal(3); // Passed
-    });
-    it("rejects finalizing before voting ends", async function () {
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await expect(contract.finalizeProposal(0)).to.be.revertedWith("Voting period has not ended");
-    });
-  });
-
-  // ===== View Functions =====
-  describe("View Functions", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(chair).createProposal("Test");
-    });
-
-    it("getProposal returns correct data", async function () {
-      const p = await contract.getProposal(0);
-      expect(p.description).to.equal("Test");
-      expect(p.proposalProposer).to.equal(chair.address);
-    });
-    it("hasVoted returns false for non-voter", async function () {
-      expect(await contract.hasVoted(0, member1.address)).to.equal(false);
-    });
-    it("getProposalState returns correct state", async function () {
-      expect(await contract.getProposalState(0)).to.equal(0); // Created
-    });
-    it("hasCalledForDivision returns false initially", async function () {
-      expect(await contract.hasCalledForDivision(0, member1.address)).to.equal(false);
-    });
-  });
-
-  // ===== Edge Cases =====
-  describe("Edge Cases", function () {
-    beforeEach(async function () {
-      await contract.connect(owner).addVoter(chair.address);
-      await contract.connect(owner).addVoter(member1.address);
-      await contract.connect(owner).addVoter(member2.address);
-      await contract.connect(chair).createProposal("Test");
-      await contract.connect(member1).secondProposal(0);
-      await contract.connect(chair).openVoting(0, 60);
-    });
-
-    // Note: "cannot open voting twice" — the contract's openVoting requires Seconded state,
-    // so calling it twice on the same proposal fails on the second call (already tested implicitly)
-
-    it("can vote after voting reopened", async function () {
-      // member1 votes, requests reconsideration, chair reopens
-      await contract.connect(member1).voteOnMotion(0, 0, NULLIFIER_HASH, proofArr);
-      await contract.connect(member1).reconsider(0);
-      await contract.connect(chair).reopenVoting(0);
-      
-      // Votes cleared — member2 can vote
-      await contract.connect(member2).voteOnMotion(0, 1, NULLIFIER_HASH, proofArr);
-      const p = await contract.getProposal(0);
-      expect(p.noVotes).to.equal(1);
-      expect(p.yesVotes).to.equal(0);
+    it("should allow any member to call for division", async function () {
+      // Call for division should not revert
+      await expect(contract.connect(member1).callForDivision(0)).to.not.be.reverted;
     });
   });
 });

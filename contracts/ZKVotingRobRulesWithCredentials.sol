@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "./Groth16VerifierV2.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Groth16Verifier } from "./Groth16VerifierV2.sol";
 
 /**
  * @title ZKVotingRobRulesWithCredentials
@@ -101,7 +101,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     
     // Modifiers
     modifier onlyChair() {
-        require(msg.sender == chair, "Only chair can perform this action");
+        require(msg.sender == chair, "Only chair");
         _;
     }
     
@@ -127,7 +127,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     // ============================================================
     
     modifier onlyChairOrOwner() {
-        require(msg.sender == chair || msg.sender == owner(), "Only chair or owner can perform this action");
+        require(msg.sender == chair || msg.sender == owner(), "Not authorized");
         _;
     }
     
@@ -209,9 +209,9 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     /// The proposer themselves cannot second their own motion
     function secondProposal(uint256 _proposalId) external isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
-        require(p.state == ProposalState.Created, "Proposal must be in Created state");
-        require(msg.sender != p.proposer, "Proposer cannot second own proposal");
-        require(!p.hasVotedOnMotion[msg.sender], "Already involved in this proposal");
+        require(p.state == ProposalState.Created, "Not Created");
+        require(msg.sender != p.proposer, "Self-second");
+        require(!p.hasVotedOnMotion[msg.sender], "Already involved");
         
         p.state = ProposalState.Seconded;
         p.secondedAt = block.timestamp;
@@ -223,8 +223,8 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     /// @dev Any eligible member can propose an amendment to a seconded motion
     function submitAmendment(uint256 _proposalId, string calldata _description) external isEligibleVoter returns (uint256) {
         Proposal storage p = proposals[_proposalId];
-        require(p.state == ProposalState.Seconded, "Proposal must be in Seconded state");
-        require(bytes(_description).length > 0, "Amendment description cannot be empty");
+        require(p.state == ProposalState.Seconded, "Not Seconded");
+        require(bytes(_description).length > 0, "Empty desc");
         
         p.amendments.push(Amendment({
             description: _description,
@@ -253,7 +253,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     /// @dev Chair opens the voting period — motion is now open for vote
     function openVoting(uint256 _proposalId, uint256 _duration) external onlyChair isEligibleVoter {
         Proposal storage p = proposals[_proposalId];
-        require(p.state == ProposalState.Seconded, "Proposal must be in Seconded state");
+        require(p.state == ProposalState.Seconded, "Not Seconded");
         require(_duration > 0 && _duration <= 7 days, "Invalid voting duration");
         
         p.state = ProposalState.Voting;
@@ -275,7 +275,6 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     
     /// @dev Cast a vote with Groth16 ZK proof verification.
     /// @param _choice 0=Yes, 1=No, 2=Abstain
-    /// @param _nullifierHash ZK nullifier hash for vote privacy
     /// @param _pA G1 point A from snarkjs proof
     /// @param _pB G2 point B from snarkjs proof (Fq2 swapped for BN128 precompile)
     /// @param _pC G1 point C from snarkjs proof
@@ -283,7 +282,7 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
     function castVote(
         uint256 _proposalId,
         uint256 _choice,
-        bytes32 _nullifierHash,
+        bytes32,
         uint256[2] calldata _pA,
         uint256[2][2] calldata _pB,
         uint256[2] calldata _pC,
@@ -338,8 +337,8 @@ contract ZKVotingRobRulesWithCredentials is Ownable {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal must be in Voting state");
         require(block.timestamp <= p.votingEndsAt, "Voting period has ended");
-        require(!p.reconsiderationRequested, "Reconsideration already requested");
-        require(p.hasVotedOnMotion[msg.sender], "Must have voted to request reconsideration");
+        require(!p.reconsiderationRequested, "Reconsider req");
+        require(p.hasVotedOnMotion[msg.sender], "Must have voted");
         
         // Determine prevailing side
         ProposalState prevailingSide;

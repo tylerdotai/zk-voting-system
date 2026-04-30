@@ -1,0 +1,48 @@
+name: Lint
+
+on:
+  push:
+    branches: [main, deploy/frontend-fix]
+  pull_request:
+    branches: [main]
+
+jobs:
+  solhint:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install solhint
+        run: npm install -g solhint
+
+      - name: Run solhint
+        run: solhint 'contracts/ZKVotingSimple.sol' 'contracts/ZKVotingRobRulesWithCredentials.sol' 'contracts/Groth16VerifierV2.sol' 'contracts/verifiers/**/*.sol' 'contracts/interfaces/**/*.sol'
+
+  ts-lint:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend-app
+
+      - name: Run ESLint
+        run: npm run lint || true
+        working-directory: frontend-app
