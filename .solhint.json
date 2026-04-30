@@ -2,9 +2,16 @@
   "extends": "solhint:recommended",
   "rules": {
     "compiler-version": "off",
-    "func-visibility": { "enabled": true, "parameters": ["payable"] },
-    "max-line-length": { "enabled": true, "value": 120 },
+    "func-visibility": "warn",
     "not-rely-on-time": "off",
-    "state-visibility": "off"
+    "state-visibility": "off",
+    "no-global-import": "warn",
+    "use-natspec": "off",
+    "gas-custom-errors": "off",
+    "gas-struct-packing": "off",
+    "gas-increment-by-one": "off",
+    "gas-small-strings": "off",
+    "immutable-vars-naming": "off",
+    "max-line-length": "off"
   }
 }
