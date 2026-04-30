@@ -23,7 +23,7 @@
   <p>
     ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia — fully onchain, publicly verifiable.
     <br />
-    <a href="https://zk-voting-system-hbphydl46-tylerdotais-projects.vercel.app/">View Live</a>
+    <a href="https://zk-voting-system-two.vercel.app">View Live</a>
     ·
     <a href="https://sepolia.etherscan.io/address/0x198041e195b9e8c34B5371edF67Ec84DFa68bb74">Contract</a>
     ·
