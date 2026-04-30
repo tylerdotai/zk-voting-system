@@ -1,0 +1,22 @@
+{
+  "name": "zk-voting-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "circomlibjs": "^0.1.7",
+    "ethers": "6",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "snarkjs": "^0.7.6"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "typescript": "latest"
+  }
+}
