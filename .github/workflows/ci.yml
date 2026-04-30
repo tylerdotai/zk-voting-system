@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  hardhat:
+  compile:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -24,26 +24,29 @@ jobs:
         run: npm ci
 
       - name: Compile contracts
-        run: npx hardhat compile
+        run: npx hardhat compile --force
 
-      - name: Run Hardhat tests
-        run: npx hardhat test
-
-  foundry:
+  test:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+      SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+      PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      ALCHEMY_API_KEY: ${{ secrets.ALCHEMY_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          submodules: true
+          node-version: '24'
+          cache: 'npm'
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Run Forge build
-        run: forge build
-
-      - name: Run Forge tests
-        run: forge test
+      - name: Run tests
+        run: npm test
 
   build-frontend:
     runs-on: ubuntu-latest
