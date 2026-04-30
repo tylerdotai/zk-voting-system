@@ -2,8 +2,8 @@
 
 ## Overview
 
-ENS-gated Rob's Rules parliamentary voting on Ethereum Sepolia. 
-No ENS Allowlist / ZK credential dependency. ZK vote privacy layer preserved for post-quantum future.
+Chair-managed allowlist Rob's Rules parliamentary voting on Ethereum Sepolia.
+No ENS, no Polygon ID, no third-party identity provider. ZK vote privacy layer preserved.
 
 ---
 
@@ -11,8 +11,8 @@ No ENS Allowlist / ZK credential dependency. ZK vote privacy layer preserved for
 
 | Contract | Address | Purpose |
 |---|---|---|
-| **Groth16VerifierV2** | `0x198041e195b9e8C34B5371edF67Ec84DFa68bb74` | Groth16 proof verifier |
-| **ZKVotingSimple** | `0xdA9B09bA4B059A84F98Ce27dF45de09F434A4F12` | Working demo voting |
+| **Groth16VerifierV2** | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` | Groth16 BN128 proof verifier |
+| **ZKVotingRobRulesWithCredentials** | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` | Rob's Rules governance |
 
 ## Architecture
 
@@ -22,93 +22,66 @@ User connects wallet
 Contract: isEligible(address) → check voter allowlist
        ↓
 If eligible → full Rob's Rules flow (propose, second, amend, vote, finalize)
-If not eligible → "Register Now" button → calls addVoter(address)
+If not eligible → "Register to Vote" → chair adds address to allowlist
 ```
 
 ---
 
 ## Contract: ZKVotingRobRulesWithCredentials
 
-**Deployed (Sepolia):** `0x198041e195b9e8C34B5371edF67Ec84DFa68bb74`
+### Voter Eligibility (chair-managed allowlist)
 
-### Voter Eligibility (ENS-gated, no ENS Allowlist)
+- Chair calls `addVoter(address)` to grant eligibility
+- Chair calls `removeVoter(address)` to revoke
+- `isEligible(address) → bool` — constant-time public check
 
-| Function | Access | Description |
+### State Machine
+
+```
+Created → Seconded → Voting → Passed
+                       ↘ Failed
+```
+
+### Key Functions
+
+| Function | Access | Purpose |
 |---|---|---|
-| `addVoter(address _voter)` | Chair or Owner | Grant voting rights |
-| `removeVoter(address _voter)` | Chair or Owner | Revoke voting rights |
-| `addVoters(address[] _voters)` | Chair or Owner | Batch add |
-| `isEligible(address _user)` | Anyone (view) | Check voter status |
-| `setEnsResolver(address _resolver)` | Chair or Owner | Future ENS integration |
+| `createProposal(string)` | Eligible voter | Open a new motion |
+| `secondProposal(uint256)` | Eligible voter (not proposer) | Second a motion |
+| `submitAmendment(uint256,string)` | Eligible voter | Floor amendment |
+| `approveAmendment(uint256,id)` | Chair | Chair accepts amendment |
+| `openVoting(uint256,uint256)` | Chair | Start vote period |
+| `voteOnMotion(uint256,uint256,uint256[2],uint256[2][2],uint256[2],uint256[3])` | Eligible voter | Cast vote with ZK proof |
+| `callForDivision(uint256)` | Any voter | Recorded division call |
+| `reconsider(uint256)` | Voter who voted | Request reconsideration |
+| `reopenVoting(uint256)` | Chair | Reopen a closed vote |
+| `finalizeProposal(uint256)` | Anyone | Close and tally |
 
-### Rob's Rules Parliamentary Flow
+### Events
 
-1. **Create** → Chair creates proposal (eligible voter required)
-2. **Second** → Chair seconds to move to Seconded state
-3. **Amend** → Any eligible member can propose amendments
-4. **Open Voting** → Chair opens voting period (max 7 days)
-5. **Vote** → Members vote Yes/No/Abstain
-6. **Finalize** → Anyone can finalize after voting ends → Passed/Failed
-
-### ZK Architecture Preserved (future)
-
-- `nullifierHash` in `voteOnMotion` — placeholder for ZK vote privacy
-- `ensResolver` field — future ENS-based eligibility without allowlist
-- Post-quantum signature scheme: ML-DSA (lattice-based) planned
+`ProposalCreated`, `ProposalSeconded`, `AmendmentSubmitted`, `AmendmentApproved`, `VotingOpened`, `MotionVoted`, `CallForDivision`, `ReconsiderationRequested`, `VotingReopened`, `ProposalFinalized`, `VoterAdded`, `VoterRemoved`
 
 ---
 
-## Frontend Pages
+## ZK Proof Flow
 
-| Page | Purpose |
-|---|---|
-| `index.html` | PWA offline-capable voting shell |
-| `rob-rules.html` | Full Rob's Rules parliamentary UI |
-| `verify.html` | (legacy, unused without ENS Allowlist) |
-| `manifest.json` | PWA manifest |
-| `sw.js` | Service worker for offline caching |
+1. Voter submits vote choice to frontend
+2. Frontend computes Poseidon hashes (nullifier + commitment) via `circomlibjs`
+3. Frontend runs `snarkjs.groth16.fullProve()` in browser (WASM, no server)
+4. Proof + public signals submitted to `voteOnMotion()`
+5. `Groth16Verifier` validates proof on-chain
+6. If valid, vote recorded; if not, reverts
 
-### Voter Flow (rob-rules.html)
-
-1. Connect wallet → shows address
-2. `checkVoterEligibility()` polls contract → shows registered status
-3. If not registered → "Register Now" button enabled
-4. Click "Register" → `contract.addVoter(walletAddress)` → eligible
-5. Full voting UI unlocked (create, second, amend, vote)
+**Public signals:** `[proposal_id, nullifier_hash, commitment]`
+**Private inputs:** `[vote_choice, nullifier_seed, voter_address]`
 
 ---
 
-## Out of Scope (for now)
+## Frontend (Next.js)
 
-- ZK credential verification (ENS-gated allowlist deployed instead)
-- Multi-chain support
-- Mobile app
-- Mainnet deployment
-
----
-
-## In Scope
-
-- ZK vote privacy layer (post-quantum, future)
-- Offline-capable PWA
-- Real-time SSE updates (future)
-- 3-voter end-to-end test (pre-demo)
-- Demo rehearsal
-
----
-
-## Success Criteria
-
-1. Voter can connect wallet → see eligibility → self-register
-2. Chair can add/remove voters from allowlist
-3. Full Rob's Rules parliamentary flow works on-chain
-4. PWA works offline with service worker
-5. ZK vote privacy architecture documented for future implementation
-
----
-
-## Grant Reference
-
-Zero Knowledge DID Blockchain Voting System — $2,500 grant
-Client: Fort Worth DAO
-Key constraints: post-quantum ready, not reliant on 3rd party / internet, offline backup
+- `/` — Voter portal
+- `/chair` — Chair dashboard
+- `/verify` — Standalone proof verifier
+- snarkjs + circomlibjs via npm
+- WASM + zkey served from `frontend-app/public/`
+- Service worker for offline capability

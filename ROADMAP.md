@@ -6,21 +6,21 @@
 
 ## Now — Demo at Fort Worth DAO Meeting (May 1st)
 
-The system is a working ENS-gated Rob's Rules parliamentary voting dApp on Sepolia.
+The system is a working chair-managed Rob's Rules parliamentary voting dApp on Sepolia.
 
 **What works today:**
-- Groth16VerifierV2 + ZKVotingSimple live on Sepolia
+- Groth16VerifierV2 + ZKVotingRobRulesWithCredentials live on Sepolia
 - Chair creates proposals, any eligible voter can second
-- Amendments, open voting, cast vote, finalize
+- Amendments, open voting, cast vote with ZK proof, finalize
 - Call for division, reconsideration, reopen voting
-- PWA with offline-capable service worker (✅ verified)
-- Mobile-first projection-ready UI
-- README updated with full hackathon demo script
+- Next.js PWA with service worker (offline-capable)
+- Civic UI — light theme, Inter font, Fort Worth DAO brand
+- Frontend deployed: `https://zk-voting-system-two.vercel.app`
+- CI: compile, test, build-frontend, lint — all green
 
 **What needs to happen before May 1st:**
 1. 3-voter end-to-end test (local, full Rob's Rules flow)
-2. Vercel deploy → public URL for 60-person room
-3. Demo rehearsal
+2. Demo rehearsal
 
 ---
 
@@ -28,47 +28,24 @@ The system is a working ENS-gated Rob's Rules parliamentary voting dApp on Sepol
 
 **Goal:** First real-world use at Fort Worth DAO meeting.
 
-- [ ] 3-voter end-to-end test
-- [ ] Demo rehearsal
-- [ ] Fix any failures found in rehearsal
-- [x] README polished with hackathon demo script
-- [x] Repo cleaned — test artifacts, credential infra, dead code removed
-
-**Definition of done:** 60 people can show up, connect wallets, and vote on a real proposal.
+- [ ] 3-voter end-to-end test (chair + 2 members)
+- [ ] Demo rehearsal with full Rob's Rules flow
+- [ ] May 1st FW DAO meeting presentation
 
 ---
 
-## Phase 2 — Harden (May–June 2026)
+## Phase 2 — Harden (Post-hackathon)
 
-**Goal:** Production-grade for regular DAO use.
+**Goal:** Production-ready governance for real FW DAO votes.
 
-- [ ] SSE real-time vote count updates (no page refresh)
-- [ ] Mobile app polish — native wrapper or improved PWA
-- [ ] Transaction hash + success/error UX for all actions
-- [ ] Wrong network detection + auto-switch to Sepolia
-- [ ] Proposal history + audit trail UI
-- [ ] Admin panel for chair (add/remove voters, view all proposals)
-
-**Definition of done:** DAO can run weekly votes without manual intervention.
+- [ ] Real ZK proof integration for vote privacy
+- [ ] Slither security audit on governance contracts
+- [ ] Gas optimization for large voter populations
+- [ ] Multi-chain support (Mainnet)
 
 ---
 
-## Phase 3 — Elevate (Mid 2026)
+## History
 
-**Goal:** Scale credibility + eventual mainnet.
-
-- [ ] ZK vote privacy layer (zk-SNARKs for vote correctness, ML-DSA for post-quantum)
-- [ ] ENS domain-gated eligibility (self-service, no chair allowlist)
-- [ ] Deploy to Ethereum mainnet (or L2 for gas costs)
-- [ ] Fort Worth DAO branding as reference customer
-
-**Definition of done:** ZK voting system is a product other DAOs will pay for.
-
----
-
-## What Got Us Here
-
-- **Pivot from Polygon ID** (Apr 2026) — ENS-gated allowlist, simpler, faster to ship
-- **Grant:** Fort Worth DAO — $2,500 for ZK DID voting system (post-quantum ready, offline-capable, no 3rd party dependency)
-- **Stack:** Solidity · Hardhat · Ethers.js v6 · Vanilla HTML/CSS/JS · PWA
-- **Network:** Ethereum Sepolia (mainnet when ready)
+- **Apr 2026** — Pivoted from Polygon ID to chair-managed allowlist (simpler, faster to ship)
+- **Apr 2026** — Grant: Fort Worth DAO — $2,500 for ZK voting system (offline-capable, no 3rd party dependency)
