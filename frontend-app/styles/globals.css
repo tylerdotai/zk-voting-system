@@ -8,7 +8,7 @@
   --fw-blue-pale:   #e8f0f8;
   --fw-orange:      #ff6b00;
   --fw-orange-dark: #e55d00;
-  --fw-dark:        #1a1a1a;
+  --fw-dark:        #1e3a5f;
   --fw-gray:        #6b7280;
   --fw-light:       #f9fafb;
   --fw-border:      #e5e7eb;
@@ -43,7 +43,7 @@ h1, h2, h3, h4, .state-badge, .proposal-id, .label, .connect-btn, .vote-btn, .ac
 
 /* ── Header ── */
 .header {
-  background: var(--fw-dark);
+  background: var(--fw-blue);
   padding: 1.25rem 2rem;
 }
 .header-top {
