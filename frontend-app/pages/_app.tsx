@@ -2,6 +2,13 @@ import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import '../styles/globals.css';
 
+// Browser polyfill for snarkjs / blake-hash (uses Buffer)
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Buffer: BrowserBuffer } = require('buffer');
+  if (!window.Buffer) window.Buffer = BrowserBuffer;
+}
+
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
