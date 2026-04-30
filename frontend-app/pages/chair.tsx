@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import WalletConnect from '../components/WalletConnect';
 import ChairDashboard from '../components/ChairDashboard';
 import { ethers } from 'ethers';
-import { getContract, ContractState, ProposalData } from '../lib/ethereum';
+import { getContract, connectWallet, ContractState, ProposalData } from '../lib/ethereum';
 import { CONTRACT_ADDRESS, ROB_RULES_ABI } from '../lib/constants';
 import { STATES } from '../lib/constants';
 
@@ -55,6 +55,14 @@ export default function ChairPage() {
 
   useEffect(() => {
     if (!window.ethereum) return;
+    // If MetaMask already connected, re-establish contract state without popup
+    window.ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
+      if (accounts.length > 0) {
+        connectWallet().then((s) => {
+          if (s) setState(s);
+        }).catch(() => {});
+      }
+    }).catch(() => {});
     loadProposalsFromChain();
     const iv = setInterval(loadProposalsFromChain, 8000);
     return () => clearInterval(iv);
