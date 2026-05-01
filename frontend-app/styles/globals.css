@@ -874,3 +874,23 @@ h1, h2, h3, h4, .state-badge, .proposal-id, .label, .connect-btn, .vote-btn, .ac
   .vote-buttons { grid-template-columns: repeat(3, 1fr); }
   .header h1 { font-size: 0.95rem; }
 }
+
+/* Chair Dashboard Controls */
+.chair-controls { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem; }
+
+.duration-row { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--fw-light); border-radius: 8px; border: 2px solid var(--fw-border); }
+.duration-row label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fw-gray); white-space: nowrap; }
+.duration-select { flex: 1; padding: 0.5rem 0.75rem; border-radius: 6px; border: 2px solid var(--fw-border); background: var(--fw-white); color: var(--text); font-size: 0.85rem; cursor: pointer; }
+
+.voting-controls { display: flex; flex-direction: column; gap: 0.75rem; }
+.vote-tally { display: flex; gap: 1rem; padding: 0.75rem; background: var(--fw-light); border-radius: 8px; }
+.vote-tally span { font-size: 0.85rem; font-weight: 700; }
+.yes-count { color: var(--state-voting); }
+.no-count { color: var(--state-created); }
+.abstain-count { color: var(--fw-gray); }
+
+.result-badge { font-size: 1rem; font-weight: 800; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; }
+.result-badge.passed { background: var(--state-voting); color: white; }
+.result-badge.failed { background: var(--state-created); color: white; }
+
+.action-btn.warning { background: #f59e0b; color: white; }

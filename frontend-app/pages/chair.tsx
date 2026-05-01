@@ -231,7 +231,7 @@ export default function ChairPage() {
         <div>
           <ChairDashboard
             selectedProposal={selected}
-            onProposalCreated={loadProposalsFromChain}
+            onRefresh={loadProposalsFromChain}
           />
         </div>
       </div>

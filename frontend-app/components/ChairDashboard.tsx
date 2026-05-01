@@ -1,327 +1,166 @@
 import React, { useState } from 'react';
 import { ProposalData, getContract } from '../lib/ethereum';
+import { STATES } from '../lib/constants';
 
-interface ChairDashboardProps {
+interface Props {
   selectedProposal: ProposalData | null;
-  onProposalCreated?: () => void;
+  onRefresh: () => void;
 }
 
-interface Amendment {
-  id: number;
-  description: string;
-  proposer: string;
-  approved: boolean;
-}
+const DURATION_OPTIONS = [
+  { label: '5 minutes', value: 5 * 60 },
+  { label: '15 minutes', value: 15 * 60 },
+  { label: '1 hour', value: 3600 },
+  { label: '24 hours', value: 24 * 3600 },
+  { label: '7 days', value: 7 * 24 * 3600 },
+];
 
-export default function ChairDashboard({ selectedProposal, onProposalCreated }: ChairDashboardProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [voterAddr, setVoterAddr] = useState('');
-  const [amendmentDesc, setAmendmentDesc] = useState('');
-  // Amendment panel state
-  const [showAmendments, setShowAmendments] = useState(false);
-  const [amendments, setAmendments] = useState<Amendment[]>([]);
-  const [amendmentsLoading, setAmendmentsLoading] = useState(false);
-  const [approveLoading, setApproveLoading] = useState<{ [id: number]: boolean }>({});
+export default function ChairDashboard({ selectedProposal, onRefresh }: Props) {
+  const [loading, setLoading] = useState('');
+  const [duration, setDuration] = useState(15 * 60); // default 15 min
   const [reopenLoading, setReopenLoading] = useState(false);
 
-  const state = getContract();
-  const contract = state?.contract;
-
   async function openVoting() {
-    if (!selectedProposal || !contract) return;
-    setLoading(true);
-    setError('');
+    const contract = getContract()?.contract;
+    if (!contract || !selectedProposal) return;
+    setLoading('openVoting');
     try {
-      const DURATION = 7 * 24 * 3600; // 7 days
-      const tx = await contract.openVoting(selectedProposal.id, DURATION);
+      const tx = await contract.openVoting(selectedProposal.id, duration);
       await tx.wait();
-      onProposalCreated?.();
+      onRefresh();
     } catch (e: any) {
-      setError(e.reason || e.message);
+      alert(e.message || 'Failed to open voting');
     } finally {
-      setLoading(false);
+      setLoading('');
+    }
+  }
+
+  async function fastTrack() {
+    const contract = getContract()?.contract;
+    if (!contract || !selectedProposal) return;
+    setLoading('fastTrack');
+    try {
+      const tx = await contract.fastTrackVoting(selectedProposal.id, duration);
+      await tx.wait();
+      onRefresh();
+    } catch (e: any) {
+      alert(e.message || 'Failed to fast track');
+    } finally {
+      setLoading('');
     }
   }
 
   async function finalize() {
-    if (!selectedProposal || !contract) return;
-    setLoading(true);
-    setError('');
+    const contract = getContract()?.contract;
+    if (!contract || !selectedProposal) return;
+    setLoading('finalize');
     try {
       const tx = await contract.finalizeProposal(selectedProposal.id);
       await tx.wait();
-      onProposalCreated?.();
+      onRefresh();
     } catch (e: any) {
-      setError(e.reason || e.message);
+      alert(e.message || 'Failed to finalize');
     } finally {
-      setLoading(false);
-    }
-  }
-
-  async function callDivision() {
-    if (!selectedProposal || !contract) return;
-    setLoading(true);
-    setError('');
-    try {
-      const tx = await contract.callForDivision(selectedProposal.id);
-      await tx.wait();
-      onProposalCreated?.();
-    } catch (e: any) {
-      setError(e.reason || e.message);
-    } finally {
-      setLoading(false);
+      setLoading('');
     }
   }
 
   async function reopenVoting() {
-    if (!selectedProposal || !contract) return;
+    const contract = getContract()?.contract;
+    if (!contract || !selectedProposal) return;
     setReopenLoading(true);
-    setError('');
     try {
       const tx = await contract.reopenVoting(selectedProposal.id);
       await tx.wait();
-      onProposalCreated?.();
+      onRefresh();
     } catch (e: any) {
-      setError(e.reason || e.message);
+      alert(e.message || 'Failed to reopen');
     } finally {
       setReopenLoading(false);
     }
   }
 
-  async function addVoter() {
-    if (!voterAddr.trim() || !contract) return;
-    setLoading(true);
-    setError('');
-    try {
-      const tx = await contract.addVoter(voterAddr.trim());
-      await tx.wait();
-      setVoterAddr('');
-    } catch (e: any) {
-      setError(e.reason || e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function removeVoter() {
-    if (!voterAddr.trim() || !contract) return;
-    setLoading(true);
-    setError('');
-    try {
-      const tx = await contract.removeVoter(voterAddr.trim());
-      await tx.wait();
-      setVoterAddr('');
-    } catch (e: any) {
-      setError(e.reason || e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function submitAmendment() {
-    if (!selectedProposal || !amendmentDesc.trim() || !contract) return;
-    setLoading(true);
-    setError('');
-    try {
-      const tx = await contract.submitAmendment(selectedProposal.id, amendmentDesc.trim());
-      await tx.wait();
-      setAmendmentDesc('');
-      onProposalCreated?.();
-    } catch (e: any) {
-      setError(e.reason || e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadAmendments() {
-    if (!selectedProposal || !contract) return;
-    setAmendmentsLoading(true);
-    try {
-      const count = Number(selectedProposal.amendmentCount);
-      const results: Amendment[] = [];
-      for (let i = 0; i < count; i++) {
-        const a = await (contract as any).getAmendment(selectedProposal.id, i);
-        results.push({
-          id: i,
-          description: a[0],
-          proposer: a[1],
-          approved: a[2],
-        });
-      }
-      setAmendments(results);
-      setShowAmendments(true);
-    } catch (e) {
-      console.error('Error loading amendments:', e);
-    } finally {
-      setAmendmentsLoading(false);
-    }
-  }
-
-  async function approveAmendment(amendmentId: number) {
-    if (!selectedProposal || !contract) return;
-    setApproveLoading((prev) => ({ ...prev, [amendmentId]: true }));
-    try {
-      const tx = await (contract as any).approveAmendment(selectedProposal.id, amendmentId);
-      await tx.wait();
-      // Refresh amendments
-      await loadAmendments();
-      onProposalCreated?.();
-    } catch (e: any) {
-      setError(e.reason || e.message);
-    } finally {
-      setApproveLoading((prev) => ({ ...prev, [amendmentId]: false }));
-    }
-  }
-
-  if (!selectedProposal) {
-    return (
-      <div className="detail-panel">
-        <p style={{ color: 'var(--fw-gray)', fontSize: '0.9rem' }}>
-          Select a proposal to manage it.
-        </p>
-      </div>
-    );
-  }
-
+  if (!selectedProposal) return null;
   const sp = selectedProposal;
 
   return (
-    <div className="detail-panel">
-      <h3>#{sp.id}: {sp.description}</h3>
-      <p className="detail-meta">
-        {sp.state === 0 && 'Created — awaiting second'}
-        {sp.state === 1 && 'Seconded — awaiting chair to open voting'}
-        {sp.state === 2 && 'Voting open'}
-        {sp.state === 3 && 'Passed'}
-        {sp.state === 4 && 'Failed'}
-        {' · '}
-        ✓ {Number(sp.yesVotes)} / ✗ {Number(sp.noVotes)} / ─ {Number(sp.abstainVotes)}
-      </p>
-
-      {error && (
-        <div style={{ color: 'var(--state-failed)', fontSize: '0.8rem', marginBottom: '0.75rem', fontFamily: 'Inter, sans-serif' }}>
-          {error}
-        </div>
-      )}
-
-      <div className="chair-actions">
-        <h4>Chair Actions</h4>
-
-        {sp.state === 1 && (
-          <button className={`action-btn primary ${loading ? 'loading' : ''}`} onClick={openVoting} disabled={loading}>
-            {loading && <span className="spinner" />}
-            Open Voting
-          </button>
-        )}
-
-        {sp.state === 2 && (
-          <>
-            <button className={`action-btn primary ${loading ? 'loading' : ''}`} onClick={finalize} disabled={loading}>
-              {loading && <span className="spinner" />}
-              Finalize Proposal
-            </button>
-            <button className={`action-btn secondary ${loading ? 'loading' : ''}`} onClick={callDivision} disabled={loading}>
-              {loading && <span className="spinner" />}
-              Call for Division
-            </button>
-          </>
-        )}
-
-        {(sp.state === 3 || sp.state === 4) && (
-          <button className={`action-btn secondary ${reopenLoading ? 'loading' : ''}`} onClick={reopenVoting} disabled={reopenLoading}>
-            {reopenLoading && <span className="spinner" />}
-            Reopen Voting
-          </button>
-        )}
-      </div>
-
-      {/* Amendments section */}
-      {Number(sp.amendmentCount) > 0 && (
-        <div className="amendments-section">
-          <h4>
-            Amendments ({sp.amendmentCount})
-            {amendments.filter((a) => !a.approved).length > 0 && (
-              <span style={{ color: 'var(--fw-orange)', marginLeft: '0.5rem' }}>
-                ({amendments.filter((a) => !a.approved).length} pending)
-              </span>
-            )}
-          </h4>
-          {!showAmendments ? (
-            <button
-              className="action-btn secondary"
-              onClick={loadAmendments}
-              disabled={amendmentsLoading}
-            >
-              {amendmentsLoading ? 'Loading…' : `View ${sp.amendmentCount} Amendment${Number(sp.amendmentCount) > 1 ? 's' : ''}`}
-            </button>
-          ) : (
-            amendments.map((a) => {
-              const loading = approveLoading?.[a.id];
-              return (
-                <div key={a.id} className="amendment-item">
-                  <span className="desc">
-                    {a.approved ? (
-                      <span style={{ color: 'var(--state-passed)' }}>✓ </span>
-                    ) : (
-                      <span style={{ color: 'var(--fw-orange)' }}>● </span>
-                    )}
-                    {a.description}
-                  </span>
-                  {!a.approved && (
-                    <button
-                      className="amendment-approve-btn"
-                      onClick={() => approveAmendment(a.id)}
-                      disabled={loading}
-                    >
-                      {loading ? '…' : 'Approve'}
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
-
-      {/* Submit amendment (chair can also submit) */}
-      <div className="amendments-section">
-        <h4>Submit Amendment</h4>
-        <div className="amendment-input-row">
-          <input
-            type="text"
-            placeholder="Describe an amendment…"
-            value={amendmentDesc}
-            onChange={(e) => setAmendmentDesc(e.target.value)}
-          />
-          <button
-            onClick={submitAmendment}
-            disabled={loading || !amendmentDesc.trim()}
+    <div className="chair-controls">
+      {/* Duration selector — only show when in Created or Seconded state */}
+      {sp.state < 2 && (
+        <div className="duration-row">
+          <label htmlFor="duration">Voting Duration:</label>
+          <select
+            id="duration"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+            className="duration-select"
           >
-            Submit
-          </button>
+            {DURATION_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
-      </div>
+      )}
 
-      {/* Voter Management */}
-      <div className="chair-actions" style={{ marginTop: '1rem' }}>
-        <h4>Voter Management</h4>
-        <div className="voter-input-row">
-          <input
-            type="text"
-            placeholder="0x… address"
-            value={voterAddr}
-            onChange={(e) => setVoterAddr(e.target.value)}
-          />
-          <button className="add" onClick={addVoter} disabled={loading || !voterAddr.trim()}>
-            + Add
-          </button>
-          <button className="remove" onClick={removeVoter} disabled={loading || !voterAddr.trim()}>
-            Remove
+      {/* Created state — can fast-track (chair bypass seconding) or just wait */}
+      {sp.state === 0 && (
+        <button
+          className={`action-btn primary ${loading === 'fastTrack' ? 'loading' : ''}`}
+          onClick={fastTrack}
+          disabled={loading !== ''}
+        >
+          {loading === 'fastTrack' ? 'Fast Tracking...' : '⚡ Fast Track Voting'}
+        </button>
+      )}
+
+      {/* Seconded state — can open voting properly */}
+      {sp.state === 1 && (
+        <button
+          className={`action-btn primary ${loading === 'openVoting' ? 'loading' : ''}`}
+          onClick={openVoting}
+          disabled={loading !== ''}
+        >
+          {loading === 'openVoting' ? 'Opening...' : `Open Voting (${DURATION_OPTIONS.find(d => d.value === duration)?.label})`}
+        </button>
+      )}
+
+      {/* Voting state — can finalize if time expired OR reconsider */}
+      {sp.state === 2 && (
+        <div className="voting-controls">
+          <div className="vote-tally">
+            <span className="yes-count">Yes: {Number(sp.yesVotes)}</span>
+            <span className="no-count">No: {Number(sp.noVotes)}</span>
+            <span className="abstain-count">Abstain: {Number(sp.abstainVotes)}</span>
+          </div>
+
+          {selectedProposal.reconsiderationRequested && (
+            <button
+              className={`action-btn warning ${reopenLoading ? 'loading' : ''}`}
+              onClick={reopenVoting}
+              disabled={reopenLoading}
+            >
+              {reopenLoading ? 'Reopening...' : '🔄 Reopen Voting (Reconsideration)'}
+            </button>
+          )}
+
+          <button
+            className={`action-btn success ${loading === 'finalize' ? 'loading' : ''}`}
+            onClick={finalize}
+            disabled={loading !== ''}
+          >
+            {loading === 'finalize' ? 'Finalizing...' : '✅ Finalize Proposal'}
           </button>
         </div>
-      </div>
+      )}
+
+      {/* Passed or Failed — show result */}
+      {(sp.state === 3 || sp.state === 4) && (
+        <div className="proposal-result">
+          <span className={`result-badge ${sp.state === 3 ? 'passed' : 'failed'}`}>
+            {sp.state === 3 ? '✅ PASSED' : '❌ FAILED'}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
