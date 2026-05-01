@@ -3,7 +3,7 @@ export const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111
 
 export const ROB_RULES_ABI = [
   "function proposalCount() view returns (uint256)",
-  "function getProposal(uint256 _proposalId) view returns (string, address, address, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool)",
+  "function getProposal(uint256 _proposalId) view returns (string, address, address, uint256, uint256, uint256, address, uint256, uint256, uint256, uint256, uint256, uint256, bool, uint256, bool)",
   "function getAmendment(uint256 _proposalId, uint256 _amendmentId) view returns (string, address, bool, uint256, uint256, uint256)",
   "function hasVoted(uint256 _proposalId, address _voter) view returns (bool)",
   "function isEligible(address _user) view returns (bool)",
