@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ProposalData, getContract } from '../lib/ethereum';
+import { ProposalData, getContract, shortenAddress } from '../lib/ethereum';
 import { STATES } from '../lib/constants';
 
 interface Props {
@@ -15,9 +15,14 @@ const DURATION_OPTIONS = [
   { label: '7 days', value: 7 * 24 * 3600 },
 ];
 
+function fmtTime(ts: number) {
+  if (!ts) return '—';
+  return new Date(Number(ts) * 1000).toLocaleString();
+}
+
 export default function ChairDashboard({ selectedProposal, onRefresh }: Props) {
   const [loading, setLoading] = useState('');
-  const [duration, setDuration] = useState(15 * 60); // default 15 min
+  const [duration, setDuration] = useState(15 * 60);
   const [reopenLoading, setReopenLoading] = useState(false);
 
   async function openVoting() {
@@ -80,87 +85,133 @@ export default function ChairDashboard({ selectedProposal, onRefresh }: Props) {
     }
   }
 
-  if (!selectedProposal) return null;
+  if (!selectedProposal) {
+    return (
+      <div className="detail-panel">
+        <h3>Proposal Details</h3>
+        <p className="detail-meta">Select a proposal from the list to review status, vote totals, and available chair actions.</p>
+      </div>
+    );
+  }
+
   const sp = selectedProposal;
 
   return (
-    <div className="chair-controls">
-      {/* Duration selector — only show when in Created or Seconded state */}
-      {sp.state < 2 && (
-        <div className="duration-row">
-          <label htmlFor="duration">Voting Duration:</label>
-          <select
-            id="duration"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-            className="duration-select"
-          >
-            {DURATION_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+    <div className="detail-panel">
+      <h3>Proposal #{sp.id}</h3>
+      <p className="detail-meta">Current state: {STATES[sp.state]}</p>
+
+      <div className="chair-proposal-info">
+        <div className="title">{sp.description}</div>
+        <span className={`state-badge state-${sp.state}`}>{STATES[sp.state]}</span>
+      </div>
+
+      <div className="vote-tally" style={{ marginBottom: '1rem' }}>
+        <span className="yes-count">Yes: {Number(sp.yesVotes)}</span>
+        <span className="no-count">No: {Number(sp.noVotes)}</span>
+        <span className="abstain-count">Abstain: {Number(sp.abstainVotes)}</span>
+      </div>
+
+      <div className="chair-proposal-grid">
+        <div>
+          <div className="label">Proposer</div>
+          <div className="value">{shortenAddress(sp.proposer)}</div>
+        </div>
+        <div>
+          <div className="label">Chair</div>
+          <div className="value">{shortenAddress(sp.chair)}</div>
+        </div>
+        <div>
+          <div className="label">Created</div>
+          <div className="value">{fmtTime(sp.createdAt)}</div>
+        </div>
+        <div>
+          <div className="label">Seconded By</div>
+          <div className="value">{sp.secondedBy && sp.secondedBy !== '0x0000000000000000000000000000000000000000' ? shortenAddress(sp.secondedBy) : '—'}</div>
+        </div>
+        <div>
+          <div className="label">Voting Starts</div>
+          <div className="value">{fmtTime(sp.votingStartsAt)}</div>
+        </div>
+        <div>
+          <div className="label">Voting Ends</div>
+          <div className="value">{fmtTime(sp.votingEndsAt)}</div>
+        </div>
+        <div>
+          <div className="label">Amendments</div>
+          <div className="value">{Number(sp.amendmentCount)}</div>
+        </div>
+        <div>
+          <div className="label">Division Calls</div>
+          <div className="value">{Number(sp.divisionCallCount)}{sp.divisionCalled ? ' (active)' : ''}</div>
+        </div>
+      </div>
+
+      {sp.state >= 3 && (
+        <div className={`chair-result-text ${sp.state === 3 ? 'passed' : 'failed'}`}>
+          {sp.state === 3 ? 'Final result: PASSED' : 'Final result: FAILED'}
         </div>
       )}
 
-      {/* Created state — can fast-track (chair bypass seconding) or just wait */}
-      {sp.state === 0 && (
-        <button
-          className={`action-btn primary ${loading === 'fastTrack' ? 'loading' : ''}`}
-          onClick={fastTrack}
-          disabled={loading !== ''}
-        >
-          {loading === 'fastTrack' ? 'Fast Tracking...' : '⚡ Fast Track Voting'}
-        </button>
-      )}
-
-      {/* Seconded state — can open voting properly */}
-      {sp.state === 1 && (
-        <button
-          className={`action-btn primary ${loading === 'openVoting' ? 'loading' : ''}`}
-          onClick={openVoting}
-          disabled={loading !== ''}
-        >
-          {loading === 'openVoting' ? 'Opening...' : `Open Voting (${DURATION_OPTIONS.find(d => d.value === duration)?.label})`}
-        </button>
-      )}
-
-      {/* Voting state — can finalize if time expired OR reconsider */}
-      {sp.state === 2 && (
-        <div className="voting-controls">
-          <div className="vote-tally">
-            <span className="yes-count">Yes: {Number(sp.yesVotes)}</span>
-            <span className="no-count">No: {Number(sp.noVotes)}</span>
-            <span className="abstain-count">Abstain: {Number(sp.abstainVotes)}</span>
-          </div>
-
-          {selectedProposal.reconsiderationRequested && (
-            <button
-              className={`action-btn warning ${reopenLoading ? 'loading' : ''}`}
-              onClick={reopenVoting}
-              disabled={reopenLoading}
+      <div className="chair-controls">
+        {sp.state < 2 && (
+          <div className="duration-row">
+            <label htmlFor="duration">Voting Duration:</label>
+            <select
+              id="duration"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+              className="duration-select"
             >
-              {reopenLoading ? 'Reopening...' : '🔄 Reopen Voting (Reconsideration)'}
-            </button>
-          )}
+              {DURATION_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
+        {sp.state === 0 && (
           <button
-            className={`action-btn success ${loading === 'finalize' ? 'loading' : ''}`}
-            onClick={finalize}
+            className={`action-btn primary ${loading === 'fastTrack' ? 'loading' : ''}`}
+            onClick={fastTrack}
             disabled={loading !== ''}
           >
-            {loading === 'finalize' ? 'Finalizing...' : '✅ Finalize Proposal'}
+            {loading === 'fastTrack' ? 'Fast Tracking...' : 'Fast Track Voting'}
           </button>
-        </div>
-      )}
+        )}
 
-      {/* Passed or Failed — show result */}
-      {(sp.state === 3 || sp.state === 4) && (
-        <div className="proposal-result">
-          <span className={`result-badge ${sp.state === 3 ? 'passed' : 'failed'}`}>
-            {sp.state === 3 ? '✅ PASSED' : '❌ FAILED'}
-          </span>
-        </div>
-      )}
+        {sp.state === 1 && (
+          <button
+            className={`action-btn primary ${loading === 'openVoting' ? 'loading' : ''}`}
+            onClick={openVoting}
+            disabled={loading !== ''}
+          >
+            {loading === 'openVoting' ? 'Opening...' : `Open Voting (${DURATION_OPTIONS.find(d => d.value === duration)?.label})`}
+          </button>
+        )}
+
+        {sp.state === 2 && (
+          <div className="voting-controls">
+            {selectedProposal.reconsiderationRequested && (
+              <button
+                className={`action-btn warning ${reopenLoading ? 'loading' : ''}`}
+                onClick={reopenVoting}
+                disabled={reopenLoading}
+              >
+                {reopenLoading ? 'Reopening...' : 'Reopen Voting (Reconsideration)'}
+              </button>
+            )}
+
+            <button
+              className={`action-btn success ${loading === 'finalize' ? 'loading' : ''}`}
+              onClick={finalize}
+              disabled={loading !== ''}
+            >
+              {loading === 'finalize' ? 'Finalizing...' : 'Finalize Proposal'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
