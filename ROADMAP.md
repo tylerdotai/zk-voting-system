@@ -15,7 +15,7 @@ A full parliamentary voting system using Rob's Rules of Order. No ZK required �
 - ✅ Rob's Rules flow: create → second → amend → vote → finalize
 - ✅ Duration selector (5min to 7 days)
 - ✅ Fast Track for chair to bypass seconding
-- ✅ Reconsideration support
+- ✅ Reconsideration support (current prevailing side rule, chair can reopen voting)
 - ✅ Division calls for recorded votes
 
 **Contract:** `0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad` (Sepolia)
@@ -30,7 +30,7 @@ Replace direct on-chain voting with zero-knowledge proofs so voter identity and 
 - Fix circom 2.2.3 / snarkjs toolchain incompatibility
 - Use **Sindri** (sindri.network) for zk generation OR downgrade to **circom 2.1.x**
 - Regenerate `vote_0001.zkey` with fixed toolchain
-- Deploy new `ZKVotingRobRules` contract with ZK verification in `castVote`
+- Deploy a privacy-enabled voting contract with ZK verification in `castVote`
 
 **ZK Flow (target):**
 1. Voter generates a ZK proof locally (proves: eligible + vote choice + nullifier)

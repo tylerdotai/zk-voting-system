@@ -49,7 +49,7 @@ A governance dApp where a chair manages voter eligibility via allowlist. Voters 
 2. **Seconded:** Another voter seconds (prevents spam motions)
 3. **Amendments:** Any eligible voter submits amendments; chair approves
 4. **Voting:** Chair opens voting period (configurable duration: 5min–7 days)
-5. **Passed/Failed:** After voting ends, anyone can finalize. Passed = yes > no.
+5. **Passed/Failed:** Chair can finalize anytime for demo use; anyone can finalize after voting ends. Passed = yes > no.
 
 ### Contract Functions
 
@@ -63,9 +63,9 @@ A governance dApp where a chair manages voter eligibility via allowlist. Voters 
 | `openVoting(uint256, uint256)` | Chair | Open voting (requires seconded) |
 | `castVote(uint256, uint256)` | Eligible voter | Vote yes/no/abstain |
 | `callForDivision(uint256)` | Eligible voter | Call for recorded vote |
-| `reconsider(uint256)` | Voted member | Request reconsideration |
+| `reconsider(uint256)` | Voted member on prevailing side | Request reconsideration |
 | `reopenVoting(uint256)` | Chair | Reset votes after reconsideration |
-| `finalizeProposal(uint256)` | Anyone | Close proposal (yes > no = passed) |
+| `finalizeProposal(uint256)` | Chair anytime, anyone after voting ends | Close proposal (yes > no = passed) |
 
 ### Vote Choices
 
@@ -112,9 +112,12 @@ Chair-managed allowlist. No ENS, no Polygon ID, no third-party identity provider
 
 ## Demo Flow
 
-1. Chair creates proposal → select 5 min duration → Fast Track to open voting immediately
-2. Voter 1 and Voter 2 connect wallets → second proposal → cast votes
-3. Wait 5 minutes → click Finalize → proposal passes/fails based on vote tally
+1. Chair creates proposal
+2. Choose one path:
+   - Standard path: Voter 1 seconds proposal, chair selects 5 min duration, then clicks Open Voting
+   - Fast-track path: Chair selects 5 min duration and clicks Fast Track to open voting immediately
+3. Voter 1 and Voter 2 connect wallets → cast votes
+4. Wait for the timer or use the chair demo shortcut → click Finalize → proposal passes/fails based on vote tally
 
 ---
 
