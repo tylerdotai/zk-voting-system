@@ -8,8 +8,6 @@
 \usepackage{array}
 \usepackage{parskip}
 \usepackage{fancyhdr}
-\usepackage{listings}
-\usepackage{courier}
 \usepackage{setspace}
 
 \definecolor{fwblue}{HTML}{1E3A5F}
@@ -31,12 +29,6 @@
 \fancyfoot[C]{\thepage}
 \setlength{\headheight}{15pt}
 
-\lstset{
-  basicstyle=\ttfamily\small,
-  frame=single,
-  breaklines=true,
-  columns=fullflexible
-}
 
 \begin{document}
 
@@ -52,8 +44,8 @@
     Version: & 1.1 \\
     Author: & Tyler Delano + Dexter \\
     Status: & Phase 1 live on Sepolia, ZK deferred to Phase 2 \\
-    Frontend: & \url{https://zk-voting-system-two.vercel.app} \\
-    Live Contract: & \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad} \\
+    Frontend: & https://zk-voting-system-two.vercel.app \\
+    Live Contract: & 0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad \\
     \end{tabular}
 
     \vfill
@@ -132,7 +124,7 @@ That leads to a two-phase architecture:
 
 \subsection{Phase 1 --- RobRulesVoting (Live)}
 
-The live contract is \texttt{RobRulesVoting}, deployed on Sepolia.
+The live contract is RobRulesVoting, deployed on Sepolia.
 
 It supports:
 \begin{itemize}
@@ -181,26 +173,24 @@ The contract implements a simplified Robert's Rules-inspired flow.
 
 \subsection{Core lifecycle}
 
-\begin{lstlisting}
-Created -> Seconded -> Voting -> Passed / Failed
-\end{lstlisting}
+\noindent\fbox{\parbox{0.96\textwidth}{\textbf{Created} $\rightarrow$ \textbf{Seconded} $\rightarrow$ \textbf{Voting} $\rightarrow$ \textbf{Passed / Failed}}}
 
 \subsection{Supported governance actions}
 
 \begin{tabular}{|p{0.31\textwidth}|p{0.61\textwidth}|}
 \hline
 \textbf{Action} & \textbf{Purpose} \\ \hline
-\texttt{createProposal()} & Start a motion \\ \hline
-\texttt{secondProposal()} & Require another member to support moving forward \\ \hline
-\texttt{submitAmendment()} & Allow proposed changes before final vote \\ \hline
-\texttt{approveAmendment()} & Chair approval for amendment flow \\ \hline
-\texttt{openVoting()} & Begin timed voting after seconding \\ \hline
-\texttt{fastTrackVoting()} & Chair shortcut for demo flow \\ \hline
-\texttt{castVote()} & Record yes / no / abstain vote \\ \hline
-\texttt{callForDivision()} & Demand a more formal recorded vote signal \\ \hline
-\texttt{reconsider()} & Request reconsideration from the prevailing side \\ \hline
-\texttt{reopenVoting()} & Reopen voting after reconsideration \\ \hline
-\texttt{finalizeProposal()} & Close the motion on-chain \\ \hline
+createProposal() & Start a motion \\ \hline
+secondProposal() & Require another member to support moving forward \\ \hline
+submitAmendment() & Allow proposed changes before final vote \\ \hline
+approveAmendment() & Chair approval for amendment flow \\ \hline
+openVoting() & Begin timed voting after seconding \\ \hline
+fastTrackVoting() & Chair shortcut for demo flow \\ \hline
+castVote() & Record yes / no / abstain vote \\ \hline
+callForDivision() & Demand a more formal recorded vote signal \\ \hline
+reconsider() & Request reconsideration from the prevailing side \\ \hline
+reopenVoting() & Reopen voting after reconsideration \\ \hline
+finalizeProposal() & Close the motion on-chain \\ \hline
 \end{tabular}
 
 This is not a complete encoding of parliamentary law. It is a practical governance prototype designed to prove that better process can exist on-chain without reducing everything to a raw poll.
@@ -210,7 +200,7 @@ This is not a complete encoding of parliamentary law. It is a practical governan
 \subsection{Live now}
 \begin{itemize}
     \item Sepolia deployment
-    \item frontend at \url{https://zk-voting-system-two.vercel.app}
+    \item frontend at https://zk-voting-system-two.vercel.app
     \item chair dashboard
     \item voter portal
     \item proposal verification page
@@ -277,11 +267,11 @@ No token economics are required for the current hackathon demo.
 \section{Current Live Deployment}
 
 \begin{itemize}
-    \item \textbf{Contract:} \texttt{RobRulesVoting}
+    \item \textbf{Contract:} RobRulesVoting
     \item \textbf{Network:} Ethereum Sepolia
-    \item \textbf{Address:} \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad}
-    \item \textbf{Frontend:} \url{https://zk-voting-system-two.vercel.app}
-    \item \textbf{Chair Wallet:} \texttt{0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0}
+    \item \textbf{Address:} 0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad
+    \item \textbf{Frontend:} https://zk-voting-system-two.vercel.app
+    \item \textbf{Chair Wallet:} 0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0
 \end{itemize}
 
 \section{Conclusion}
