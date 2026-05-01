@@ -1,0 +1,177 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{array}
+\usepackage{parskip}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{courier}
+\usepackage{setspace}
+
+\definecolor{fwblue}{HTML}{1E3A5F}
+\definecolor{fwblueaccent}{HTML}{2563EB}
+\definecolor{fwgray}{HTML}{6B7280}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=fwblue,
+  urlcolor=fwblueaccent,
+  pdftitle={ZK Voting System Whitepaper},
+  pdfauthor={Tyler Delano + Dexter}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\textcolor{fwgray}{ZK Voting System}}
+\fancyhead[R]{\textcolor{fwgray}{Whitepaper}}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{15pt}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+    \includegraphics[width=0.18\textwidth]{logo.png}\\[1.2cm]
+    {\Huge \bfseries \textcolor{fwblue}{ZK Voting System}\\[0.35cm]}
+    {\Large Whitepaper\\[0.5cm]}
+    {\large Parliamentary Governance for DAOs, with Privacy as Phase 2\\[1.2cm]}
+
+    \begin{tabular}{>{\bfseries}p{3.2cm}p{8.5cm}}
+    Version: & 1.0 \\
+    Author: & Tyler Delano + Dexter \\
+    Status: & Phase 1 live on Sepolia \\
+    Frontend: & \url{https://zk-voting-system-two.vercel.app} \\
+    Live Contract: & \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad} \\
+    \end{tabular}
+
+    \vfill
+    {\large \today}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Problem}
+
+On-chain DAO voting reveals everything: who voted, what they voted, and when. This violates parliamentary privacy norms and discourages honest voting on controversial motions. Members may vote strategically or avoid voting entirely to stay anonymous.
+
+Current solutions require either:
+\begin{itemize}
+    \item Centralized identity providers (ENS, Proof of Humanity), which exclude many legitimate voters.
+    \item Off-chain voting with on-chain settlement, which adds complexity and trust assumptions.
+\end{itemize}
+
+\section{Solution: Two-Phase Architecture}
+
+\subsection{Phase 1: Rob's Rules On-Chain (Now)}
+
+Full parliamentary voting using Robert's Rules of Order. Chair-managed voter allowlist on Sepolia. No ZK, no identity requirements. Pure smart contract governance.
+
+\textbf{Why start here:} Get real governance running on-chain before adding complexity. Rob's Rules itself is sophisticated. It handles amendments, reconsiderations, division calls, and quorum-oriented governance behavior that most simple voting systems skip.
+
+\subsection{Phase 2: ZK Privacy Layer (Future)}
+
+Replace direct \texttt{castVote} with a ZK proof that proves:
+\begin{enumerate}
+    \item The voter is on the eligibility allowlist, without revealing which voter.
+    \item The vote choice is valid (yes, no, or abstain).
+    \item The nullifier is unique, preventing double-voting.
+\end{enumerate}
+
+\textbf{On-chain result:} The contract only sees that a valid proof was cast for a proposal. It does not learn identity, vote content, or a link between voter and vote.
+
+\textbf{Circuit:} \texttt{vote.circom} already exists, but needs a circom toolchain fix before zkey regeneration.
+
+\section{Rob's Rules Implementation}
+
+\subsection{Parliamentary Features}
+
+\begin{tabular}{|p{0.31\textwidth}|p{0.61\textwidth}|}
+\hline
+\textbf{Feature} & \textbf{Implementation} \\ \hline
+Motion (proposal creation) & \texttt{createProposal()} --- any eligible voter \\ \hline
+Seconding requirement & \texttt{secondProposal()} --- another voter must second, reducing spam \\ \hline
+Amendments & \texttt{submitAmendment()} + \texttt{approveAmendment()} --- any voter proposes, chair approves \\ \hline
+Debate period & Voting opens after seconding and amendment resolution \\ \hline
+Recorded vote (division) & \texttt{callForDivision()} --- any member can demand a recorded tally \\ \hline
+Reconsideration & \texttt{reconsider()} --- member on the prevailing side can reopen \\ \hline
+Majority rule & \texttt{yes > no} means passed; abstains do not count \\ \hline
+\end{tabular}
+
+\subsection{State Machine}
+
+\begin{lstlisting}
+Created -> Seconded -> [Amendments] -> Voting -> Passed/Failed
+                            ^______________|
+                         (reconsideration)
+\end{lstlisting}
+
+\subsection{Why Rob's Rules?}
+
+Robert's Rules of Order is the standard for deliberative bodies. It handles:
+\begin{itemize}
+    \item \textbf{Quorum:} minimum participation requirements
+    \item \textbf{Seconding:} protection against spam motions
+    \item \textbf{Amendments:} constructive modification before voting
+    \item \textbf{Division:} recorded vote on demand
+    \item \textbf{Reconsideration:} correction of mistakes without a full reproposal
+\end{itemize}
+
+Most blockchain voting systems skip all of this. This system implements the parliamentary process directly.
+
+\section{ZK Circuit Design}
+
+\textbf{Circuit:} \texttt{vote.circom} (Phase 2)
+
+\subsection*{Private Inputs}
+\begin{itemize}
+    \item \texttt{nullifier\_hash} --- prevents double-voting without exposing identity
+    \item \texttt{commitment} --- voter identity commitment from the allowlist Merkle tree
+    \item \texttt{vote\_choice} --- 0, 1, or 2 for yes, no, or abstain
+\end{itemize}
+
+\subsection*{Public Inputs}
+\begin{itemize}
+    \item \texttt{merkle\_root} --- proves allowlist membership without revealing which voter
+    \item \texttt{proposal\_id} --- binds the proof to a specific proposal
+    \item \texttt{nullifier\_hash\_out} --- public record of the spent nullifier
+\end{itemize}
+
+\textbf{Verification:} Groth16 proof verified on-chain by \texttt{Groth16VerifierV2}.
+
+\section{Economic Model}
+
+\textbf{Phase 1:} Free to use. Gas costs are paid by voters. The chair pays for proposal creation.
+
+\textbf{Phase 2:} ZK proof generation is computationally expensive. Planned mitigations:
+\begin{itemize}
+    \item Pre-compute proofs client-side, with no server round-trip.
+    \item Use a bouncer or relayer for optional gasless submission.
+    \item Deploy on Layer 2, such as Base, for lower gas costs.
+\end{itemize}
+
+\section{Deployment}
+
+\subsection{Phase 1 --- Live}
+\begin{itemize}
+    \item Contract: \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad} (Sepolia)
+    \item Frontend: \url{https://zk-voting-system-two.vercel.app}
+    \item Chair: \texttt{0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0}
+\end{itemize}
+
+\subsection{ZK Layer}
+Phase 2 requires circom 2.1.x or Sindri to fix the broken proving toolchain.
+
+\end{document}
