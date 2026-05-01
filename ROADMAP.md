@@ -18,7 +18,7 @@ A full parliamentary voting system using Rob's Rules of Order. No ZK required �
 - ✅ Reconsideration support
 - ✅ Division calls for recorded votes
 
-**Contract:** `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` (Sepolia)
+**Contract:** `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` (Sepolia)
 
 ---
 
@@ -64,6 +64,6 @@ Replace direct on-chain voting with zero-knowledge proofs so voter identity and 
 
 | Name | Address | Status |
 |---|---|---|
-| `ZKVotingRobRulesNoZK` | `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` | ✅ Live — current |
+| `ZKVotingRobRulesNoZK` | `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` | ✅ Live — current |
 | `ZKVotingRobRulesWithCredentials` | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` | Old ZK contract (deprecated, not in use) |
 | `Groth16VerifierV2` | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` | Old ZK verifier (Phase 2 use only) |

@@ -321,10 +321,17 @@ contract ZKVotingRobRulesNoZK is Ownable {
     
     /// @dev Finalize proposal — Passed if yes > no, Failed otherwise
     /// Per Robert's Rules: standard majority = yes > no (abstains don't count)
+    /// Also callable by chair at any time for emergency demo purposes.
     function finalizeProposal(uint256 _proposalId) external {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");
-        require(block.timestamp > p.votingEndsAt || p.reconsiderationRequested, "Voting period has not ended");
+        
+        // Allow chair to finalize anytime (for live demos)
+        // Or allow anyone after time expires OR reconsideration was triggered
+        bool canFinalize = (msg.sender == chair) ||
+                          (block.timestamp > p.votingEndsAt) ||
+                          (p.reconsiderationRequested && msg.sender == p.reconsiderRequester);
+        require(canFinalize, "Cannot finalize yet");
         
         if (p.yesVotes > p.noVotes) {
             p.state = ProposalState.Passed;

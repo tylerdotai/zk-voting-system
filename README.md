@@ -40,7 +40,7 @@ A governance dApp using Robert's Rules of Order for on-chain voting. No ZK requi
 
 | Contract | Address (Sepolia) |
 |---|---|
-| `ZKVotingRobRulesNoZK` (current) | `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` |
+| `ZKVotingRobRulesNoZK` (current) | `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` |
 
 ---
 
