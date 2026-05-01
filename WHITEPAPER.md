@@ -102,7 +102,7 @@ Most blockchain voting systems skip all of this. We implement it properly.
 ## Deployment
 
 **Phase 1 — Live:**
-- Contract: `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` (Sepolia)
+- Contract: `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` (Sepolia)
 - Frontend: https://zk-voting-system-two.vercel.app
 - Chair: `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0`
 
