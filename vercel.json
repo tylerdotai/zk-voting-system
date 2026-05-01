@@ -1,4 +1,4 @@
 {
-  "buildCommand": null,
-  "outputDirectory": "frontend-app/out"
+  "outputDirectory": "frontend-app/out",
+  "installCommand": "npm install"
 }

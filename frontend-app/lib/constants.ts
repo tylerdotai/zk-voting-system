@@ -1,5 +1,4 @@
-export const CONTRACT_ADDRESS = '0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3';
-export const VERIFIER_ADDRESS = '0x02aa9654f33Aa73880460B4f286A430c4D56CAb6';
+export const CONTRACT_ADDRESS = '0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f';
 export const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111
 
 export const ROB_RULES_ABI = [
@@ -11,17 +10,22 @@ export const ROB_RULES_ABI = [
   "function chair() view returns (address)",
   "function addVoter(address _voter)",
   "function removeVoter(address _voter)",
+  "function addVoters(address[] calldata _voters)",
   "function createProposal(string calldata _description) returns (uint256)",
   "function secondProposal(uint256 _proposalId)",
   "function submitAmendment(uint256 _proposalId, string calldata _description) returns (uint256)",
   "function approveAmendment(uint256 _proposalId, uint256 _amendmentId)",
   "function fastTrackVoting(uint256 _proposalId, uint256 _duration)",
   "function openVoting(uint256 _proposalId, uint256 _duration)",
-  "function castVote(uint256 _proposalId, uint256 _choice, bytes32 _nullifierHash, uint256[2] calldata _pA, uint256[2][2] calldata _pB, uint256[2] calldata _pC, uint256[3] calldata _pubSignals)",
+  "function castVote(uint256 _proposalId, uint256 _choice)",
   "function finalizeProposal(uint256 _proposalId)",
+  "function reconsider(uint256 _proposalId)",
+  "function reopenVoting(uint256 _proposalId)",
   "function callForDivision(uint256 _proposalId)",
   "event ProposalCreated(uint256 indexed proposalId, address proposer, string description)",
+  "event ProposalSeconded(uint256 indexed proposalId, address indexed secondedBy)",
   "event MotionVoted(uint256 indexed proposalId, uint256 choice, address indexed voter)",
+  "event ProposalFinalized(uint256 indexed proposalId, uint256 finalState)",
 ];
 
 export const STATES = ['Created', 'Seconded', 'Voting', 'Passed', 'Failed'];
