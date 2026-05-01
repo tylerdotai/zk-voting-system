@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
-describe("ZKVotingRobRulesNoZK", function () {
+describe("RobRulesVoting", function () {
   let voting;
   let owner;
   let chair;
@@ -21,7 +21,7 @@ describe("ZKVotingRobRulesNoZK", function () {
   beforeEach(async function () {
     [owner, chair, member1, member2, member3] = await ethers.getSigners();
 
-    const Factory = await ethers.getContractFactory("ZKVotingRobRulesNoZK");
+    const Factory = await ethers.getContractFactory("RobRulesVoting");
     voting = await Factory.connect(owner).deploy(chair.address, 3);
     await voting.waitForDeployment();
 

@@ -22,7 +22,7 @@ A governance dApp where a chair manages voter eligibility via allowlist. Voters 
 
 | Contract | Network | Address |
 |---|---|---|
-| `ZKVotingRobRulesNoZK` | Sepolia | `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` |
+| `RobRulesVoting` | Sepolia | `0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad` |
 | Chair + Owner | Sepolia | `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0` |
 
 **No Groth16 verifier in use.** ZK layer is Phase 2. All voting is direct on-chain.

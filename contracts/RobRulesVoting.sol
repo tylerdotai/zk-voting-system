@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title ZKVotingRobRulesNoZK
+ * @title RobRulesVoting
  * @dev Rob's Rules Parliamentary Voting — no ZK proof required.
  *    For hackathon demo: proof-of-concept before full ZK privacy layer.
  * 
@@ -21,7 +21,7 @@ import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
  * 
  * ZK privacy layer: reserved for future (Phase 2)
  */
-contract ZKVotingRobRulesNoZK is Ownable {
+contract RobRulesVoting is Ownable {
     
     // Chair role
     address public chair;
