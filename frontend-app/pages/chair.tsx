@@ -82,8 +82,19 @@ export default function ChairPage() {
   }
 
   async function handleCreate(description: string) {
-    const s = getContract();
-    if (!s || !s.contract) return;
+    let s = getContract();
+    if (!s || !s.contract) {
+      if (!window.ethereum) {
+        showToastMsg('Connect wallet first');
+        return;
+      }
+      try {
+        s = await connectWallet();
+      } catch (e: any) {
+        showToastMsg(e.message || 'Wallet connection failed');
+        return;
+      }
+    }
     try {
       const tx = await s.contract.createProposal(description);
       setTxHash(tx.hash);
