@@ -11,6 +11,7 @@ export default function LandingPage() {
             <a href="/voter">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
             <a href="/verify">Verify</a>
+            <a href="/whitepaper.pdf" target="_blank" rel="noreferrer">Whitepaper</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span className="network">Sepolia</span>
