@@ -8,7 +8,7 @@
     "test": "hardhat test",
     "build": "cd frontend-app && npm run build",
     "deploy": "hardhat run scripts/deploy.js",
-    "circom": "circom circuits/vote.circom --r1cs --wasm --sym"
+    "circom": "circom archive/phase2-zk/circuits/vote/vote.circom --r1cs --wasm --sym"
   },
   "keywords": [
     "zk",
