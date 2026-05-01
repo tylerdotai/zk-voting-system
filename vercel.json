@@ -1,3 +1,10 @@
 {
-  "outputDirectory": "frontend-app/out"
+  "buildCommand": "cd frontend-app && npm install && npm run build",
+  "outputDirectory": "frontend-app/out",
+  "installCommand": "cd frontend-app && npm install",
+  "routes": [
+    { "src": "/chair", "dest": "/chair.html" },
+    { "src": "/verify", "dest": "/verify.html" },
+    { "src": "/404", "dest": "/404.html" }
+  ]
 }
