@@ -49,9 +49,9 @@
     {\large Parliamentary Governance for DAOs, with Privacy as Phase 2\\[1.2cm]}
 
     \begin{tabular}{>{\bfseries}p{3.2cm}p{8.5cm}}
-    Version: & 1.0 \\
+    Version: & 1.1 \\
     Author: & Tyler Delano + Dexter \\
-    Status: & Phase 1 live on Sepolia \\
+    Status: & Phase 1 live on Sepolia, ZK deferred to Phase 2 \\
     Frontend: & \url{https://zk-voting-system-two.vercel.app} \\
     Live Contract: & \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad} \\
     \end{tabular}
@@ -63,115 +63,238 @@
 \tableofcontents
 \newpage
 
-\section{Problem}
+\section{Executive Summary}
 
-On-chain DAO voting reveals everything: who voted, what they voted, and when. This violates parliamentary privacy norms and discourages honest voting on controversial motions. Members may vote strategically or avoid voting entirely to stay anonymous.
+ZK Voting System is a governance prototype for DAOs that combines a Robert's Rules-style parliamentary process with a planned zero-knowledge privacy layer.
 
-Current solutions require either:
+The live hackathon demo focuses on \textbf{Phase 1} only:
 \begin{itemize}
-    \item Centralized identity providers (ENS, Proof of Humanity), which exclude many legitimate voters.
-    \item Off-chain voting with on-chain settlement, which adds complexity and trust assumptions.
+    \item a chair-managed voter allowlist
+    \item proposal creation and seconding
+    \item timed voting with yes / no / abstain
+    \item on-chain finalization and verification
 \end{itemize}
 
-\section{Solution: Two-Phase Architecture}
+The zero-knowledge portion is \textbf{not live in the current demo}. It remains part of the architecture and roadmap, but was deferred because the Circom / snarkjs proving toolchain was not stable enough to ship confidently on the hackathon timeline.
 
-\subsection{Phase 1: Rob's Rules On-Chain (Now)}
+That tradeoff was intentional. The current demo shows a working governance flow first, instead of presenting a privacy system that is not reliable enough to trust.
 
-Full parliamentary voting using Robert's Rules of Order. Chair-managed voter allowlist on Sepolia. No ZK, no identity requirements. Pure smart contract governance.
+\section{What the Live Demo Actually Shows}
 
-\textbf{Why start here:} Get real governance running on-chain before adding complexity. Rob's Rules itself is sophisticated. It handles amendments, reconsiderations, division calls, and quorum-oriented governance behavior that most simple voting systems skip.
-
-\subsection{Phase 2: ZK Privacy Layer (Future)}
-
-Replace direct \texttt{castVote} with a ZK proof that proves:
+The current live system on Sepolia demonstrates:
 \begin{enumerate}
-    \item The voter is on the eligibility allowlist, without revealing which voter.
-    \item The vote choice is valid (yes, no, or abstain).
-    \item The nullifier is unique, preventing double-voting.
+    \item proposal creation by an eligible voter
+    \item seconding by another eligible voter, or chair-led fast-track for demo flow
+    \item timed voting with yes / no / abstain choices
+    \item on-chain tallying of votes
+    \item proposal finalization and verification through the frontend and the blockchain
 \end{enumerate}
 
-\textbf{On-chain result:} The contract only sees that a valid proof was cast for a proposal. It does not learn identity, vote content, or a link between voter and vote.
+The live demo does \textbf{not} currently provide:
+\begin{itemize}
+    \item anonymous voting
+    \item private voter identity proofs
+    \item hidden vote choices
+    \item production-grade decentralization or governance hardening
+\end{itemize}
 
-\textbf{Circuit:} \texttt{vote.circom} already exists, but needs a circom toolchain fix before zkey regeneration.
+This is a real on-chain parliamentary governance prototype, but it is still a prototype.
 
-\section{Rob's Rules Implementation}
+\section{Problem}
 
-\subsection{Parliamentary Features}
+Most on-chain voting systems are too simple for real governance.
+
+They typically reduce governance to a basic token-weighted yes/no poll and ignore the procedural structure that real deliberative groups use to make decisions. They also make voting fully transparent by default, which can discourage honest participation on controversial issues.
+
+The problem this project addresses has two parts.
+
+\subsection{Governance quality}
+DAOs often lack motion discipline, seconding requirements, amendment handling, reconsideration rules, and other process controls that help meetings produce legitimate outcomes.
+
+\subsection{Voter privacy}
+On most public chains, a vote is visible to anyone who can inspect the ledger. That makes it hard to support sensitive governance decisions where privacy matters.
+
+\section{Project Thesis}
+
+The thesis of this project is:
+
+\begin{quote}
+DAOs need both better parliamentary process and better privacy, but the process layer should work on its own before the privacy layer is added.
+\end{quote}
+
+That leads to a two-phase architecture:
+\begin{itemize}
+    \item \textbf{Phase 1:} ship a functioning Rob's Rules-inspired governance system on-chain
+    \item \textbf{Phase 2:} add zero-knowledge privacy to hide voter identity and vote choice while preserving eligibility and anti-double-voting guarantees
+\end{itemize}
+
+\section{System Architecture}
+
+\subsection{Phase 1 --- RobRulesVoting (Live)}
+
+The live contract is \texttt{RobRulesVoting}, deployed on Sepolia.
+
+It supports:
+\begin{itemize}
+    \item chair-managed voter eligibility
+    \item proposal creation
+    \item seconding
+    \item amendment submission
+    \item opening voting windows
+    \item fast-track voting for demo use
+    \item division calls
+    \item reconsideration flow
+    \item finalization
+\end{itemize}
+
+This phase uses standard wallet-based interactions and records votes directly on-chain.
+
+\subsection{Phase 2 --- ZK Privacy Layer (Planned)}
+
+The planned privacy layer replaces direct vote submission with a proof that shows:
+\begin{itemize}
+    \item the voter is eligible
+    \item the vote choice is valid
+    \item the vote has not already been cast for that proposal
+\end{itemize}
+
+The intended result is a voting system where the chain verifies the legitimacy of the vote without learning who cast it or how they voted.
+
+This phase is \textbf{not active in the current demo}.
+
+\section{Why ZK Is Not Live Yet}
+
+The project originally aimed to include browser-based ZK proof generation in the demo.
+
+That was cut for a concrete technical reason, not for presentation reasons:
+\begin{itemize}
+    \item the Circom 2.2.x and snarkjs toolchain introduced compatibility problems in the proving flow
+    \item the circuit artifacts required for a stable browser proof path could not be regenerated with confidence in the available timeframe
+    \item shipping a brittle ZK flow would have made the demo less credible, not more
+\end{itemize}
+
+So the current system keeps the ZK design in scope, but does not pretend it is already working end-to-end.
+
+\section{Parliamentary Model}
+
+The contract implements a simplified Robert's Rules-inspired flow.
+
+\subsection{Core lifecycle}
+
+\begin{lstlisting}
+Created -> Seconded -> Voting -> Passed / Failed
+\end{lstlisting}
+
+\subsection{Supported governance actions}
 
 \begin{tabular}{|p{0.31\textwidth}|p{0.61\textwidth}|}
 \hline
-\textbf{Feature} & \textbf{Implementation} \\ \hline
-Motion (proposal creation) & \texttt{createProposal()} --- any eligible voter \\ \hline
-Seconding requirement & \texttt{secondProposal()} --- another voter must second, reducing spam \\ \hline
-Amendments & \texttt{submitAmendment()} + \texttt{approveAmendment()} --- any voter proposes, chair approves \\ \hline
-Debate period & Voting opens after seconding and amendment resolution \\ \hline
-Recorded vote (division) & \texttt{callForDivision()} --- any member can demand a recorded tally \\ \hline
-Reconsideration & \texttt{reconsider()} --- member on the prevailing side can reopen \\ \hline
-Majority rule & \texttt{yes > no} means passed; abstains do not count \\ \hline
+\textbf{Action} & \textbf{Purpose} \\ \hline
+\texttt{createProposal()} & Start a motion \\ \hline
+\texttt{secondProposal()} & Require another member to support moving forward \\ \hline
+\texttt{submitAmendment()} & Allow proposed changes before final vote \\ \hline
+\texttt{approveAmendment()} & Chair approval for amendment flow \\ \hline
+\texttt{openVoting()} & Begin timed voting after seconding \\ \hline
+\texttt{fastTrackVoting()} & Chair shortcut for demo flow \\ \hline
+\texttt{castVote()} & Record yes / no / abstain vote \\ \hline
+\texttt{callForDivision()} & Demand a more formal recorded vote signal \\ \hline
+\texttt{reconsider()} & Request reconsideration from the prevailing side \\ \hline
+\texttt{reopenVoting()} & Reopen voting after reconsideration \\ \hline
+\texttt{finalizeProposal()} & Close the motion on-chain \\ \hline
 \end{tabular}
 
-\subsection{State Machine}
+This is not a complete encoding of parliamentary law. It is a practical governance prototype designed to prove that better process can exist on-chain without reducing everything to a raw poll.
 
-\begin{lstlisting}
-Created -> Seconded -> [Amendments] -> Voting -> Passed/Failed
-                            ^______________|
-                         (reconsideration)
-\end{lstlisting}
+\section{What Is Live vs. What Is Roadmap}
 
-\subsection{Why Rob's Rules?}
-
-Robert's Rules of Order is the standard for deliberative bodies. It handles:
+\subsection{Live now}
 \begin{itemize}
-    \item \textbf{Quorum:} minimum participation requirements
-    \item \textbf{Seconding:} protection against spam motions
-    \item \textbf{Amendments:} constructive modification before voting
-    \item \textbf{Division:} recorded vote on demand
-    \item \textbf{Reconsideration:} correction of mistakes without a full reproposal
+    \item Sepolia deployment
+    \item frontend at \url{https://zk-voting-system-two.vercel.app}
+    \item chair dashboard
+    \item voter portal
+    \item proposal verification page
+    \item Rob's Rules-inspired motion flow
 \end{itemize}
 
-Most blockchain voting systems skip all of this. This system implements the parliamentary process directly.
-
-\section{ZK Circuit Design}
-
-\textbf{Circuit:} \texttt{vote.circom} (Phase 2)
-
-\subsection*{Private Inputs}
+\subsection{Planned next}
 \begin{itemize}
-    \item \texttt{nullifier\_hash} --- prevents double-voting without exposing identity
-    \item \texttt{commitment} --- voter identity commitment from the allowlist Merkle tree
-    \item \texttt{vote\_choice} --- 0, 1, or 2 for yes, no, or abstain
+    \item zero-knowledge vote casting
+    \item anonymous eligibility proofs
+    \item hidden vote choices
+    \item stronger production controls and governance hardening
+    \item potentially Layer 2 deployment for cheaper execution
 \end{itemize}
 
-\subsection*{Public Inputs}
+\section{Demo Trust Model}
+
+The live demo is intentionally centralized in a few places because it is a hackathon prototype.
+
+\subsection*{Current trust assumptions}
 \begin{itemize}
-    \item \texttt{merkle\_root} --- proves allowlist membership without revealing which voter
-    \item \texttt{proposal\_id} --- binds the proof to a specific proposal
-    \item \texttt{nullifier\_hash\_out} --- public record of the spent nullifier
+    \item the chair manages the allowlist
+    \item the chair has strong operational control over the live demo flow
+    \item the system is not yet governed by a multisig, timelock, or full production review process
 \end{itemize}
 
-\textbf{Verification:} Groth16 proof verified on-chain by \texttt{Groth16VerifierV2}.
+This is acceptable for a prototype, but it is not the final governance model.
+
+\section{Security and Production Readiness}
+
+The live build is suitable for a controlled demo, but it is \textbf{not production-ready governance infrastructure}.
+
+Key reasons:
+\begin{itemize}
+    \item the live system is still evolving quickly
+    \item the privacy layer is not active yet
+    \item production-grade governance controls are not fully in place
+    \item the project has not gone through a formal external smart contract audit
+\end{itemize}
+
+Recent hardening work improved contract edge cases and test coverage, but production deployment would still require:
+\begin{itemize}
+    \item a broader audit
+    \item governance minimization or multisig controls
+    \item operational monitoring
+    \item stronger deployment and upgrade discipline
+\end{itemize}
 
 \section{Economic Model}
 
-\textbf{Phase 1:} Free to use. Gas costs are paid by voters. The chair pays for proposal creation.
+\subsection{Phase 1}
+Users pay normal transaction gas costs for on-chain actions.
 
-\textbf{Phase 2:} ZK proof generation is computationally expensive. Planned mitigations:
+\subsection{Phase 2}
+If ZK proving returns, the system may need:
 \begin{itemize}
-    \item Pre-compute proofs client-side, with no server round-trip.
-    \item Use a bouncer or relayer for optional gasless submission.
-    \item Deploy on Layer 2, such as Base, for lower gas costs.
+    \item client-side proving optimization
+    \item relayer support for better UX
+    \item Layer 2 deployment for lower execution cost
 \end{itemize}
 
-\section{Deployment}
+No token economics are required for the current hackathon demo.
 
-\subsection{Phase 1 --- Live}
+\section{Current Live Deployment}
+
 \begin{itemize}
-    \item Contract: \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad} (Sepolia)
-    \item Frontend: \url{https://zk-voting-system-two.vercel.app}
-    \item Chair: \texttt{0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0}
+    \item \textbf{Contract:} \texttt{RobRulesVoting}
+    \item \textbf{Network:} Ethereum Sepolia
+    \item \textbf{Address:} \texttt{0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad}
+    \item \textbf{Frontend:} \url{https://zk-voting-system-two.vercel.app}
+    \item \textbf{Chair Wallet:} \texttt{0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0}
 \end{itemize}
 
-\subsection{ZK Layer}
-Phase 2 requires circom 2.1.x or Sindri to fix the broken proving toolchain.
+\section{Conclusion}
+
+This project does not claim to have solved private DAO voting today.
+
+What it does show, honestly, is this:
+\begin{enumerate}
+    \item a working on-chain parliamentary governance flow can be built and demonstrated now
+    \item the privacy layer can be designed cleanly on top of that process model
+    \item it is better to ship a truthful prototype than a fake end-to-end ZK story
+\end{enumerate}
+
+The current demo is a functioning governance prototype with a credible path toward private voting, not a finished private voting platform.
 
 \end{document}
