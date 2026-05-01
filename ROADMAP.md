@@ -1,51 +1,69 @@
 # ROADMAP.md — ZK Voting System
 
-**Current phase: Live on Sepolia — Demo Ready (May 1st FW DAO meeting)**
+**Current phase: Live on Sepolia — Demo Ready (May 1st FW DAO hackathon)**
 
 ---
 
-## Now — Demo at Fort Worth DAO Meeting (May 1st)
+## Phase 1 — ✅ LIVE: Rob's Rules DAO (No ZK)
 
-The system is a working chair-managed Rob's Rules parliamentary voting dApp on Sepolia.
+**Status:** Deployed and working on Sepolia
 
-**What works today:**
-- Groth16VerifierV2 + ZKVotingRobRulesWithCredentials live on Sepolia
-- Chair creates proposals, any eligible voter can second
-- Amendments, open voting, cast vote with ZK proof, finalize
-- Call for division, reconsideration, reopen voting
-- Next.js PWA with service worker (offline-capable)
-- Civic UI — light theme, Inter font, Fort Worth DAO brand
-- Frontend deployed: `https://zk-voting-system-two.vercel.app`
-- CI: compile, test, build-frontend, lint — all green
+A full parliamentary voting system using Rob's Rules of Order. No ZK required — direct on-chain voting. Chair-managed voter allowlist.
 
-**What needs to happen before May 1st:**
-1. 3-voter end-to-end test (local, full Rob's Rules flow)
-2. Demo rehearsal
+- ✅ Solidity contract deployed (`ZKVotingRobRulesNoZK`)
+- ✅ Next.js frontend deployed (Vercel)
+- ✅ Rob's Rules flow: create → second → amend → vote → finalize
+- ✅ Duration selector (5min to 7 days)
+- ✅ Fast Track for chair to bypass seconding
+- ✅ Reconsideration support
+- ✅ Division calls for recorded votes
+
+**Contract:** `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` (Sepolia)
 
 ---
 
-## Phase 1 — Ship (May 2026)
+## Phase 2 — ZK Privacy Layer (Future)
 
-**Goal:** First real-world use at Fort Worth DAO meeting.
+Replace direct on-chain voting with zero-knowledge proofs so voter identity and vote choice are never revealed on-chain.
 
-- [ ] 3-voter end-to-end test (chair + 2 members)
-- [ ] Demo rehearsal with full Rob's Rules flow
-- [ ] May 1st FW DAO meeting presentation
+**Requirements:**
+- Fix circom 2.2.3 / snarkjs toolchain incompatibility
+- Use **Sindri** (sindri.network) for zk generation OR downgrade to **circom 2.1.x**
+- Regenerate `vote_0001.zkey` with fixed toolchain
+- Deploy new `ZKVotingRobRules` contract with ZK verification in `castVote`
 
----
+**ZK Flow (target):**
+1. Voter generates a ZK proof locally (proves: eligible + vote choice + nullifier)
+2. Proof submitted to contract → verifier checks proof validity
+3. On-chain: only records that a valid proof was cast, not who voted or what they voted
 
-## Phase 2 — Harden (Post-hackathon)
-
-**Goal:** Production-ready governance for real FW DAO votes.
-
-- [ ] Real ZK proof integration for vote privacy
-- [ ] Slither security audit on governance contracts
-- [ ] Gas optimization for large voter populations
-- [ ] Multi-chain support (Mainnet)
+**Why it's Phase 2:** The circom 2.2.3 WASM ABI breaks snarkjs's signal indexing. All proof generation fails with "Too many values for input signal nullifier_hash." This is a toolchain issue, not a code issue. Fix requires either external zk service (Sindri) or circom downgrade.
 
 ---
 
-## History
+## Phase 3 — Production Hardening (Future)
 
-- **Apr 2026** — Pivoted from Polygon ID to chair-managed allowlist (simpler, faster to ship)
-- **Apr 2026** — Grant: Fort Worth DAO — $2,500 for ZK voting system (offline-capable, no 3rd party dependency)
+- Deploy to Ethereum mainnet
+- Deploy to Base (Layer 2 for lower gas)
+- Gasless voting via bouncer/relayer
+- Multisig chair (3-of-5 for chair actions)
+- IPFS-based proposal metadata (off-chain proposal content with on-chain hash commitment)
+
+---
+
+## Phase 4 — Ecosystem (Future)
+
+- Snapshot.org integration for off-chain signaling before on-chain votes
+- Discourse plugin for governance forum integration
+- Mobile companion app
+- Token-gated proposals (balance > X ETH can create proposals)
+
+---
+
+## Contracts
+
+| Name | Address | Status |
+|---|---|---|
+| `ZKVotingRobRulesNoZK` | `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` | ✅ Live — current |
+| `ZKVotingRobRulesWithCredentials` | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` | Old ZK contract (deprecated, not in use) |
+| `Groth16VerifierV2` | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` | Old ZK verifier (Phase 2 use only) |

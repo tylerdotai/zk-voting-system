@@ -2,86 +2,125 @@
 
 ## Overview
 
-Chair-managed allowlist Rob's Rules parliamentary voting on Ethereum Sepolia.
-No ENS, no Polygon ID, no third-party identity provider. ZK vote privacy layer preserved.
+Chair-managed allowlist Rob's Rules parliamentary voting DAO running on Ethereum Sepolia.
+
+**Status:** Live demo ready (May 1st FW DAO hackathon)
 
 ---
 
-## Live Contracts
+## What It Is
 
-| Contract | Address | Purpose |
-|---|---|---|
-| **Groth16VerifierV2** | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` | Groth16 BN128 proof verifier |
-| **ZKVotingRobRulesWithCredentials** | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` | Rob's Rules governance |
+A governance dApp where a chair manages voter eligibility via allowlist. Voters can create proposals, debate via amendments, and vote on-chain using Rob's Rules of Order parliamentary procedure.
+
+**No ZK for Phase 1.** ZK proof privacy is Phase 2 (roadmap). Phase 1 is pure on-chain parliamentary voting.
+
+---
 
 ## Architecture
 
-```
-User connects wallet
-       ↓
-Contract: isEligible(address) → check voter allowlist
-       ↓
-If eligible → full Rob's Rules flow (propose, second, amend, vote, finalize)
-If not eligible → "Register to Vote" → chair adds address to allowlist
-```
+### Smart Contracts
 
----
-
-## Contract: ZKVotingRobRulesWithCredentials
-
-### Voter Eligibility (chair-managed allowlist)
-
-- Chair calls `addVoter(address)` to grant eligibility
-- Chair calls `removeVoter(address)` to revoke
-- `isEligible(address) → bool` — constant-time public check
-
-### State Machine
-
-```
-Created → Seconded → Voting → Passed
-                       ↘ Failed
-```
-
-### Key Functions
-
-| Function | Access | Purpose |
+| Contract | Network | Address |
 |---|---|---|
-| `createProposal(string)` | Eligible voter | Open a new motion |
-| `secondProposal(uint256)` | Eligible voter (not proposer) | Second a motion |
-| `submitAmendment(uint256,string)` | Eligible voter | Floor amendment |
-| `approveAmendment(uint256,id)` | Chair | Chair accepts amendment |
-| `openVoting(uint256,uint256)` | Chair | Start vote period |
-| `voteOnMotion(uint256,uint256,uint256[2],uint256[2][2],uint256[2],uint256[3])` | Eligible voter | Cast vote with ZK proof |
-| `callForDivision(uint256)` | Any voter | Recorded division call |
-| `reconsider(uint256)` | Voter who voted | Request reconsideration |
-| `reopenVoting(uint256)` | Chair | Reopen a closed vote |
-| `finalizeProposal(uint256)` | Anyone | Close and tally |
+| `ZKVotingRobRulesNoZK` | Sepolia | `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` |
+| Chair + Owner | Sepolia | `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0` |
 
-### Events
+**No Groth16 verifier in use.** ZK layer is Phase 2. All voting is direct on-chain.
 
-`ProposalCreated`, `ProposalSeconded`, `AmendmentSubmitted`, `AmendmentApproved`, `VotingOpened`, `MotionVoted`, `CallForDivision`, `ReconsiderationRequested`, `VotingReopened`, `ProposalFinalized`, `VoterAdded`, `VoterRemoved`
+### Tech Stack
+
+- **Frontend:** Next.js 16, TypeScript, plain CSS, Inter font, Vercel static export
+- **Contract:** Solidity 0.8.19, Hardhat
+- **Network:** Ethereum Sepolia testnet
+- **Wallet:** MetaMask (browser extension)
+- **No third-party identity:** Chair-managed allowlist only
 
 ---
 
-## ZK Proof Flow
+## Rob's Rules Flow
 
-1. Voter submits vote choice to frontend
-2. Frontend computes Poseidon hashes (nullifier + commitment) via `circomlibjs`
-3. Frontend runs `snarkjs.groth16.fullProve()` in browser (WASM, no server)
-4. Proof + public signals submitted to `voteOnMotion()`
-5. `Groth16Verifier` validates proof on-chain
-6. If valid, vote recorded; if not, reverts
+```
+[Created] → [Seconded] → [Voting] → [Passed / Failed]
+              ↓
+         Amendments (any voter can submit, chair approves)
+```
 
-**Public signals:** `[proposal_id, nullifier_hash, commitment]`
-**Private inputs:** `[vote_choice, nullifier_seed, voter_address]`
+1. **Created:** Any eligible voter creates a proposal
+2. **Seconded:** Another voter seconds (prevents spam motions)
+3. **Amendments:** Any eligible voter submits amendments; chair approves
+4. **Voting:** Chair opens voting period (configurable duration: 5min–7 days)
+5. **Passed/Failed:** After voting ends, anyone can finalize. Passed = yes > no.
+
+### Contract Functions
+
+| Function | Who | Description |
+|---|---|---|
+| `createProposal(string)` | Eligible voter | Create a new proposal |
+| `secondProposal(uint256)` | Eligible voter (not proposer) | Second a proposal |
+| `submitAmendment(uint256, string)` | Eligible voter | Submit an amendment |
+| `approveAmendment(uint256, uint256)` | Chair | Approve an amendment |
+| `fastTrackVoting(uint256, uint256)` | Chair | Bypass seconding, open voting directly |
+| `openVoting(uint256, uint256)` | Chair | Open voting (requires seconded) |
+| `castVote(uint256, uint256)` | Eligible voter | Vote yes/no/abstain |
+| `callForDivision(uint256)` | Eligible voter | Call for recorded vote |
+| `reconsider(uint256)` | Voted member | Request reconsideration |
+| `reopenVoting(uint256)` | Chair | Reset votes after reconsideration |
+| `finalizeProposal(uint256)` | Anyone | Close proposal (yes > no = passed) |
+
+### Vote Choices
+
+- `0` = Yes
+- `1` = No
+- `2` = Abstain
+
+Abstains don't count toward the majority. Passed = yes votes strictly greater than no votes.
 
 ---
 
-## Frontend (Next.js)
+## State Machine
 
-- `/` — Voter portal
-- `/chair` — Chair dashboard
-- `/verify` — Standalone proof verifier
-- snarkjs + circomlibjs via npm
-- WASM + zkey served from `frontend-app/public/`
-- Service worker for offline capability
+```
+0: Created    — proposal exists, needs seconding
+1: Seconded   — seconded, amendments can be submitted
+2: Voting     — voting period active
+3: Passed     — finalized, yes > no
+4: Failed     — finalized, no >= yes
+```
+
+---
+
+## Voter Eligibility
+
+Chair-managed allowlist. No ENS, no Polygon ID, no third-party identity provider.
+
+- `addVoter(address)` — chair or owner adds a voter
+- `addVoters(address[])` — batch add
+- `isEligible(address)` — check eligibility
+- `removeVoter(address)` — chair or owner removes
+
+---
+
+## Test Accounts for Demo
+
+| Role | Address | Private Key |
+|---|---|---|
+| Chair + Owner | `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0` | Funded Sepolia account |
+| Voter 1 | `0x70997970C51812dc3A010C7d01b50e0d17dc79C8` | Hardhat default |
+| Voter 2 | `0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC` | Hardhat default |
+
+---
+
+## Demo Flow
+
+1. Chair creates proposal → select 5 min duration → Fast Track to open voting immediately
+2. Voter 1 and Voter 2 connect wallets → second proposal → cast votes
+3. Wait 5 minutes → click Finalize → proposal passes/fails based on vote tally
+
+---
+
+## Future (Phase 2)
+
+- **ZK Privacy Layer:** Replace `castVote(uint256, uint256)` with a ZK proof that proves eligibility and vote choice without revealing identity or vote
+- **Sindri or Circom 2.1.x:** Fix broken circom 2.2.3 toolchain for zkey regeneration
+- **Multi-chain:** Deploy to Base and Ethereum mainnet
+- **Gas optimization:** Batch voter registration, gasless voting via bouncer

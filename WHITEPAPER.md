@@ -2,155 +2,108 @@
 
 **Version:** 1.0  
 **Author:** Tyler Delano + Dexter  
-**Status:** Live on Sepolia testnet  
-**Chain:** Ethereum Sepolia  
-**Identity:** Chair-managed voter allowlist (no ENS, no Polygon ID)
+**Status:** Phase 1 live on Sepolia
 
 ---
 
-## 1. Executive Summary
+## Problem
 
-ZK Voting System is a privacy-preserving governance dApp for DAOs, civic groups, and member communities.
+On-chain DAO voting reveals everything: who voted, what they voted, and when. This violates parliamentary privacy norms and discourages honest voting on controversial motions. Members may vote strategically or avoid voting entirely to stay anonymous.
 
-It combines four things into one working system:
+Current solutions require either:
+- Centralized identity providers (ENS, Proof of Humanity) — excludes many legitimate voters
+- Off-chain voting with on-chain settlement — adds complexity and trust assumptions
 
-1. **Real onchain voting** on Ethereum Sepolia
-2. **Chair-managed voter eligibility** — no third-party identity provider required
-3. **Rob's Rules parliamentary flow** — Created → Seconded → Amendments → Voting → Passed/Failed
-4. **Next.js PWA** — installable, offline-capable, real-world ready
+## Solution: Two-Phase Architecture
 
-The goal is a live, demoable governance product where any authorized voter can:
+### Phase 1: Rob's Rules On-Chain (NOW)
 
-- connect a wallet and verify eligibility
-- create, second, amend, and vote on proposals
-- have every governance action anchored immutably onchain
-- access the full experience from a phone or desktop
+Full parliamentary voting using Robert's Rules of Order. Chair-managed voter allowlist on Sepolia. No ZK, no identity requirements. Pure smart contract governance.
 
----
+**Why start here:** Get real governance running on-chain before adding complexity. Rob's Rules itself is sophisticated — it handles amendments, reconsiderations, division calls, and quorum rules that most "simple" voting systems skip.
 
-## 2. Problem
+### Phase 2: ZK Privacy Layer (FUTURE)
 
-Most DAO and civic voting tools fail in one of three ways:
+Replace direct `castVote` with a ZK proof that proves:
+1. Voter is on the eligibility allowlist (without revealing which voter)
+2. Vote choice is valid (yes/no/abstain)
+3. Nullifier is unique (prevents double-voting)
 
-1. **Weak identity** — anyone can sybil, duplicate, or spoof eligibility
-2. **Weak privacy** — eligibility checks leak more user data than necessary
-3. **Weak usability** — governance tools are clunky, desktop-only, not built for actual members
+**On-chain result:** Contract only sees "a valid proof was cast for proposal X" — no identity, no vote, no link between voter and vote.
 
-A legitimate governance system needs all three: eligibility enforcement, privacy preservation, and usable participation.
+**Circuit:** `vote.circom` — already written, needs circom toolchain fix before zkey regeneration.
 
 ---
 
-## 3. Product Thesis
+## Rob's Rules Implementation
 
-**Eligibility should be verifiable without a third party, participation should feel simple, and every governance action should be publicly auditable onchain.**
+### Parliamentary Features
 
-That means:
-
-- wallet connection handles transaction identity
-- chair-managed allowlist handles eligibility today (no ENS, no Polygon ID)
-- smart contracts handle proposal and vote integrity
-- snarkjs Groth16 proofs handle vote privacy (commitment scheme)
-- the dApp provides immutable, auditable governance actions
-- the Next.js PWA handles real-world access from phone or desktop
-
----
-
-## 4. System Goals
-
-### Primary Goals
-
-- Verify voter eligibility via chair-managed allowlist (no third-party dependency)
-- Support structured governance flows (Rob's Rules, not just yes/no ballots)
-- Run on Ethereum Sepolia (Base mainnet-ready architecture)
-- Ship as a Next.js PWA with mobile-capable frontend
-- Make every critical governance action traceable and immutable onchain
-- Produce a working live demo of full ZK proof → verification → vote flow
-
-### Demo Constraints
-
-- No third-party identity provider required
-- Offline-capable PWA with blockchain sync (service worker)
-- Post-quantum ready architecture (ZK vote privacy layer built in via Groth16)
-
----
-
-## 5. Architecture
-
-### Core Components
-
-#### A. Identity Layer
-Voter eligibility is chair-managed via `addVoter(address)` on the governance contract. The chair controls who can participate — no external resolver, no credential issuer required.
-
-#### B. Smart Contract Layer
-`ZKVotingRobRulesWithCredentials.sol` handles all governance state: proposals, amendments, voting periods, vote tallying, and finalization. `Groth16VerifierV2` validates ZK proofs onchain.
-
-#### C. Application Layer
-Next.js 16 PWA with three views:
-- **Voter Portal** (`/`) — proposal browsing, vote registration, vote casting with ZK proof
-- **Chair Dashboard** (`/chair`) — proposal creation, amendment approval, voting period management
-- **Proof Verifier** (`/verify`) — standalone ZK proof verification
-
-#### D. ZK Proof Layer
-Client-side WASM (browser) computes Poseidon hashes and generates Groth16 proofs via `snarkjs` + `circomlibjs` (npm packages). Proof verified onchain by `Groth16VerifierV2`.
-
-#### E. PWA Layer
-Installable on mobile and desktop. Service worker caches static assets for offline viewing. Works without internet for proposal state inspection.
-
-### Data Flow
-
-```
-User connects wallet
-       ↓
-isEligible(address) → allowlist check
-       ↓
-If eligible → browser generates Groth16 proof (WASM, no server)
-       ↓
-Frontend submits vote transaction with proof
-       ↓
-Groth16Verifier validates proof onchain
-       ↓
-Contract records vote → all clients poll for updates
-```
-
----
-
-## 6. ZK Proof Technical Details
-
-**Circuit:** `circuits/vote/vote.circom` (Circom 2.0)
-
-**Public inputs:** `[proposal_id, nullifier_hash, commitment]`
-
-**Private inputs:** `[vote_choice, nullifier_seed, voter_address]`
-
-**Hashing:** Poseidon via `circomlibjs` — same Poseidon config as the contract's `hashFn`
-
-**Proof system:** Groth16 (BN128)
-
-**Trusted setup:** Powers of Tau ceremony (`build/ptau/`), contribution by Flume SaaS Factory
-
----
-
-## 7. Contract Addresses
-
-| Contract | Sepolia Address |
+| Feature | Implementation |
 |---|---|
-| `Groth16VerifierV2` | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` |
-| `ZKVotingRobRulesWithCredentials` | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` |
-| Chair (admin) | `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0` |
+| Motion (proposal creation) | `createProposal()` — any eligible voter |
+| Seconding requirement | `secondProposal()` — prevents spam, another voter must second |
+| Amendments | `submitAmendment()` + `approveAmendment()` — any voter proposes, chair approves |
+| Debate period | Voting opens after seconding + amendments resolved |
+| Recorded vote (division) | `callForDivision()` — any member can demand recorded tally |
+| Reconsideration | `reconsider()` — member who voted on prevailing side can reopen |
+| Majority rule | `yes > no` = passed; abstains don't count |
+
+### State Machine
+
+```
+Created → Seconded → [Amendments] → Voting → Passed/Failed
+                            ↑______________|
+                         (reconsideration)
+```
+
+### Why Rob's Rules?
+
+Robert's Rules of Order is the standard for deliberative bodies. It handles:
+- **Quorum:** Minimum participation requirements
+- **Seconding:** Prevents spam motions
+- **Amendments:** Allows constructive modification before voting
+- **Division:** Recorded vote on demand
+- **Reconsideration:** Correct mistakes without full reproposal
+
+Most blockchain voting systems skip all of this. We implement it properly.
 
 ---
 
-## 8. Live Demo
+## ZK Circuit Design
 
-**URL:** https://zk-voting-system-two.vercel.app
+**Circuit:** `vote.circom` (Phase 2)
 
-Connect MetaMask to Sepolia, register as a voter (chair adds your address), and experience the full Rob's Rules flow.
+**Private inputs:**
+- `nullifier_hash` — prevents double-voting, reveals nothing about identity
+- `commitment` — voter identity commitment from allowlist Merkle tree
+- `vote_choice` — 0/1/2 (yes/no/abstain)
+
+**Public inputs:**
+- `merkle_root` — allows proof that voter is in allowlist without revealing which
+- `proposal_id` — binds vote to specific proposal
+- `nullifier_hash_out` — public record of spent nullifier
+
+**Verification:** Groth16 proof verified on-chain by `Groth16VerifierV2`.
 
 ---
 
-## 9. Future Work
+## Economic Model
 
-- Full end-to-end test with 3 distinct voters
-- Demo rehearsal before May 1st FW DAO meeting
-- Gas optimization for large voter populations
-- Multi-chain deployment (Base, mainnet)
+**Phase 1:** Free to use. Gas costs paid by voters. Chair pays for proposal creation.
+
+**Phase 2:** ZK proof generation is computationally expensive — mitigations:
+- Pre-compute proofs client-side (no server round-trip)
+- Use a bouncer/relayer for gasless submission (optional)
+- Layer 2 deployment (Base) for lower gas costs
+
+---
+
+## Deployment
+
+**Phase 1 — Live:**
+- Contract: `0x2D74a3a6Da491972D89ea2DbcB8328215bF7CA8f` (Sepolia)
+- Frontend: https://zk-voting-system-two.vercel.app
+- Chair: `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0`
+
+**ZK Layer:** Phase 2 — requires circom 2.1.x or Sindri to fix broken toolchain.
