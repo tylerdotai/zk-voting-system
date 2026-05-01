@@ -63,7 +63,9 @@ contract ZKVotingRobRulesNoZK is Ownable {
         bool divisionCalled;
         uint256 divisionCallCount;
         mapping(address => bool) divisionCallers;
-        address[] votersOnPrevailingSide;
+        address[] divisionCallerList;
+        address[] motionVoters;
+        mapping(address => VoteChoice) voteChoiceByVoter;
         bool reconsiderationRequested;
         address reconsiderRequester;
         Amendment[] amendments;
@@ -104,6 +106,11 @@ contract ZKVotingRobRulesNoZK is Ownable {
     
     modifier onlyChairOrOwner() {
         require(msg.sender == chair || msg.sender == owner(), "Not authorized");
+        _;
+    }
+
+    modifier validProposal(uint256 _proposalId) {
+        require(_proposalId < proposalCount, "Invalid proposal ID");
         _;
     }
     
@@ -184,7 +191,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Any eligible voter can second a motion
-    function secondProposal(uint256 _proposalId) external isEligibleVoter {
+    function secondProposal(uint256 _proposalId) external isEligibleVoter validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Created, "Not Created");
         require(msg.sender != p.proposer, "Self-second");
@@ -198,7 +205,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Any eligible member can propose an amendment
-    function submitAmendment(uint256 _proposalId, string calldata _description) external isEligibleVoter returns (uint256) {
+    function submitAmendment(uint256 _proposalId, string calldata _description) external isEligibleVoter validProposal(_proposalId) returns (uint256) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Seconded, "Not Seconded");
         require(bytes(_description).length > 0, "Empty desc");
@@ -219,7 +226,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Chair approves amendments
-    function approveAmendment(uint256 _proposalId, uint256 _amendmentId) external onlyChair {
+    function approveAmendment(uint256 _proposalId, uint256 _amendmentId) external onlyChair validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(_amendmentId < p.amendments.length, "Invalid amendment ID");
         
@@ -228,7 +235,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Chair opens the voting period
-    function openVoting(uint256 _proposalId, uint256 _duration) external onlyChair isEligibleVoter {
+    function openVoting(uint256 _proposalId, uint256 _duration) external onlyChair isEligibleVoter validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Seconded, "Not Seconded");
         require(_duration > 0 && _duration <= 7 days, "Invalid voting duration");
@@ -239,7 +246,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Fast-track: open voting directly from Created state (hackathon demo only)
-    function fastTrackVoting(uint256 _proposalId, uint256 _duration) external onlyChair {
+    function fastTrackVoting(uint256 _proposalId, uint256 _duration) external onlyChair validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Created || p.state == ProposalState.Seconded, "Proposal not eligible");
         require(_duration > 0 && _duration <= 7 days, "Invalid voting duration");
@@ -252,7 +259,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     /// @dev Cast a vote — no ZK proof required.
     /// @param _proposalId The proposal ID
     /// @param _choice 0=Yes, 1=No, 2=Abstain
-    function castVote(uint256 _proposalId, uint256 _choice) external isEligibleVoter {
+    function castVote(uint256 _proposalId, uint256 _choice) external isEligibleVoter validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");
@@ -261,6 +268,8 @@ contract ZKVotingRobRulesNoZK is Ownable {
         require(!p.hasVotedOnMotion[msg.sender], "Already voted");
         
         p.hasVotedOnMotion[msg.sender] = true;
+        p.motionVoters.push(msg.sender);
+        p.voteChoiceByVoter[msg.sender] = VoteChoice(_choice);
         
         if (_choice == 0) {
             p.yesVotes++;
@@ -274,12 +283,13 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Any member can call for a division
-    function callForDivision(uint256 _proposalId) external isEligibleVoter {
+    function callForDivision(uint256 _proposalId) external isEligibleVoter validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal must be in Voting state");
         require(!p.divisionCallers[msg.sender], "Already called for division");
         
         p.divisionCallers[msg.sender] = true;
+        p.divisionCallerList.push(msg.sender);
         p.divisionCallCount++;
         
         emit DivisionCalled(_proposalId, msg.sender, p.divisionCallCount);
@@ -290,12 +300,20 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Member who voted on the prevailing side can move to reconsider
-    function reconsider(uint256 _proposalId) external isEligibleVoter {
+    function reconsider(uint256 _proposalId) external isEligibleVoter validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal must be in Voting state");
         require(block.timestamp <= p.votingEndsAt, "Voting period has ended");
         require(!p.reconsiderationRequested, "Reconsider req");
         require(p.hasVotedOnMotion[msg.sender], "Must have voted");
+        require(p.yesVotes != p.noVotes, "No prevailing side");
+
+        VoteChoice voterChoice = p.voteChoiceByVoter[msg.sender];
+        if (p.yesVotes > p.noVotes) {
+            require(voterChoice == VoteChoice.Yes, "Not on prevailing side");
+        } else {
+            require(voterChoice == VoteChoice.No, "Not on prevailing side");
+        }
         
         p.reconsiderationRequested = true;
         p.reconsiderRequester = msg.sender;
@@ -304,17 +322,35 @@ contract ZKVotingRobRulesNoZK is Ownable {
     }
     
     /// @dev Chair confirms reconsideration — resets voting for a fresh vote
-    function reopenVoting(uint256 _proposalId) external onlyChair {
+    function reopenVoting(uint256 _proposalId) external onlyChair validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal must be in Voting state");
         require(p.reconsiderationRequested, "No reconsideration requested");
         
+        uint256 priorDuration = p.votingEndsAt - p.votingStartsAt;
+
+        for (uint256 i = 0; i < p.motionVoters.length; i++) {
+            address voter = p.motionVoters[i];
+            p.hasVotedOnMotion[voter] = false;
+            delete p.voteChoiceByVoter[voter];
+        }
+        delete p.motionVoters;
+
+        for (uint256 i = 0; i < p.divisionCallerList.length; i++) {
+            address caller = p.divisionCallerList[i];
+            p.divisionCallers[caller] = false;
+        }
+        delete p.divisionCallerList;
+
         p.yesVotes = 0;
         p.noVotes = 0;
         p.abstainVotes = 0;
         p.reconsiderationRequested = false;
+        p.reconsiderRequester = address(0);
         p.divisionCalled = false;
         p.divisionCallCount = 0;
+        p.votingStartsAt = block.timestamp;
+        p.votingEndsAt = block.timestamp + priorDuration;
         
         emit VotingReopened(_proposalId);
     }
@@ -322,7 +358,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     /// @dev Finalize proposal — Passed if yes > no, Failed otherwise
     /// Per Robert's Rules: standard majority = yes > no (abstains don't count)
     /// Also callable by chair at any time for emergency demo purposes.
-    function finalizeProposal(uint256 _proposalId) external {
+    function finalizeProposal(uint256 _proposalId) external validProposal(_proposalId) {
         Proposal storage p = proposals[_proposalId];
         require(p.state == ProposalState.Voting, "Proposal not in Voting state");
         
@@ -346,7 +382,7 @@ contract ZKVotingRobRulesNoZK is Ownable {
     // View Functions
     // ============================================================
     
-    function getProposal(uint256 _proposalId) external view returns (
+    function getProposal(uint256 _proposalId) external view validProposal(_proposalId) returns (
         string memory description,
         address proposalProposer,
         address proposalChair,
@@ -385,11 +421,11 @@ contract ZKVotingRobRulesNoZK is Ownable {
         );
     }
     
-    function hasVoted(uint256 _proposalId, address _voter) external view returns (bool) {
+    function hasVoted(uint256 _proposalId, address _voter) external view validProposal(_proposalId) returns (bool) {
         return proposals[_proposalId].hasVotedOnMotion[_voter];
     }
     
-    function getAmendment(uint256 _proposalId, uint256 _amendmentId) external view returns (
+    function getAmendment(uint256 _proposalId, uint256 _amendmentId) external view validProposal(_proposalId) returns (
         string memory description,
         address proposer,
         bool approved,
@@ -409,11 +445,11 @@ contract ZKVotingRobRulesNoZK is Ownable {
         );
     }
     
-    function hasCalledForDivision(uint256 _proposalId, address _voter) external view returns (bool) {
+    function hasCalledForDivision(uint256 _proposalId, address _voter) external view validProposal(_proposalId) returns (bool) {
         return proposals[_proposalId].divisionCallers[_voter];
     }
     
-    function getProposalState(uint256 _proposalId) external view returns (uint256) {
+    function getProposalState(uint256 _proposalId) external view validProposal(_proposalId) returns (uint256) {
         return uint256(proposals[_proposalId].state);
     }
 }
