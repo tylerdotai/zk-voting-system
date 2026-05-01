@@ -49,7 +49,8 @@ export default function VerifyPage() {
         <div className="header-top">
           <h1>Verify Proposal</h1>
           <nav className="header-nav">
-            <a href="/">Voter Portal</a>
+            <a href="/">Home</a>
+            <a href="/voter">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -81,7 +82,7 @@ export default function VerifyPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--fw-gray)', fontSize: '0.8rem' }}>ZK Privacy</span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--fw-orange)' }}>Phase 2 Roadmap</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--fw-blue-accent)' }}>Phase 2 Roadmap</span>
             </div>
           </div>
         </div>

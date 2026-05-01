@@ -27,7 +27,7 @@ export default function WalletConnect({ onConnected }: WalletConnectProps) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span
           style={{
-            background: 'var(--fw-orange)',
+            background: 'var(--fw-blue-accent)',
             color: '#fff',
             padding: '0.3rem 0.75rem',
             borderRadius: '8px',

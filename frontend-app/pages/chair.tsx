@@ -140,7 +140,8 @@ export default function ChairPage() {
         <div className="header-top">
           <h1>Rob&apos;s Rules Voting</h1>
           <nav className="header-nav">
-            <a href="/">Voter Portal</a>
+            <a href="/">Home</a>
+            <a href="/voter">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
             <a href="/verify">Verify</a>
           </nav>
