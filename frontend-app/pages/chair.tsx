@@ -142,7 +142,7 @@ export default function ChairPage() {
           <nav className="header-nav">
             <a href="/">Home</a>
             <a href="/voter">Voter Portal</a>
-            <a href="/chair">Chair Dashboard</a>
+            <a href="/chair" className="active">Chair Dashboard</a>
             <a href="/verify">Verify</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

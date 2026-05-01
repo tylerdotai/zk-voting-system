@@ -173,7 +173,7 @@ export default function VoterPage() {
           <h1>Rob&apos;s Rules Voting</h1>
           <nav className="header-nav">
             <a href="/">Home</a>
-            <a href="/voter">Voter Portal</a>
+            <a href="/voter" className="active">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
             <a href="/verify">Verify</a>
           </nav>
