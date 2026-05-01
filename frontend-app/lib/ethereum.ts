@@ -38,10 +38,22 @@ declare global {
   }
 }
 
+async function buildState(provider: ethers.BrowserProvider): Promise<ContractState> {
+  const signer = await provider.getSigner();
+  const address = await signer.getAddress();
+  const contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, signer);
+  const chair = await contract.chair();
+  const isEligible = await contract.isEligible(address);
+  const isChair = chair.toLowerCase() === address.toLowerCase();
+  cachedState = { provider, signer, address, contract, isEligible, isChair };
+  return cachedState;
+}
+
 export async function connectWallet(): Promise<ContractState> {
   if (!window.ethereum) {
     throw new Error('Please install MetaMask');
   }
+
   const provider = new ethers.BrowserProvider(window.ethereum);
   const network = await provider.getNetwork();
   if (Number(network.chainId) !== 11155111) {
@@ -54,14 +66,35 @@ export async function connectWallet(): Promise<ContractState> {
       throw new Error('Please switch to Sepolia testnet');
     }
   }
-  const signer = await provider.getSigner();
-  const address = await signer.getAddress();
-  const contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, signer);
-  const chair = await contract.chair();
-  const isEligible = await contract.isEligible(address);
-  const isChair = chair.toLowerCase() === address.toLowerCase();
-  cachedState = { provider, signer, address, contract, isEligible, isChair };
-  return cachedState;
+
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  return buildState(provider);
+}
+
+export async function syncWalletState(): Promise<ContractState | null> {
+  if (!window.ethereum) {
+    cachedState = null;
+    return null;
+  }
+
+  const accounts: string[] = await window.ethereum.request({ method: 'eth_accounts' });
+  if (!accounts || accounts.length === 0) {
+    cachedState = null;
+    return null;
+  }
+
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const network = await provider.getNetwork();
+  if (Number(network.chainId) !== 11155111) {
+    cachedState = null;
+    return null;
+  }
+
+  return buildState(provider);
+}
+
+export function clearCachedState(): void {
+  cachedState = null;
 }
 
 export function shortenAddress(addr: string): string {
@@ -73,7 +106,6 @@ export function getContract(): ContractState | null {
   return cachedState;
 }
 
-/** Read-only contract (no signer needed) for public view calls */
 export function getReadOnlyContract(): ethers.Contract | null {
   if (!window.ethereum) return null;
   try {

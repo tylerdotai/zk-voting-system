@@ -32,7 +32,7 @@ export default function LandingPage() {
             <div className="landing-meta">
               <div className="landing-stat">
                 <span className="landing-stat-label">Live Contract</span>
-                <span className="landing-stat-value">0x0e51...0E70c</span>
+                <span className="landing-stat-value">0xF844...dbad</span>
               </div>
               <div className="landing-stat">
                 <span className="landing-stat-label">Current Scope</span>

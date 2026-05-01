@@ -10,7 +10,7 @@
 
 A full parliamentary voting system using Rob's Rules of Order. No ZK required — direct on-chain voting. Chair-managed voter allowlist.
 
-- ✅ Solidity contract deployed (`ZKVotingRobRulesNoZK`)
+- ✅ Solidity contract deployed (`RobRulesVoting`)
 - ✅ Next.js frontend deployed (Vercel)
 - ✅ Rob's Rules flow: create → second → amend → vote → finalize
 - ✅ Duration selector (5min to 7 days)
@@ -18,7 +18,7 @@ A full parliamentary voting system using Rob's Rules of Order. No ZK required �
 - ✅ Reconsideration support
 - ✅ Division calls for recorded votes
 
-**Contract:** `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` (Sepolia)
+**Contract:** `0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad` (Sepolia)
 
 ---
 
@@ -64,6 +64,6 @@ Replace direct on-chain voting with zero-knowledge proofs so voter identity and 
 
 | Name | Address | Status |
 |---|---|---|
-| `ZKVotingRobRulesNoZK` | `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c` | ✅ Live — current |
+| `RobRulesVoting` | `0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad` | ✅ Live — current |
 | `ZKVotingRobRulesWithCredentials` | `0x397b13EaD1ED0D72eC7A7aD660D00fF089539CF3` | Old ZK contract (deprecated, not in use) |
 | `Groth16VerifierV2` | `0x02aa9654f33Aa73880460B4f286A430c4D56CAb6` | Old ZK verifier (Phase 2 use only) |

@@ -20,7 +20,7 @@
     ·
     <a href="https://zk-voting-system-two.vercel.app/verify">Verify Proposal</a>
     ·
-    <a href="https://sepolia.etherscan.io/address/0x0e51e42d9a18bae5790b0e2298e85f067d30e70c">Sepolia Contract</a>
+    <a href="https://sepolia.etherscan.io/address/0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad">Sepolia Contract</a>
   </p>
 </div>
 
@@ -112,9 +112,9 @@ Instead of shipping a flaky demo, we locked in the governance system first and m
 
 ### Active contract
 
-- **Contract:** `ZKVotingRobRulesNoZK`
+- **Contract:** `RobRulesVoting`
 - **Network:** Ethereum Sepolia
-- **Address:** `0x0e51E42d9a18Bae5790B0e2298E85f067d30E70c`
+- **Address:** `0xF844B2B37f34Dc53b79AAd0bc657C508e628dbad`
 - **Chair / Owner:** `0x6A8C66fBAA1fE05947CfBD54b2fCF67ca3c254e0`
 
 ### Status
@@ -292,7 +292,7 @@ frontend-app/
     └── globals.css
 
 contracts/
-├── ZKVotingRobRulesNoZK.sol
+├── RobRulesVoting.sol
 ├── ZKVotingRobRulesWithCredentials.sol
 └── Groth16VerifierV2.sol
 

@@ -336,7 +336,7 @@ export default function VoterPage() {
             </div>
             <div className="verifier-item">
               <span className="verifier-label">Voting Contract</span>
-              <span className="verifier-value" style={{ fontSize: '0.65rem' }}>0x0e51...0E70c</span>
+              <span className="verifier-value" style={{ fontSize: '0.65rem' }}>0xF844...dbad</span>
             </div>
             <div className="verifier-item">
               <span className="verifier-label">Your Status</span>

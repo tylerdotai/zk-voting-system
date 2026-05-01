@@ -4,17 +4,17 @@ async function main() {
   const [deployer, voter1, voter2] = await hre.ethers.getSigners();
   console.log("Deploying from:", deployer.address);
 
-  const NoZK = await hre.ethers.getContractFactory("ZKVotingRobRulesNoZK");
-  const nozk = await NoZK.deploy(deployer.address, 3);
-  const receipt = await nozk.deploymentTransaction().wait();
-  const addr = nozk.target;
+  const RobRulesVoting = await hre.ethers.getContractFactory("RobRulesVoting");
+  const robRulesVoting = await RobRulesVoting.deploy(deployer.address, 3);
+  const receipt = await robRulesVoting.deploymentTransaction().wait();
+  const addr = await robRulesVoting.getAddress();
   console.log("Deployed to:", addr);
   console.log("TX:", receipt.hash);
 
   // Add voters
-  await (await nozk.addVoter(voter1.address)).wait();
+  await (await robRulesVoting.addVoter(voter1.address)).wait();
   console.log("Added voter1:", voter1.address);
-  await (await nozk.addVoter(voter2.address)).wait();
+  await (await robRulesVoting.addVoter(voter2.address)).wait();
   console.log("Added voter2:", voter2.address);
   
   console.log("\n=== NEW CONTRACT (chair can finalize anytime) ===");
