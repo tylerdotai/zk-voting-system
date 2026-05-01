@@ -26,14 +26,11 @@ export default function WalletConnect({ onConnected }: WalletConnectProps) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span
+          className="wallet-badge"
           style={{
             background: 'var(--fw-blue-accent)',
-            color: '#fff',
-            padding: '0.3rem 0.75rem',
+            padding: '0.35rem 0.8rem',
             borderRadius: '8px',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-            fontFamily: 'Inter, sans-serif',
           }}
         >
           {shortenAddress(state.address)}

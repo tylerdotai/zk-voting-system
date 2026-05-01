@@ -7,6 +7,7 @@ export default function LandingPage() {
         <div className="header-top">
           <h1>Fort Worth DAO Governance Demo</h1>
           <nav className="header-nav">
+            <a href="/" className="active">Home</a>
             <a href="/voter">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
             <a href="/verify">Verify</a>

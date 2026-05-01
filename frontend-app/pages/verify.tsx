@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { ethers } from 'ethers';
 import WalletConnect from '../components/WalletConnect';
 import { getContract, shortenAddress } from '../lib/ethereum';
-import { STATES } from '../lib/constants';
-import { CONTRACT_ADDRESS } from '../lib/constants';
+import { STATES, CONTRACT_ADDRESS, ROB_RULES_ABI } from '../lib/constants';
+
+const READONLY_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
 export default function VerifyPage() {
   const [proposalInput, setProposalInput] = useState('');
@@ -21,20 +23,31 @@ export default function VerifyPage() {
       const id = parseInt(proposalInput, 10);
       if (isNaN(id) || id < 0) throw new Error('Invalid proposal ID');
 
-      const s = getContract();
-      if (!s) throw new Error('Connect wallet to query chain');
+      let contract = getContract()?.contract;
+      if (!contract) {
+        const provider = new ethers.JsonRpcProvider(READONLY_RPC);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ROB_RULES_ABI, provider);
+      }
 
-      const raw = await s.contract.getProposal(id);
+      const raw = await contract.getProposal(id);
       setProposal({
         id,
         description: raw[0],
         proposer: raw[1],
         chair: raw[2],
         state: Number(raw[3]),
+        createdAt: Number(raw[4]),
+        secondedAt: Number(raw[5]),
+        secondedBy: raw[6],
+        votingStartsAt: Number(raw[7]),
+        votingEndsAt: Number(raw[8]),
         yesVotes: Number(raw[9]),
         noVotes: Number(raw[10]),
         abstainVotes: Number(raw[11]),
-        votingEndsAt: Number(raw[8]),
+        amendmentCount: Number(raw[12]),
+        divisionCalled: raw[13],
+        divisionCallCount: Number(raw[14]),
+        reconsiderationRequested: raw[15],
       });
     } catch (err: any) {
       setError(err.message || 'Failed to fetch proposal');
@@ -42,6 +55,8 @@ export default function VerifyPage() {
       setLoading(false);
     }
   }
+
+  const fmt = (ts: number) => (ts ? new Date(ts * 1000).toLocaleString() : '—');
 
   return (
     <div>
@@ -52,6 +67,7 @@ export default function VerifyPage() {
             <a href="/">Home</a>
             <a href="/voter">Voter Portal</a>
             <a href="/chair">Chair Dashboard</a>
+            <a href="/verify" className="active">Verify</a>
           </nav>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <span className="network">Sepolia</span>
@@ -60,7 +76,7 @@ export default function VerifyPage() {
         </div>
       </header>
 
-      <main className="main" style={{ maxWidth: '720px', margin: '0 auto' }}>
+      <main className="main" style={{ maxWidth: '860px', margin: '0 auto' }}>
         <div style={{
           padding: '1.25rem',
           background: 'var(--card)',
@@ -72,17 +88,17 @@ export default function VerifyPage() {
             Rob&apos;s Rules Voting Contract
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
               <span style={{ color: 'var(--fw-gray)', fontSize: '0.8rem' }}>Contract</span>
-              <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text)' }}>{CONTRACT_ADDRESS}</span>
+              <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`} target="_blank" rel="noreferrer" style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text)' }}>{CONTRACT_ADDRESS}</a>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: 'var(--fw-gray)', fontSize: '0.8rem' }}>Network</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--text)' }}>Sepolia (testnet)</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: 'var(--fw-gray)', fontSize: '0.8rem' }}>ZK Privacy</span>
-              <span style={{ fontSize: '0.8rem', color: 'var(--fw-blue-accent)' }}>Phase 2 Roadmap</span>
+              <span style={{ color: 'var(--fw-gray)', fontSize: '0.8rem' }}>Lookup mode</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--fw-dark)' }}>Read-only RPC (wallet optional)</span>
             </div>
           </div>
         </div>
@@ -132,6 +148,7 @@ export default function VerifyPage() {
                 {STATES[proposal.state]}
               </span>
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
               <div style={{ textAlign: 'center', padding: '0.75rem', background: 'var(--fw-light)', borderRadius: '8px' }}>
                 <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--state-voting)' }}>{proposal.yesVotes}</div>
@@ -146,12 +163,22 @@ export default function VerifyPage() {
                 <div style={{ fontSize: '0.7rem', color: 'var(--fw-gray)', textTransform: 'uppercase' }}>Abstain</div>
               </div>
             </div>
-            <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: 'var(--fw-gray)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-              <div>Proposer: <span style={{ fontFamily: 'monospace' }}>{shortenAddress(proposal.proposer)}</span></div>
-              <div>Chair: <span style={{ fontFamily: 'monospace' }}>{shortenAddress(proposal.chair)}</span></div>
-              {proposal.votingEndsAt > 0 && (
-                <div>Voting ends: <span style={{ fontFamily: 'monospace' }}>{new Date(Number(proposal.votingEndsAt) * 1000).toLocaleString()}</span></div>
-              )}
+
+            <div className="verify-extra-grid">
+              <div className="item"><div className="k">Proposer</div><div className="v">{shortenAddress(proposal.proposer)}</div></div>
+              <div className="item"><div className="k">Chair</div><div className="v">{shortenAddress(proposal.chair)}</div></div>
+              <div className="item"><div className="k">Created At</div><div className="v">{fmt(proposal.createdAt)}</div></div>
+              <div className="item"><div className="k">Seconded At</div><div className="v">{fmt(proposal.secondedAt)}</div></div>
+              <div className="item"><div className="k">Seconded By</div><div className="v">{proposal.secondedBy && proposal.secondedBy !== '0x0000000000000000000000000000000000000000' ? shortenAddress(proposal.secondedBy) : '—'}</div></div>
+              <div className="item"><div className="k">Voting Starts</div><div className="v">{fmt(proposal.votingStartsAt)}</div></div>
+              <div className="item"><div className="k">Voting Ends</div><div className="v">{fmt(proposal.votingEndsAt)}</div></div>
+              <div className="item"><div className="k">Amendments</div><div className="v">{proposal.amendmentCount}</div></div>
+              <div className="item"><div className="k">Division Calls</div><div className="v">{proposal.divisionCallCount}{proposal.divisionCalled ? ' (active)' : ''}</div></div>
+              <div className="item"><div className="k">Reconsideration</div><div className="v">{proposal.reconsiderationRequested ? 'Requested' : 'No'}</div></div>
+            </div>
+
+            <div style={{ marginTop: '1rem', fontSize: '0.78rem' }}>
+              <a href={`https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}#readContract`} target="_blank" rel="noreferrer" className="tx-link">Inspect readContract on Etherscan ↗</a>
             </div>
           </div>
         )}
