@@ -1,4 +1,9 @@
 {
   "outputDirectory": "frontend-app/out",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "routes": [
+    { "src": "/chair", "dest": "/chair.html" },
+    { "src": "/verify", "dest": "/verify.html" },
+    { "src": "/404", "dest": "/404.html" }
+  ]
 }
